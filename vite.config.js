@@ -27,6 +27,9 @@ export default defineConfig({
         '@strapi/design-system',
         '@strapi/icons',
         /^@strapi\/design-system\/.*/,
+        /^@strapi\/helper-plugin\/.*/,
+        /^@strapi\/icons\/.*/,
+        /^@strapi\/.*/,
       ],
     },
     commonjsOptions: {
