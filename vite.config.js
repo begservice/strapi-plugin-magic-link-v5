@@ -27,6 +27,7 @@ export default defineConfig({
         '@strapi/design-system',
         '@strapi/icons',
         /^@strapi\/design-system\/.*/,
+        /^@strapi\/design-system\/v2.*/,
         /^@strapi\/helper-plugin\/.*/,
         /^@strapi\/icons\/.*/,
         /^@strapi\/.*/,
