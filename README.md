@@ -175,7 +175,7 @@ const verifyToken = async () => {
   if (token) {
     try {
       const response = await axios.get(
-        `/api/magic-link/login?loginToken=${token}`,
+        `/api/magic-link/login?loginToken=${token}`
       );
       // Store JWT and redirect user
       localStorage.setItem("token", response.data.jwt);
