@@ -2,6 +2,8 @@
 
 A secure passwordless authentication solution for Strapi, allowing users to log in via email links without requiring passwords.
 
+![Magic Link Overview](pics/pic6.png)
+
 ## Core Features
 
 - **Passwordless Authentication**: Login via secure email links
@@ -9,6 +11,8 @@ A secure passwordless authentication solution for Strapi, allowing users to log 
 - **JWT Session Tracking**: Monitor and manage active sessions
 - **Security Features**: IP banning, token expiration controls
 - **Admin Interface**: Statistics dashboard and configuration options
+
+![Core Features](pics/pic7.png)
 
 ## Installation
 
@@ -53,9 +57,13 @@ After installation, restart your Strapi server and the plugin will be available 
    - One-time use tokens (configurable)
    - Automatic blocking after failed attempts
 
+![Authentication Process](pics/pic8.png)
+
 ## Configuration
 
 Configure the plugin through **Settings > Magic Link** in the Strapi admin panel:
+
+![Configuration Interface](pics/pic9.png)
 
 ### General Settings
 
@@ -83,6 +91,8 @@ Configure the plugin through **Settings > Magic Link** in the Strapi admin panel
 ## Dashboard & Admin Interface
 
 Magic Link provides a comprehensive admin interface with several key sections:
+
+![Admin Dashboard](pics/pic10.png)
 
 ### Dashboard Overview
 
