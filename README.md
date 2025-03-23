@@ -18,10 +18,15 @@ A secure passwordless authentication solution for Strapi, allowing users to log 
 
 ```bash
 # Using npm
-npm install magic-link
+npm install strapi-plugin-magic-link-v5
 
 # Using yarn
-yarn add magic-link
+yarn add strapi-plugin-magic-link-v5
+
+# Install directly from GitHub
+npm install begservice/strapi-magic-link
+# or
+yarn add begservice/strapi-magic-link
 ```
 
 After installation, restart your Strapi server and the plugin will be available in the admin panel.
