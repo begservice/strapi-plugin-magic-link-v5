@@ -92,7 +92,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const settings = await pluginStore.get({ key: 'settings' });
@@ -131,7 +131,7 @@ module.exports = {
           username,
           email,
           password,
-          provider: 'magic-link',
+          provider: 'strapi-plugin-magic-link-v5',
           confirmed: true, // Auto-confirm the user
           blocked: false,
           role: defaultRole.id,
@@ -460,7 +460,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       // Get current banned IPs or initialize empty array
@@ -497,7 +497,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       // Get current banned IPs or initialize empty array
@@ -528,7 +528,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       // Get current banned IPs
@@ -560,7 +560,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const settings = await pluginStore.get({ key: 'settings' }) || {};

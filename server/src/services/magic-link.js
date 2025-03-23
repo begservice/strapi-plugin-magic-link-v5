@@ -19,7 +19,7 @@ module.exports = ({ strapi }) => ({
     const pluginStore = strapi.store({
       environment: '',
       type: 'plugin',
-      name: 'magic-link',
+      name: 'strapi-plugin-magic-link-v5',
     });
     return pluginStore.get({ key: 'settings' });
   },
@@ -219,7 +219,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const blockedTokens = await pluginStore.get({ key: 'blocked_jwt_tokens' }) || { tokens: [] };
@@ -258,7 +258,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const blockedTokensData = await pluginStore.get({ key: 'blocked_jwt_tokens' }) || { tokens: [] };
@@ -288,7 +288,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const blockedTokens = await pluginStore.get({ key: 'blocked_jwt_tokens' }) || { tokens: [] };
@@ -310,7 +310,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const blockedTokens = await pluginStore.get({ key: 'blocked_jwt_tokens' }) || { tokens: [] };
@@ -341,7 +341,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const bannedIPs = await pluginStore.get({ key: 'banned_ips' }) || { ips: [] };

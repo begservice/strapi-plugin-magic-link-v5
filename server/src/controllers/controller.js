@@ -6,7 +6,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const settings = await pluginStore.get({ key: 'settings' });
@@ -104,7 +104,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       await pluginStore.set({ key: 'settings', value: processedBody });
@@ -128,7 +128,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
 
       // Standardeinstellungen definieren

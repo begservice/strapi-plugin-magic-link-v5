@@ -15,7 +15,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
@@ -59,7 +59,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
@@ -81,7 +81,7 @@ module.exports = {
         
         // Sperrung auch in der Sperrliste erfassen
         if (jwtSessions[sessionIndex].jwtToken) {
-          const { magicLink } = strapi.plugins['magic-link'].services;
+          const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
           await magicLink.blockJwtToken(
             jwtSessions[sessionIndex].jwtToken,
             jwtSessions[sessionIndex].userId,
@@ -100,7 +100,7 @@ module.exports = {
       
       // Möglichkeit 2: Sperren über Token (Legacy)
       if (token) {
-        const { magicLink } = strapi.plugins['magic-link'].services;
+        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
         const result = await magicLink.blockJwtToken(
           token, 
           ctx.request.body.userId || 'unknown', 
@@ -155,7 +155,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
@@ -183,7 +183,7 @@ module.exports = {
       
       // Token aus der Sperrliste entfernen, falls vorhanden
       if (jwtSessions[sessionIndex].jwtToken) {
-        const { magicLink } = strapi.plugins['magic-link'].services;
+        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
         
         try {
           // JWT von der Blacklist entfernen
@@ -222,7 +222,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'magic-link',
+        name: 'strapi-plugin-magic-link-v5',
       });
       
       const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
