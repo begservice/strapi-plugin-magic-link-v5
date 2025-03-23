@@ -8,8 +8,8 @@
     "./strapi-server": "./server/src/index.js"
   },
   "scripts": {
-    "build": "node build.js",
-    "dev": "strapi-plugin watch",
+    "build": "strapi-plugin build",
+     "dev": "strapi-plugin watch",
     "watch": "strapi-plugin watch"
   },
   "dependencies": {
