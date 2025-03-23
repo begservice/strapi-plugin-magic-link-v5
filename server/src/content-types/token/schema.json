@@ -1,0 +1,47 @@
+{
+  "kind": "collectionType",
+  "collectionName": "magic_link_tokens",
+  "info": {
+    "singularName": "token",
+    "pluralName": "tokens",
+    "displayName": "Magic Link Token"
+  },
+  "options": {
+    "draftAndPublish": false,
+    "comment": ""
+  },
+  "attributes": {
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "token": {
+      "type": "string",
+      "required": true
+    },
+    "expires_at": {
+      "type": "datetime",
+      "required": true
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "required": true
+    },
+    "context": {
+      "type": "json"
+    },
+    "user_agent": {
+      "type": "text",
+      "description": "User agent of the browser used during login"
+    },
+    "ip_address": {
+      "type": "string",
+      "description": "IP address used during login"
+    },
+    "last_used_at": {
+      "type": "datetime",
+      "description": "Timestamp of last login using this token"
+    }
+  }
+}
