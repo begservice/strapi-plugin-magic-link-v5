@@ -33,10 +33,38 @@ async function main() {
       path.resolve(__dirname, 'dist/server')
     );
 
-    // Kopieren der package.json in dist
+    // Kopieren und Anpassen der package.json für das Dist-Verzeichnis
+    const packageJson = require('./package.json');
+    
+    // Entferne nicht benötigte Felder für die Dist-Version
+    const distPackageJson = {
+      ...packageJson,
+      scripts: {
+        postinstall: "node ./strapi-admin.js postinstall"
+      },
+      devDependencies: undefined,
+      files: [
+        "admin",
+        "server",
+        "strapi-admin.js",
+        "strapi-server.js"
+      ]
+    };
+    
+    await fs.writeJson(
+      path.resolve(__dirname, 'dist/package.json'),
+      distPackageJson,
+      { spaces: 2 }
+    );
+    
+    // Kopieren der strapi-*.js Dateien in dist
     await fs.copy(
-      path.resolve(__dirname, 'package.json'),
-      path.resolve(__dirname, 'dist/package.json')
+      path.resolve(__dirname, 'strapi-admin.js'),
+      path.resolve(__dirname, 'dist/strapi-admin.js')
+    );
+    await fs.copy(
+      path.resolve(__dirname, 'strapi-server.js'),
+      path.resolve(__dirname, 'dist/strapi-server.js')
     );
 
     console.log('Build completed successfully!');
