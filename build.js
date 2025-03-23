@@ -4,15 +4,15 @@ const path = require('path');
 const { build } = require('vite');
 
 async function main() {
-  console.log('Starting build process for Magic Link plugin...');
+  console.log('Starting Strapi plugin build for Magic Link...');
   
   try {
-    // Stellen Sie sicher, dass das dist-Verzeichnis existiert
-    await fs.ensureDir(path.resolve(__dirname, 'dist'));
+    // Clean and prepare dist directory
+    await fs.emptyDir(path.resolve(__dirname, 'dist'));
     await fs.ensureDir(path.resolve(__dirname, 'dist/admin'));
     await fs.ensureDir(path.resolve(__dirname, 'dist/server'));
 
-    // Admin-Build
+    // Build admin panel
     await build({
       configFile: path.resolve(__dirname, 'vite.config.js'),
       root: path.resolve(__dirname, 'admin/src'),
@@ -27,22 +27,20 @@ async function main() {
       },
     });
 
-    // Server-Build (kopieren Sie einfach die Dateien)
+    // Copy server components
     await fs.copy(
-      path.resolve(__dirname, 'server/src'), 
+      path.resolve(__dirname, 'server/src'),
       path.resolve(__dirname, 'dist/server')
     );
 
-    // Kopieren und Anpassen der package.json für das Dist-Verzeichnis
+    // Generate minimal package.json
     const packageJson = require('./package.json');
-    
-    // Entferne nicht benötigte Felder für die Dist-Version
     const distPackageJson = {
-      ...packageJson,
-      scripts: {
-        postinstall: "node ./strapi-admin.js postinstall"
-      },
-      devDependencies: undefined,
+      name: packageJson.name,
+      version: packageJson.version,
+      description: packageJson.description,
+      strapi: packageJson.strapi,
+      dependencies: packageJson.dependencies,
       files: [
         "admin",
         "server",
@@ -56,8 +54,8 @@ async function main() {
       distPackageJson,
       { spaces: 2 }
     );
-    
-    // Kopieren der strapi-*.js Dateien in dist
+
+    // Copy strapi integration files
     await fs.copy(
       path.resolve(__dirname, 'strapi-admin.js'),
       path.resolve(__dirname, 'dist/strapi-admin.js')
@@ -67,11 +65,11 @@ async function main() {
       path.resolve(__dirname, 'dist/strapi-server.js')
     );
 
-    console.log('Build completed successfully!');
+    console.log('Strapi plugin build completed successfully!');
   } catch (err) {
     console.error('Build failed:', err);
     process.exit(1);
   }
 }
 
-main(); 
+main();
