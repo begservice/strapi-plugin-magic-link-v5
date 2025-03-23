@@ -7,12 +7,6 @@ async function main() {
   console.log('Starting build process for Magic Link plugin...');
   
   try {
-    // Direktes Ausführen ohne Build
-    console.log('Plugin wird ohne Build verwendet, da wir direkt auf die Quelldateien verweisen.');
-    console.log('Stellen Sie sicher, dass Sie "strapi develop" mit der --watch-admin Option starten.');
-    
-    // Für Produktionsbuilds können Sie diesen Code aktivieren:
-    /*
     // Stellen Sie sicher, dass das dist-Verzeichnis existiert
     await fs.ensureDir(path.resolve(__dirname, 'dist'));
     await fs.ensureDir(path.resolve(__dirname, 'dist/admin'));
@@ -38,7 +32,12 @@ async function main() {
       path.resolve(__dirname, 'server/src'), 
       path.resolve(__dirname, 'dist/server')
     );
-    */
+
+    // Kopieren der package.json in dist
+    await fs.copy(
+      path.resolve(__dirname, 'package.json'),
+      path.resolve(__dirname, 'dist/package.json')
+    );
 
     console.log('Build completed successfully!');
   } catch (err) {
