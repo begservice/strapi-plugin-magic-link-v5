@@ -9,7 +9,7 @@
   },
   "scripts": {
     "build": "strapi-plugin build",
-     "dev": "strapi-plugin watch",
+    "dev": "strapi-plugin watch",
     "watch": "strapi-plugin watch"
   },
   "dependencies": {
@@ -48,11 +48,11 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "magic-link",
+    "name": "strapi-plugin-magic-link",
     "displayName": "Magic Link Authentication",
     "description": "This plugin provides passwordless authentication via magic links sent to email"
   },
-  "name": "magic-link",
+  "name": "strapi-plugin-magic-link",
   "description": "This plugin provides passwordless authentication via magic links sent to email",
   "license": "MIT",
   "author": "Scherwan Al-Ahmad <scherwan.al-ahmad@joulee.de>"
