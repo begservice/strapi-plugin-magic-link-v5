@@ -23,18 +23,6 @@ export default {
       }))
     });
 
-    app.addMenuLink({
-      to: `/plugins/${pluginId}/tokens`,
-      icon: PluginIcon,
-      intlLabel: {
-        id: getTrad('tokens.title'),
-        defaultMessage: 'Magic Link Tokens',
-      },
-      Component: () => import('./pages/Tokens').then(module => ({
-        default: module.default
-      }))
-    });
-
     app.createSettingSection(
       {
         id: pluginId,
@@ -49,7 +37,7 @@ export default {
             id: getTrad('Form.title.Settings'),
             defaultMessage: 'Settings',
           },
-          id: 'magic-link-settings',
+          id: 'strapi-plugin-magic-link-v5-settings',
           to: `/settings/${pluginId}`,
           Component: () => import('./pages/Settings').then(module => ({
             default: module.default
@@ -64,6 +52,16 @@ export default {
       initializer: Initializer,
       isReady: false,
       name,
+      routes: [
+        {
+          method: 'GET',
+          path: '/tokens',
+          handler: 'tokens.find',
+          config: {
+            policies: [],
+          },
+        },
+      ]
     });
   },
 
