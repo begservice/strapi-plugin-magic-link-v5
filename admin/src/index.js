@@ -23,26 +23,6 @@ export default {
       }))
     });
 
-    app.addMenuLink({
-      to: `/plugins/${pluginId}/tokens`,
-      icon: PluginIcon,
-      intlLabel: {
-        id: getTrad('tokens.title'),
-        defaultMessage: 'Magic Link Tokens',
-      },
-      Component: () => import('./pages/Tokens').then(module => ({
-        default: module.default
-      })),
-      isDisplayed: false,
-    });
-
-    app.registerPlugin({
-      id: pluginId,
-      initializer: Initializer,
-      isReady: false,
-      name,
-    });
-
     app.createSettingSection(
       {
         id: pluginId,
@@ -66,6 +46,23 @@ export default {
         },
       ]
     );
+
+    app.registerPlugin({
+      id: pluginId,
+      initializer: Initializer,
+      isReady: false,
+      name,
+      routes: [
+        {
+          method: 'GET',
+          path: '/tokens',
+          handler: 'tokens.find',
+          config: {
+            policies: [],
+          },
+        },
+      ]
+    });
   },
 
   bootstrap() {

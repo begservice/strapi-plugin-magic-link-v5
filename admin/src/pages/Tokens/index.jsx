@@ -156,7 +156,7 @@ const TokensPage = () => {
   // IP entsperren
   const unbanIP = async () => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/unban-ip`, { ip: ipToUnban });
+      await post(`/strapi-plugin-magic-link-v5/unban-ip`, { data: { ip: ipToUnban } });
       toggleNotification({
         type: 'success',
         message: `IP ${ipToUnban} wurde erfolgreich entsperrt`
@@ -542,7 +542,7 @@ const TokensPage = () => {
   // IP-Bann Funktion implementieren
   const banIP = async () => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/ban-ip`, { ip: ipToBan });
+      await post(`/strapi-plugin-magic-link-v5/ban-ip`, { data: { ip: ipToBan } });
       
       toggleNotification({
         type: 'success',
@@ -1815,13 +1815,15 @@ const TokensPage = () => {
           </Modal.Header>
           <Modal.Body>
             <Flex direction="column" gap={2}>
-              <TextInput
-                name="ip"
-                label="IP-Adresse"
-                value={ipToBan}
-                onChange={(e) => setIpToBan(e.target.value)}
-                placeholder="z.B. 192.168.1.1"
-              />
+              <Field.Root name="ip">
+                <Field.Label>IP-Adresse</Field.Label>
+                <Field.Input
+                  placeholder="z.B. 192.168.1.1"
+                  value={ipToBan}
+                  onChange={(e) => setIpToBan(e.target.value)}
+                />
+                <Field.Hint>Geben Sie die zu bannende IP-Adresse ein</Field.Hint>
+              </Field.Root>
             </Flex>
           </Modal.Body>
           <Modal.Footer>
@@ -1842,72 +1844,37 @@ const TokensPage = () => {
       <Modal.Root open={showCreateModal} onOpenChange={setShowCreateModal}>
         <Modal.Content>
           <Modal.Header>
-            <Modal.Title>Neuen Token erstellen</Modal.Title>
+            <Modal.Title>Magic Link Token erstellen</Modal.Title>
+            <Modal.SubTitle>Erstellen Sie einen Token für einen Benutzer</Modal.SubTitle>
           </Modal.Header>
           <Modal.Body>
             <Box paddingTop={2}>
-              <Field.Root 
-                name="email" 
-                id="email" 
-                required
-                hint={emailValidationStatus ? emailValidationStatus.message : "Die E-Mail-Adresse für den neuen Token"}
-                error={emailValidationStatus && !emailValidationStatus.valid ? emailValidationStatus.message : null}
-              >
-                <Field.Label>E-Mail-Adresse*</Field.Label>
+              <Field.Root name="email-create">
+                <Field.Label>E-Mail</Field.Label>
                 <Field.Input
                   type="email"
-                  placeholder="benutzer@beispiel.de"
-                  name="email"
-                  onChange={(e) => {
-                    setEmailToCreate(e.target.value);
-                    setEmailValidationStatus(null);
-                  }}
+                  placeholder="email@example.com"
                   value={emailToCreate}
-                  required
-                  aria-label="E-Mail-Adresse"
-                  error={emailValidationStatus && !emailValidationStatus.valid}
+                  onChange={(e) => setEmailToCreate(e.target.value)}
+                  aria-label="E-Mail für den neuen Token"
                 />
-                {emailValidationStatus && emailValidationStatus.message && (
-                  <Field.Hint>{emailValidationStatus.message}</Field.Hint>
-                )}
-                {emailValidationStatus && !emailValidationStatus.valid && (
-                  <Field.Error>{emailValidationStatus.message}</Field.Error>
-                )}
+                <Field.Hint>Die E-Mail des Benutzers, für den der Token erstellt werden soll</Field.Hint>
               </Field.Root>
-              
-              <Box paddingTop={4}>
-                <Field.Root 
-                  name="json-context" 
-                  id="json-context" 
-                >
-                  <Field.Label>JSON-Kontext</Field.Label>
+            </Box>
+            
+            <Box paddingTop={4}>
+              <Field.Root name="send-email">
+                <Flex gap={2} alignItems="center">
                   <Field.Input
-                    as="textarea"
-                    placeholder='{"key": "value"}'
-                    name="json-context"
-                    onChange={(e) => setJsonContext(e.target.value)}
-                    value={jsonContext}
-                    aria-label="JSON-Kontext"
-                    style={{ height: '80px', fontFamily: 'monospace' }}
+                    type="checkbox"
+                    id="send-email"
+                    name="send-email"
+                    checked={sendEmail}
+                    onChange={(e) => setSendEmail(e.target.checked)}
                   />
-                  <Field.Hint>Optionaler JSON-Kontext für den Token (z.B. in Form von Key-Value-Paaren)</Field.Hint>
-                </Field.Root>
-              </Box>
-              
-              <Box paddingTop={4}>
-                <Field.Root name="send-email" id="send-email">
-                  <Flex gap={2} alignItems="center">
-                    <Field.Input
-                      type="checkbox"
-                      id="send-email"
-                      name="send-email"
-                      checked={sendEmail}
-                      onChange={(e) => setSendEmail(e.target.checked)}
-                    />
-                    <Field.Label htmlFor="send-email">E-Mail mit Magic Link senden</Field.Label>
-                  </Flex>
-                </Field.Root>
-              </Box>
+                  <Field.Label htmlFor="send-email">E-Mail mit Magic Link senden</Field.Label>
+                </Flex>
+              </Field.Root>
             </Box>
           </Modal.Body>
           <Modal.Footer>

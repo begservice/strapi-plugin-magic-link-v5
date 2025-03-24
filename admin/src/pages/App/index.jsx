@@ -12,11 +12,14 @@ const App = () => {
   console.log("Aktueller Pfad:", currentPath);
   console.log("Plugin ID:", pluginId);
   
-  // Einfachere Bedingungen, die nur prüfen, ob der Pfad bestimmte Segmente enthält
-  const isTokensPage = currentPath.includes(`/plugins/${pluginId}/tokens`) || 
-                      currentPath.includes(`/plugins/magic-link/tokens`);
-  const isHomePage = (currentPath.includes(`/plugins/${pluginId}`) || 
-                     currentPath.includes(`/plugins/magic-link`)) && !isTokensPage;
+  // Verbesserte Routenerkennung mit exakter Pfadprüfung
+  const tokensPath = `/admin/plugins/${pluginId}/tokens`;
+  const basePath = `/admin/plugins/${pluginId}`;
+  
+  // Prüfe, ob der aktuelle Pfad genau der Tokens-Pfad ist
+  const isTokensPage = currentPath === tokensPath;
+  // Homepage ist die Basis-URL ohne weitere Pfadsegmente
+  const isHomePage = currentPath === basePath;
 
   console.log("isTokensPage:", isTokensPage);
   console.log("isHomePage:", isHomePage);
