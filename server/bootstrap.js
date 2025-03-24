@@ -109,33 +109,19 @@ The Team`
 
   // Middleware to check for revoked JWT tokens
   strapi.server.use(async (ctx, next) => {
-    // Nur fortfahren, wenn es eine Authentifizierung gibt
-    const token = ctx.request.header.authorization;
-    if (token && token.startsWith('Bearer ')) {
-      try {
-        const jwtToken = token.substring(7);
-        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
-        
-        // Prüfen, ob der Token gesperrt ist
-        const isBlocked = await magicLink.isJwtTokenBlocked(jwtToken);
-        
-        if (isBlocked) {
-          return ctx.unauthorized('This token has been revoked');
-        }
-      } catch (error) {
-        // Bei Fehlern lieber fortfahren als die Anfrage zu blockieren
-        console.error('Error checking JWT token blacklist:', error);
+    const prefix = 'bearer ';
+    const authorization = ctx.request?.headers?.authorization?.toLowerCase() || '';
+    
+    if (authorization.startsWith(prefix)) {
+      const token = authorization.substring(prefix.length);
+      
+      // Überprüfen, ob der Token gesperrt wurde
+      const { magicLink } = strapi.plugins['magic-link'].services;
+      if (magicLink.isJwtTokenBlocked && (await magicLink.isJwtTokenBlocked(token))) {
+        return ctx.unauthorized('Token has been revoked');
       }
     }
     
-    return next();
+    await next();
   });
-
-  // Initialisiere Webhooks
-  try {
-    const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
-    await magicLink.initialize();
-  } catch (error) {
-    strapi.log.error('Error initializing magic link plugin:', error);
-  }
 };

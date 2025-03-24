@@ -1,82 +1,99 @@
-// @ts-check
-import { prefixPluginTranslations } from '@strapi/helper-plugin';
-import { PLUGIN_ID } from './pluginId';
-import getTrad from './utils/getTrad';
-import reducers from './reducers';
-import permissions from './permissions';
-import PluginIcon from './components/PluginIcon/index.jsx';
+// import { prefixPluginTranslations } from '@strapi/strapi/admin';
+import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
+import Initializer from './components/Initializer';
+import PluginIcon from './components/PluginIcon';
+import pluginPermissions from './permissions';
+import getTrad from './utils/getTrad';
+import prefixPluginTranslations from './utils/prefixPluginTranslations';
 
-const name = 'strapi-plugin-magic-link-v5';
-
-const icon = PluginIcon;
+const name = pluginPkg.strapi.name;
 
 export default {
   register(app) {
-    app.addReducers(reducers);
+    app.addMenuLink({
+      to: `/plugins/${pluginId}`,
+      icon: PluginIcon,
+      intlLabel: {
+        id: `${pluginId}.plugin.name`,
+        defaultMessage: name,
+      },
+      Component: () => import('./pages/HomePage').then(module => ({
+        default: module.default
+      }))
+    });
 
     app.addMenuLink({
-      to: `/plugins/${PLUGIN_ID}`,
-      icon,
+      to: `/plugins/${pluginId}/tokens`,
+      icon: PluginIcon,
       intlLabel: {
-        id: `${PLUGIN_ID}.plugin.name`,
-        defaultMessage: 'Magic Link',
+        id: getTrad('tokens.title'),
+        defaultMessage: 'Magic Link Tokens',
       },
-      Component: async () => {
-        const component = await import('./pages/App');
-        return component;
-      },
-      permissions: [
-        {
-          action: `plugin::${pluginId}.read`,
-          subject: null,
-        },
-      ],
+      Component: () => import('./pages/Tokens').then(module => ({
+        default: module.default
+      }))
     });
 
     app.createSettingSection(
       {
         id: pluginId,
         intlLabel: {
-          id: getTrad('Settings.header'),
+          id: getTrad('Header.Settings'),
           defaultMessage: 'Magic Link',
         },
       },
       [
         {
-          id: 'strapi-plugin-magic-link-v5-settings',
           intlLabel: {
-            id: getTrad('Settings.subHeader'),
+            id: getTrad('Form.title.Settings'),
             defaultMessage: 'Settings',
           },
-          Component: async () => {
-            const component = await import('./pages/Settings');
-            return component;
-          },
-          permissions: permissions.accessSettings,
+          id: 'magic-link-settings',
+          to: `/settings/${pluginId}`,
+          Component: () => import('./pages/Settings').then(module => ({
+            default: module.default
+          })),
+          permissions: pluginPermissions.readSettings,
         },
       ]
     );
+
+    app.registerPlugin({
+      id: pluginId,
+      initializer: Initializer,
+      isReady: false,
+      name,
+    });
   },
 
-  bootstrap() {},
+  bootstrap() {
+    // Nothing to do here
+  },
 
   async registerTrads({ locales }) {
     const importedTrads = await Promise.all(
-      locales.map((locale) => {
-        return import(`./translations/${locale}.json`)
-          .then(({ default: data }) => {
-            return {
-              data: prefixPluginTranslations(data, pluginId),
-              locale,
-            };
-          })
-          .catch(() => {
-            return {
-              data: {},
-              locale,
-            };
-          });
+      locales.map(locale => {
+        try {
+          return import(`./translations/${locale}.json`)
+            .then(({ default: data }) => {
+              return {
+                data: prefixPluginTranslations(data, pluginId),
+                locale,
+              };
+            })
+            .catch(() => {
+              return {
+                data: {},
+                locale,
+              };
+            });
+        } catch (error) {
+          return {
+            data: {},
+            locale,
+          };
+        }
       })
     );
 

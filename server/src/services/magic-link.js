@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * strapi-plugin-magic-link-v5.js service
+ * magic-link.js service
  *
  * @description: A set of functions similar to controller's actions to avoid code duplication.
  */
@@ -19,7 +19,7 @@ module.exports = ({ strapi }) => ({
     const pluginStore = strapi.store({
       environment: '',
       type: 'plugin',
-      name: 'strapi-plugin-magic-link-v5',
+      name: 'magic-link',
     });
     return pluginStore.get({ key: 'settings' });
   },
@@ -82,39 +82,28 @@ module.exports = ({ strapi }) => ({
     return user;
   },
 
-  async createToken(userId, email, userIp, userAgent, expiresIn = 3600) {
-    const tokenValue = nanoid(32);
-    const now = Date.now();
-    
-    try {
-      // Token in der Datenbank speichern
-      const tokenObject = await strapi.query('plugin::strapi-plugin-magic-link-v5.token').create({
-        data: {
-          token: tokenValue,
-          user: userId,
-          email,
-          expires_at: new Date(now + expiresIn * 1000),
-          ip_address: userIp || null,
-          user_agent: userAgent || null
-        }
-      });
+  async createToken(email, context = {}) {
+    const settings = await this.settings();
+    const tokenLength = settings.token_length || 20;
+    const token = nanoid(tokenLength);
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 1);
 
-      return tokenObject;
-    } catch (error) {
-      strapi.log.error('Error creating token:', error);
-      throw new Error('Failed to create token');
-    }
-  },
-
-  async findToken(token) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
-      where: { token },
-      populate: ['user']
+    const tokenObject = await strapi.query('plugin::magic-link.token').create({
+      data: {
+        email,
+        token,
+        expires_at: expires,
+        is_active: true,
+        context: typeof context === 'string' ? JSON.parse(context) : context,
+      },
     });
+
+    return tokenObject;
   },
 
   async fetchToken(token) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
+    return strapi.query('plugin::magic-link.token').findOne({
       where: { token },
     });
   },
@@ -138,12 +127,10 @@ module.exports = ({ strapi }) => ({
     return currentTime < expiryTime;
   },
 
-  async deactivateToken(tokenId) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').update({
-      where: { id: tokenId },
-      data: {
-        is_active: false
-      }
+  async deactivateToken(token) {
+    return strapi.query('plugin::magic-link.token').update({
+      where: { id: token.id },
+      data: { is_active: false },
     });
   },
 
@@ -171,7 +158,7 @@ module.exports = ({ strapi }) => ({
     }
 
     // Update token in database
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').update({
+    return strapi.query('plugin::magic-link.token').update({
       where: { id: token.id },
       data: updateData
     });
@@ -232,7 +219,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       const blockedTokens = (await pluginStore.get({ key: 'blocked_jwt_tokens' })) || { tokens: [] };
@@ -271,7 +258,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       const blockedTokensData = (await pluginStore.get({ key: 'blocked_jwt_tokens' })) || { tokens: [] };
@@ -301,7 +288,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       const blockedTokens = (await pluginStore.get({ key: 'blocked_jwt_tokens' })) || { tokens: [] };
@@ -323,7 +310,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       const blockedTokens = (await pluginStore.get({ key: 'blocked_jwt_tokens' })) || { tokens: [] };
@@ -354,7 +341,7 @@ module.exports = ({ strapi }) => ({
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       const bannedIPs = (await pluginStore.get({ key: 'banned_ips' })) || { ips: [] };
@@ -365,15 +352,5 @@ module.exports = ({ strapi }) => ({
       console.error('Error checking if IP is banned:', error);
       return false;
     }
-  },
-
-  async markTokenAsUsed(tokenData) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').update({
-      where: { id: tokenData.id },
-      data: {
-        used_at: new Date(),
-        is_active: false
-      }
-    });
   }
 }); 

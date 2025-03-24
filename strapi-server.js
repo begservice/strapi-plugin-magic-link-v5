@@ -1,4 +1,7 @@
 'use strict';
 
-// Direkt aus der Quelle importieren, ohne auf den Build zu warten
-module.exports = require('./server/src'); 
+// Verwenden der Quelldatei direkt während der Entwicklung 
+// und der gebauten Datei im Produktionsmodus
+module.exports = process.env.NODE_ENV === 'development' 
+  ? require('./server/src/index.js')
+  : require('./dist/server'); 

@@ -14,7 +14,7 @@ const emailRegExp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"
 module.exports = {
   async login(ctx) {
     const { loginToken } = ctx.query;
-    const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+    const { magicLink } = strapi.plugins['magic-link'].services;
     const { user: userService, jwt: jwtService } = strapi.plugins['users-permissions'].services;
     const isEnabled = await magicLink.isEnabled();
 
@@ -157,7 +157,7 @@ module.exports = {
   },
 
   async sendLink(ctx) {
-    const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+    const { magicLink } = strapi.plugins['magic-link'].services;
 
     const isEnabled = await magicLink.isEnabled();
 

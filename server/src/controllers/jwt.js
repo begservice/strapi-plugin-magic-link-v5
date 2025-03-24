@@ -81,7 +81,7 @@ module.exports = {
         
         // Sperrung auch in der Sperrliste erfassen
         if (jwtSessions[sessionIndex].jwtToken) {
-          const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+          const { magicLink } = strapi.plugins['magic-link'].services;
           await magicLink.blockJwtToken(
             jwtSessions[sessionIndex].jwtToken,
             jwtSessions[sessionIndex].userId,
@@ -100,7 +100,7 @@ module.exports = {
       
       // Möglichkeit 2: Sperren über Token (Legacy)
       if (token) {
-        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+        const { magicLink } = strapi.plugins['magic-link'].services;
         const result = await magicLink.blockJwtToken(
           token, 
           ctx.request.body.userId || 'unknown', 
@@ -183,7 +183,7 @@ module.exports = {
       
       // Token aus der Sperrliste entfernen, falls vorhanden
       if (jwtSessions[sessionIndex].jwtToken) {
-        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+        const { magicLink } = strapi.plugins['magic-link'].services;
         
         try {
           // JWT von der Blacklist entfernen
@@ -257,38 +257,5 @@ module.exports = {
       console.error('Error cleaning up sessions:', error);
       ctx.throw(500, error);
     }
-  },
-
-  async revokeJWT(ctx) {
-    try {
-      const { jwt, userId, reason } = ctx.request.body;
-      
-      if (!jwt) {
-        return ctx.badRequest('JWT token is required');
-      }
-      
-      const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
-      
-      // ... existing code ...
-    },
-
-    async unrevokeJWT(ctx) {
-      try {
-        const { jwt, userId } = ctx.request.body;
-        
-        if (!jwt) {
-          return ctx.badRequest('JWT token is required');
-        }
-        
-        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
-        
-        // ... existing code ...
-      },
-
-    async getAllBlockedJWTs(ctx) {
-      try {
-        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
-        
-        // ... existing code ...
-      },
+  }
 }; 

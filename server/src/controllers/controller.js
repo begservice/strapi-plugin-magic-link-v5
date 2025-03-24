@@ -49,7 +49,7 @@ module.exports = {
       
       // Korrigiere den Login-Pfad, wenn er den alten Wert hat
       if (processedSettings.login_path === '/passwordless-login' || processedSettings.login_path === '/api/magic-link/login') {
-        processedSettings.login_path = '/strapi-plugin-magic-link-v5/login';
+        processedSettings.login_path = '/magic-link/login';
       }
 
       // Check if Email Designer plugin is installed
@@ -124,11 +124,6 @@ module.exports = {
    */
   async resetData(ctx) {
     try {
-      // Lösche alle Tokens
-      await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').deleteMany({
-        where: {},
-      });
-
       // Plugin Store für die Einstellungen
       const pluginStore = strapi.store({
         environment: '',
@@ -136,42 +131,53 @@ module.exports = {
         name: 'magic-link',
       });
 
-      // Get server URL in Strapi v5 way
-      const serverUrl = strapi.config.get('server.url', 'http://localhost:1337');
-
-      // Initialize with default settings
+      // Standardeinstellungen definieren
       const defaultSettings = {
         enabled: true,
-        createUserIfNotExists: true,
-        expire_period: 3600,
-        confirmationUrl: `${serverUrl}`,
-        from_name: 'Administration Panel',
-        from_email: 'no-reply@strapi.io',
-        response_email: '',
-        token_length: 32,
+        createUserIfNotExists: false,
         stays_valid: false,
+        expire_period: 3600,
+        token_length: 20,
+        max_login_attempts: 5,
+        login_path: '/magic-link/login',
+        confirmationUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
         store_login_info: true,
-        object: 'Magic Link',
-        message_html: `<p>Hi!</p>
-<p>Click the link below to log in:</p>
-<p><%= URL %>?loginToken=<%= CODE %></p>
-<p>Thanks!</p>`,
-        message_text: `Hi!
+        default_role: 'authenticated',
+        object: 'Your Magic Link for Login',
+        from_name: 'Magic Link Service',
+        from_email: 'noreply@example.com',
+        message_html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>Magic Link Login</title>
+</head>
+<body>
+  <h2>Magic Link Login</h2>
+  <p>Click the link below to log in:</p>
+  <p><a href="<%= URL %>?loginToken=<%= CODE %>">Log in to your account</a></p>
+  <p>Or use this URL: <%= URL %>?loginToken=<%= CODE %></p>
+  <p>This link will expire in 1 hour.</p>
+</body>
+</html>`,
+        message_text: `Hello,
+
 Click the link below to log in:
+
 <%= URL %>?loginToken=<%= CODE %>
-Thanks!`,
-        max_login_attempts: 3,
-        login_path: '/strapi-plugin-magic-link-v5/login',
-        verify_email: false,
-        welcome_email: false,
-        use_jwt_token: true,
-        jwt_token_expires_in: '30d',
-        callback_url: `${serverUrl}`,
-        allow_magic_links_on_public_registration: false,
+
+This link will expire in 1 hour.`,
+        jwt_token_expires_in: '30d'
       };
 
       // Einstellungen zurücksetzen
       await pluginStore.set({ key: 'settings', value: defaultSettings });
+
+      // Alle Magic Link Tokens löschen
+      await strapi.db.query('plugin::magic-link.token').deleteMany({
+        where: {},
+      });
 
       // JWT Sessions löschen
       try {

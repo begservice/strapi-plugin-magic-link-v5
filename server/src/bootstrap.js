@@ -16,7 +16,7 @@ const magicLinkActions = {
       displayName: 'Read',
       uid: 'settings.read',
       subCategory: 'Settings',
-      pluginName: 'strapi-plugin-magic-link-v5',
+      pluginName: 'magic-link',
     },
     {
       // Settings Update
@@ -24,7 +24,7 @@ const magicLinkActions = {
       displayName: 'Edit',
       uid: 'settings.update',
       subCategory: 'Settings',
-      pluginName: 'strapi-plugin-magic-link-v5',
+      pluginName: 'magic-link',
     },
   ],
 };
@@ -33,7 +33,7 @@ module.exports = async ({ strapi }) => {
   const pluginStore = strapi.store({
     environment: '',
     type: 'plugin',
-    name: 'strapi-plugin-magic-link-v5',
+    name: 'magic-link',
   });
   const settings = await pluginStore.get({ key: 'settings' });
 
@@ -63,7 +63,7 @@ Please click on the link below to login.
 Thanks.`,
       // Additional settings from passwordless-plugin
       max_login_attempts: 3,
-      login_path: '/strapi-plugin-magic-link-v5/login',
+      login_path: '/magic-link/login',
       user_creation_strategy: 'email',
       verify_email: false,
       welcome_email: false,
@@ -91,7 +91,7 @@ Thanks.`,
     if (token && token.startsWith('Bearer ')) {
       try {
         const jwtToken = token.substring(7);
-        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+        const { magicLink } = strapi.plugins['magic-link'].services;
         
         // Prüfen, ob der Token gesperrt ist
         const isBlocked = await magicLink.isJwtTokenBlocked(jwtToken);

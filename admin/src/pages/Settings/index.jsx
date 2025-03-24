@@ -71,7 +71,7 @@ const Settings = () => {
     message_text: '',
     // Additional settings from passwordless-plugin
     max_login_attempts: 3,
-    login_path: '/strapi-plugin-magic-link-v5/login',
+    login_path: '/magic-link/login',
     user_creation_strategy: 'email',
     verify_email: false,
     welcome_email: false,
@@ -110,7 +110,7 @@ const Settings = () => {
     console.log('Initiating API call to fetch Magic Link settings');
     
     try {
-      const res = await get('/strapi-plugin-magic-link-v5/settings');
+      const res = await get('/magic-link/settings');
       console.log('Magic Link API response:', res);
       
       // Check if data property exists in the response
@@ -256,7 +256,7 @@ const Settings = () => {
       });
       
       // Sende die Änderungen an die API
-      const response = await put('/strapi-plugin-magic-link-v5/settings', settingsToSubmit);
+      const response = await put('/magic-link/settings', settingsToSubmit);
       console.log('Settings saved response:', response);
       
       // Aktualisiere den API-Zustand
@@ -678,26 +678,6 @@ const Settings = () => {
         </Flex>
       </Box>
     );
-  };
-
-  const handleResetData = () => {
-    confirm({
-      title: formatMessage({ id: getTrad('settings.dangerZone.resetData.confirmTitle'), defaultMessage: 'Reset all plugin data?' }),
-      message: formatMessage({ id: getTrad('settings.dangerZone.resetData.confirmMessage'), defaultMessage: 'This will delete all magic link tokens and settings. This action cannot be undone.' }),
-      onConfirm: async () => {
-        try {
-          await post('/strapi-plugin-magic-link-v5/reset-data');
-          
-          // ... existing code ...
-        } catch (error) {
-          console.error('Fehler beim Zurücksetzen der Daten:', error);
-          toggleNotification({
-            type: 'danger',
-            message: 'Fehler beim Zurücksetzen der Daten: ' + (error.response?.data?.message || error.message)
-          });
-        }
-      }
-    });
   };
 
   return (
@@ -1263,7 +1243,34 @@ const Settings = () => {
                 </Box>
                 <Button
                   variant="danger"
-                  onClick={handleResetData}
+                  onClick={() => {
+                    // Bestätigung vom Benutzer einholen
+                    if (window.confirm(safeTranslate('settings.reset.confirmMessage', 'Sind Sie sicher, dass Sie alle Magic Link Daten zurücksetzen möchten? Diese Aktion kann nicht rückgängig gemacht werden!'))) {
+                      setIsLoading(true);
+                      // API-Anfrage senden
+                      post('/magic-link/reset-data')
+                        .then(response => {
+                          // Benachrichtigung anzeigen
+                          toggleNotification({
+                            type: 'success',
+                            message: response.data.message || 'Alle Magic Link Daten wurden zurückgesetzt.'
+                          });
+                          
+                          // Formular neu laden
+                          loadSettings();
+                        })
+                        .catch(error => {
+                          console.error('Fehler beim Zurücksetzen der Daten:', error);
+                          toggleNotification({
+                            type: 'danger',
+                            message: 'Fehler beim Zurücksetzen der Daten: ' + (error.response?.data?.message || error.message)
+                          });
+                        })
+                        .finally(() => {
+                          setIsLoading(false);
+                        });
+                    }
+                  }}
                   startIcon={<Trash />}
                   disabled={isLoading}
                 >
