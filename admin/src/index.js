@@ -27,17 +27,17 @@ export default {
       {
         id: pluginId,
         intlLabel: {
-          id: getTrad('Header.Settings'),
+          id: getTrad('Settings.header.title'),
           defaultMessage: 'Magic Link',
         },
       },
       [
         {
           intlLabel: {
-            id: getTrad('Form.title.Settings'),
+            id: getTrad('Settings.general.title'),
             defaultMessage: 'Settings',
           },
-          id: 'strapi-plugin-magic-link-v5-settings',
+          id: 'settings',
           to: `/settings/${pluginId}`,
           Component: () => import('./pages/Settings').then(module => ({
             default: module.default

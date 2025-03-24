@@ -43,7 +43,7 @@ const HomePage = () => {
     const fetchTokenData = async () => {
       try {
         setIsLoading(true);
-        const response = await get('/magic-link/tokens');
+        const response = await get('/strapi-plugin-magic-link-v5/tokens');
         const { data, meta } = response.data || { data: [], meta: {} };
         
         if (data && Array.isArray(data)) {
