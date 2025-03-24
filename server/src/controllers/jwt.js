@@ -15,10 +15,10 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
-      const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
+      const storedData = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       const jwtSessions = storedData.sessions || [];
       
       // Aktuelles Datum für Ablaufprüfung
@@ -59,10 +59,10 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
-      const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
+      const storedData = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       let jwtSessions = storedData.sessions || [];
       
       // Möglichkeit 1: Sperren über sessionId
@@ -155,10 +155,10 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
-      const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
+      const storedData = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       let jwtSessions = storedData.sessions || [];
       
       // Finde die Session anhand der ID
@@ -222,10 +222,10 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
-      const storedData = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
+      const storedData = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       let jwtSessions = storedData.sessions || [];
       
       // Identifiziere abgelaufene Sessions
@@ -257,5 +257,38 @@ module.exports = {
       console.error('Error cleaning up sessions:', error);
       ctx.throw(500, error);
     }
-  }
+  },
+
+  async revokeJWT(ctx) {
+    try {
+      const { jwt, userId, reason } = ctx.request.body;
+      
+      if (!jwt) {
+        return ctx.badRequest('JWT token is required');
+      }
+      
+      const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+      
+      // ... existing code ...
+    },
+
+    async unrevokeJWT(ctx) {
+      try {
+        const { jwt, userId } = ctx.request.body;
+        
+        if (!jwt) {
+          return ctx.badRequest('JWT token is required');
+        }
+        
+        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+        
+        // ... existing code ...
+      },
+
+    async getAllBlockedJWTs(ctx) {
+      try {
+        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
+        
+        // ... existing code ...
+      },
 }; 

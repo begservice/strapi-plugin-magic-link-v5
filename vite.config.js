@@ -7,7 +7,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@strapi/design-system': resolve(__dirname, '../../node_modules/@strapi/design-system'),
-      '@strapi/helper-plugin': resolve(__dirname, '../../node_modules/@strapi/helper-plugin'),
       '@strapi/icons': resolve(__dirname, '../../node_modules/@strapi/icons'),
     },
   },
@@ -23,14 +22,10 @@ export default defineConfig({
         'react-query',
         'prop-types',
         'yup',
-        '@strapi/helper-plugin',
+        '@strapi/strapi',
         '@strapi/design-system',
         '@strapi/icons',
         /^@strapi\/design-system\/.*/,
-        /^@strapi\/design-system\/v2.*/,
-        /^@strapi\/helper-plugin\/.*/,
-        /^@strapi\/icons\/.*/,
-        /^@strapi\/.*/,
       ],
     },
     commonjsOptions: {

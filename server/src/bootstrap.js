@@ -63,7 +63,7 @@ Please click on the link below to login.
 Thanks.`,
       // Additional settings from passwordless-plugin
       max_login_attempts: 3,
-      login_path: '/magic-link/login',
+      login_path: '/strapi-plugin-magic-link-v5/login',
       user_creation_strategy: 'email',
       verify_email: false,
       welcome_email: false,

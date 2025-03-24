@@ -1,98 +1,82 @@
-import { prefixPluginTranslations } from '@strapi/strapi/admin';
-import pluginPkg from '../../package.json';
-import pluginId from './pluginId';
-import Initializer from './components/Initializer';
-import PluginIcon from './components/PluginIcon';
-import pluginPermissions from './permissions';
+// @ts-check
+import { prefixPluginTranslations } from '@strapi/helper-plugin';
+import { PLUGIN_ID } from './pluginId';
 import getTrad from './utils/getTrad';
+import reducers from './reducers';
+import permissions from './permissions';
+import PluginIcon from './components/PluginIcon/index.jsx';
+import pluginId from './pluginId';
 
-const name = pluginPkg.strapi.name;
+const name = 'strapi-plugin-magic-link-v5';
+
+const icon = PluginIcon;
 
 export default {
   register(app) {
-    app.addMenuLink({
-      to: `/plugins/${pluginId}`,
-      icon: PluginIcon,
-      intlLabel: {
-        id: `${pluginId}.plugin.name`,
-        defaultMessage: name,
-      },
-      Component: () => import('./pages/HomePage').then(module => ({
-        default: module.default
-      }))
-    });
+    app.addReducers(reducers);
 
     app.addMenuLink({
-      to: `/plugins/${pluginId}/tokens`,
-      icon: PluginIcon,
+      to: `/plugins/${PLUGIN_ID}`,
+      icon,
       intlLabel: {
-        id: getTrad('tokens.title'),
-        defaultMessage: 'Magic Link Tokens',
+        id: `${PLUGIN_ID}.plugin.name`,
+        defaultMessage: 'Magic Link',
       },
-      Component: () => import('./pages/Tokens').then(module => ({
-        default: module.default
-      }))
+      Component: async () => {
+        const component = await import('./pages/App');
+        return component;
+      },
+      permissions: [
+        {
+          action: `plugin::${pluginId}.read`,
+          subject: null,
+        },
+      ],
     });
 
     app.createSettingSection(
       {
         id: pluginId,
         intlLabel: {
-          id: getTrad('Header.Settings'),
+          id: getTrad('Settings.header'),
           defaultMessage: 'Magic Link',
         },
       },
       [
         {
+          id: 'strapi-plugin-magic-link-v5-settings',
           intlLabel: {
-            id: getTrad('Form.title.Settings'),
+            id: getTrad('Settings.subHeader'),
             defaultMessage: 'Settings',
           },
-          id: 'magic-link-settings',
-          to: `/settings/${pluginId}`,
-          Component: () => import('./pages/Settings').then(module => ({
-            default: module.default
-          })),
-          permissions: pluginPermissions.readSettings,
+          Component: async () => {
+            const component = await import('./pages/Settings');
+            return component;
+          },
+          permissions: permissions.accessSettings,
         },
       ]
     );
-
-    app.registerPlugin({
-      id: pluginId,
-      initializer: Initializer,
-      isReady: false,
-      name,
-    });
   },
 
-  bootstrap() {
-    // Nothing to do here
-  },
+  bootstrap() {},
 
   async registerTrads({ locales }) {
     const importedTrads = await Promise.all(
-      locales.map(locale => {
-        try {
-          return import(`./translations/${locale}.json`)
-            .then(({ default: data }) => {
-              return {
-                data: prefixPluginTranslations(data, pluginId),
-                locale,
-              };
-            })
-            .catch(() => {
-              return {
-                data: {},
-                locale,
-              };
-            });
-        } catch (error) {
-          return {
-            data: {},
-            locale,
-          };
-        }
+      locales.map((locale) => {
+        return import(`./translations/${locale}.json`)
+          .then(({ default: data }) => {
+            return {
+              data: prefixPluginTranslations(data, pluginId),
+              locale,
+            };
+          })
+          .catch(() => {
+            return {
+              data: {},
+              locale,
+            };
+          });
       })
     );
 

@@ -35,7 +35,7 @@ export default {
             id: getTrad('Form.title.Settings'),
             defaultMessage: 'Settings',
           },
-          id: 'magic-link-settings',
+          id: 'strapi-plugin-magic-link-v5-settings',
           to: `/settings/${pluginId}`,
           Component: async () => {
             const component = await import('./admin/src/pages/Settings/index.jsx');
@@ -60,7 +60,7 @@ export default {
     const importedTrads = await Promise.all(
       locales.map((locale) => {
         return import(
-          /* webpackChunkName: "magic-link-translation-[request]" */ `./admin/src/translations/${locale}.json`
+          /* webpackChunkName: "strapi-plugin-magic-link-v5-translation-[request]" */ `./admin/src/translations/${locale}.json`
         )
           .then(({ default: data }) => {
             return {

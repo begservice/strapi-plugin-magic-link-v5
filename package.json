@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "0.0.0",
   "keywords": [],
   "type": "commonjs",
   "exports": {
@@ -8,19 +8,16 @@
     "./strapi-server": "./server/src/index.js"
   },
   "scripts": {
-    "build": "strapi-plugin build",
+    "build": "node build.js",
     "dev": "strapi-plugin watch",
     "watch": "strapi-plugin watch"
   },
   "dependencies": {
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "@strapi/design-system": "^2.0.0-rc.18",
-    "ci": "^2.3.0",
     "lodash": "^4.17.21",
     "nanoid": "^3.3.4"
   },
   "devDependencies": {
-    "@strapi/helper-plugin": "^5.0.0-alpha.2",
     "@strapi/sdk-plugin": "^5.3.2",
     "@strapi/strapi": "^5.11.2",
     "@vitejs/plugin-react": "^4.2.1",
@@ -29,13 +26,11 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.0",
-    "semantic-release": "^24.2.3",
     "styled-components": "^6.1.15",
     "vite": "^5.0.0"
   },
   "peerDependencies": {
     "@strapi/design-system": "^2.0.0-rc.18",
-    "@strapi/helper-plugin": "^5.11.2",
     "@strapi/icons": "^2.0.0-rc.18",
     "@strapi/strapi": "^5.11.2",
     "formik": "^2.4.5",
@@ -57,5 +52,5 @@
   "name": "strapi-plugin-magic-link-v5",
   "description": "This plugin provides passwordless authentication via magic links sent to email",
   "license": "MIT",
-  "author": "Scherwan Al-Ahmad <scherwan.al-ahmad@joulee.de>"
+  "author": "Schero A. <124470865+begservice@users.noreply.github.com>"
 }

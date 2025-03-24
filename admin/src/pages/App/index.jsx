@@ -1,50 +1,38 @@
-import React from 'react';
-import { Main, Box, Typography } from '@strapi/design-system';
-import pluginId from '../../pluginId';
+import React, { useEffect } from 'react';
+import { Switch, Route, useLocation } from 'react-router-dom';
+import { SkipToContent } from '@strapi/design-system';
+import { useIntl } from 'react-intl';
+import { AnErrorOccurred } from '@strapi/helper-plugin';
 import HomePage from '../HomePage';
+import PLUGIN_ID from '../../pluginId';
+import { Helmet } from 'react-helmet';
+import SettingsPage from '../Settings';
 import TokensPage from '../Tokens';
+import getTrad from '../../utils/getTrad';
 
 const App = () => {
-  console.log("Magic Link App-Root-Komponente wird geladen");
-  
-  // Ermittle den aktuellen Pfad, um zu sehen, welche Route angezeigt werden soll
-  const currentPath = window.location.pathname;
-  console.log("Aktueller Pfad:", currentPath);
-  console.log("Plugin ID:", pluginId);
-  
-  // Einfachere Bedingungen, die nur prüfen, ob der Pfad bestimmte Segmente enthält
-  const isTokensPage = currentPath.includes(`/plugins/${pluginId}/tokens`) || 
-                      currentPath.includes(`/plugins/magic-link/tokens`);
-  const isHomePage = (currentPath.includes(`/plugins/${pluginId}`) || 
-                     currentPath.includes(`/plugins/magic-link`)) && !isTokensPage;
+  const { formatMessage } = useIntl();
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const isTokensPage = 
+    currentPath.includes(`/plugins/strapi-plugin-magic-link-v5/tokens`);
+  const isSettingsPage = (
+    currentPath.includes(`/plugins/strapi-plugin-magic-link-v5`)) && !isTokensPage;
 
-  console.log("isTokensPage:", isTokensPage);
-  console.log("isHomePage:", isHomePage);
-  
-  let content;
-  if (isTokensPage) {
-    console.log("Zeige TokensPage an");
-    content = <TokensPage />;
-  } else if (isHomePage) {
-    console.log("Zeige HomePage an");
-    content = <HomePage />;
-  } else {
-    console.log("Zeige 404 Seite an");
-    content = (
-      <Box padding={8} background="neutral100">
-        <Typography variant="alpha">
-          404 - Route nicht gefunden: {currentPath}
-        </Typography>
-      </Box>
-    );
-  }
-  
   return (
-    <Main>
-      {content}
-    </Main>
+    <div>
+      <Helmet title={formatMessage({ id: getTrad('Header.title'), defaultMessage: 'Magic Link' })} />
+      <SkipToContent>
+        {formatMessage({ id: getTrad('Header.title'), defaultMessage: 'Magic Link' })}
+      </SkipToContent>
+      <Switch>
+        <Route path={`/plugins/${PLUGIN_ID}/tokens`} component={TokensPage} exact />
+        <Route path={`/settings/${PLUGIN_ID}`} component={SettingsPage} exact />
+        <Route path={`/plugins/${PLUGIN_ID}`} component={HomePage} exact />
+        <Route component={AnErrorOccurred} />
+      </Switch>
+    </div>
   );
 };
 
-export { App };
 export default App; 

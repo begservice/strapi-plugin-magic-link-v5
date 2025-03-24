@@ -1,0 +1,28 @@
+{
+  "externals": [
+    "react",
+    "react-dom",
+    "react-router-dom",
+    "react-intl",
+    "styled-components",
+    "formik",
+    "react-query",
+    "prop-types",
+    "yup",
+    "@strapi/strapi",
+    "@strapi/design-system",
+    "@strapi/icons"
+  ],
+  "output": {
+    "globals": {
+      "react": "React",
+      "react-dom": "ReactDOM",
+      "react-router-dom": "ReactRouterDom",
+      "react-intl": "ReactIntl",
+      "styled-components": "styled",
+      "@strapi/strapi": "Strapi",
+      "@strapi/design-system": "StrapiDesignSystem",
+      "@strapi/icons": "StrapiIcons"
+    }
+  }
+}

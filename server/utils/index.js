@@ -1,13 +1,15 @@
 'use strict';
 
 /**
- * Get plugin service
- * @param {string} name - Service name
- * @returns {object} service
+ * Hilfsfunktionen für das Plugin
  */
-const getService = (name) => {
-  return strapi.plugin('magic-link').services[name];
-};
+
+/**
+ * Holt einen Service vom Plugin
+ */
+function getService(name) {
+  return strapi.plugin('strapi-plugin-magic-link-v5').services[name];
+}
 
 module.exports = {
   getService,

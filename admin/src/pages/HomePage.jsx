@@ -23,7 +23,7 @@ import {
   Information,
   Calendar
 } from '@strapi/icons';
-import { useFetchClient } from '@strapi/helper-plugin';
+import { useFetchClient } from "@strapi/strapi/admin";
 
 const HomePage = () => {
   const { get } = useFetchClient();
@@ -37,13 +37,30 @@ const HomePage = () => {
     tokenExpiresNextDays: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [tokens, setTokens] = useState([]);
+
+  const fetchTokens = async () => {
+    setIsLoading(true);
+    try {
+      const response = await get('/strapi-plugin-magic-link-v5/tokens');
+      setTokens(response.data);
+    } catch (error) {
+      console.error('Failed to fetch tokens', error);
+      toggleNotification({
+        type: 'warning',
+        message: 'Error loading tokens',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // API-Anfrage, um echte Token-Daten zu laden
   useEffect(() => {
     const fetchTokenData = async () => {
       try {
         setIsLoading(true);
-        const response = await get('/magic-link/tokens');
+        const response = await get('/strapi-plugin-magic-link-v5/tokens');
         const { data, meta } = response.data || { data: [], meta: {} };
         
         if (data && Array.isArray(data)) {
@@ -100,6 +117,14 @@ const HomePage = () => {
     const interval = setInterval(fetchTokenData, 30000);
     return () => clearInterval(interval);
   }, [get]);
+
+  const goToTokensPage = () => {
+    window.location.href = '/admin/plugins/strapi-plugin-magic-link-v5/tokens';
+  };
+
+  const goToSettings = () => {
+    window.location.href = '/admin/settings/strapi-plugin-magic-link-v5';
+  };
 
   return (
     <Main>
@@ -353,9 +378,7 @@ const HomePage = () => {
                           <Button 
                             variant="default"
                             endIcon={<ArrowRight />}
-                            onClick={() => {
-                              window.location.href = '/admin/plugins/magic-link/tokens';
-                            }}
+                            onClick={goToTokensPage}
                           >
                             Öffnen
                           </Button>
@@ -379,9 +402,7 @@ const HomePage = () => {
                           <Button 
                             variant="default"
                             endIcon={<ArrowRight />}
-                            onClick={() => {
-                              window.location.href = '/admin/settings/magic-link';
-                            }}
+                            onClick={goToSettings}
                           >
                             Öffnen
                           </Button>
@@ -487,9 +508,7 @@ const HomePage = () => {
                           variant="secondary"
                           startIcon={<Key />}
                           endIcon={<ArrowRight />}
-                          onClick={() => {
-                            window.location.href = '/admin/plugins/magic-link/tokens';
-                          }}
+                          onClick={goToTokensPage}
                         >
                           Tokens verwalten
                         </Button>
@@ -529,9 +548,7 @@ const HomePage = () => {
                           variant="secondary"
                           startIcon={<Shield />}
                           endIcon={<ArrowRight />}
-                          onClick={() => {
-                            window.location.href = '/admin/settings/magic-link';
-                          }}
+                          onClick={goToSettings}
                         >
                           Einstellungen öffnen
                         </Button>

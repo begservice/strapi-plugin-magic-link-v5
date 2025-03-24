@@ -1,13 +1,15 @@
-import { request } from '@strapi/helper-plugin';
+import { useFetchClient } from '@strapi/strapi/admin';
 import getRequestURL from '../../../utils/getRequestURL';
 
 const fetchData = async () => {
-  const { settings } = await request(getRequestURL('settings'), { method: 'GET' });
-  return settings;
+  const { get } = useFetchClient();
+  const { data } = await get(getRequestURL('settings'));
+  return data.settings;
 };
 
-const saveSettings = body => {
-  return request(getRequestURL('settings'), { method: 'PUT', body });
+const saveSettings = async (body) => {
+  const { put } = useFetchClient();
+  return put(getRequestURL('settings'), body);
 };
 
 export { fetchData, saveSettings }; 

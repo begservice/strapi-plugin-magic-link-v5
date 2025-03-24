@@ -56,9 +56,12 @@ module.exports = {
    */
   async find(ctx) {
     try {
-      // Query all tokens
-      const tokens = await strapi.db.query('plugin::magic-link.token').findMany({
-        orderBy: { createdAt: 'desc' },
+      // Abrufen aller Token
+      const tokens = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findMany({
+        select: ['id', 'token', 'email', 'created_at', 'expires_at', 'is_active', 'used_at', 'ip_address', 'user_agent', 'context'],
+        where: { },
+        orderBy: { created_at: 'desc' },
+        populate: ['user'],
       });
 
       // Berechne den Sicherheitswert
@@ -92,7 +95,7 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       const settings = await pluginStore.get({ key: 'settings' });
@@ -131,7 +134,7 @@ module.exports = {
           username,
           email,
           password,
-          provider: 'strapi-plugin-magic-link-v5',
+          provider: 'magic-link',
           confirmed: true, // Auto-confirm the user
           blocked: false,
           role: defaultRole.id,
@@ -150,7 +153,7 @@ module.exports = {
 
       // Erweitere den Kontext mit Ablaufdatum und Benutzerinformationen
       const enrichedContext = {
-        ...typeof context === 'string' ? JSON.parse(context) : context,
+        ...(typeof context === 'string' ? JSON.parse(context) : context),
         expires_at: expiresAt.toISOString(),
         expiry_formatted: new Intl.DateTimeFormat('de-DE', {
           year: 'numeric', 
@@ -167,16 +170,16 @@ module.exports = {
       };
 
       // Create the token
-      const token = await strapi.db.query('plugin::magic-link.token').create({
+      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').create({
         data: {
-          token: tokenValue,
           email: user.email,
-          user_id: user.id,
+          token: tokenValue,
           expires_at: expiresAt,
           is_active: true,
+          context: enrichedContext,
           ip_address: null, // Wird beim Verwenden gesetzt
           user_agent: null, // Wird beim Verwenden gesetzt
-          context: enrichedContext, // Verwende den angereicherten Kontext
+          user: user.id,
         },
       });
 
@@ -279,9 +282,7 @@ module.exports = {
   async block(ctx) {
     try {
       const { id } = ctx.params;
-
-      // Check if token exists
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
+      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
         where: { id },
       });
 
@@ -289,12 +290,9 @@ module.exports = {
         return ctx.notFound('Token not found');
       }
 
-      // Update the token to be inactive
-      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
+      const updatedToken = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').update({
         where: { id },
-        data: {
-          is_active: false,
-        },
+        data: { is_active: false },
       });
 
       return updatedToken;
@@ -310,9 +308,7 @@ module.exports = {
   async delete(ctx) {
     try {
       const { id } = ctx.params;
-
-      // Check if token exists
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
+      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
         where: { id },
       });
 
@@ -320,8 +316,7 @@ module.exports = {
         return ctx.notFound('Token not found');
       }
 
-      // Delete the token
-      await strapi.db.query('plugin::magic-link.token').delete({
+      await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').delete({
         where: { id },
       });
 
@@ -339,22 +334,17 @@ module.exports = {
   async activate(ctx) {
     try {
       const { id } = ctx.params;
-
-      // Prüfe, ob Token existiert
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
+      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
         where: { id },
       });
 
       if (!token) {
-        return ctx.notFound('Token nicht gefunden');
+        return ctx.notFound('Token not found');
       }
 
-      // Aktualisiere den Token auf aktiv
-      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
+      const updatedToken = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').update({
         where: { id },
-        data: {
-          is_active: true,
-        },
+        data: { is_active: true },
       });
 
       return updatedToken;
@@ -371,19 +361,22 @@ module.exports = {
   async extend(ctx) {
     try {
       const { id } = ctx.params;
-      const { days } = ctx.request.body;
+      const { additionalTime } = ctx.request.body;
+      
+      if (!additionalTime || typeof additionalTime !== 'number') {
+        return ctx.badRequest('Invalid additionalTime parameter');
+      }
 
-      // Prüfe, ob Token existiert
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
+      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
         where: { id },
       });
 
       if (!token) {
-        return ctx.notFound('Token nicht gefunden');
+        return ctx.notFound('Token not found');
       }
 
       // Verarbeite die Anzahl der Tage
-      const daysToAdd = parseInt(days) || 7; // Standard: 7 Tage
+      const daysToAdd = parseInt(additionalTime) || 7; // Standard: 7 Tage
       
       // Berechne das neue Ablaufdatum
       let newExpiryDate;
@@ -400,7 +393,7 @@ module.exports = {
       newExpiryDate.setDate(newExpiryDate.getDate() + daysToAdd);
 
       // Aktualisiere den Token mit dem neuen Ablaufdatum
-      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
+      const updatedToken = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').update({
         where: { id },
         data: {
           expires_at: newExpiryDate,
@@ -460,11 +453,11 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       // Get current banned IPs or initialize empty array
-      const bannedIPs = await pluginStore.get({ key: 'banned_ips' }) || { ips: [] };
+      const bannedIPs = (await pluginStore.get({ key: 'banned_ips' })) || { ips: [] };
       
       // Add new IP to the list if not already present
       if (!bannedIPs.ips.includes(ipAddress)) {
@@ -474,7 +467,7 @@ module.exports = {
         await pluginStore.set({ key: 'banned_ips', value: bannedIPs });
         
         // Deactivate all tokens associated with this IP
-        await strapi.db.query('plugin::magic-link.token').updateMany({
+        await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').updateMany({
           where: { ip_address: ipAddress },
           data: { is_active: false },
         });
@@ -497,11 +490,11 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       // Get current banned IPs or initialize empty array
-      const bannedIPs = await pluginStore.get({ key: 'banned_ips' }) || { ips: [] };
+      const bannedIPs = (await pluginStore.get({ key: 'banned_ips' })) || { ips: [] };
       
       return bannedIPs;
     } catch (error) {
@@ -528,11 +521,11 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       // Get current banned IPs
-      const bannedIPs = await pluginStore.get({ key: 'banned_ips' }) || { ips: [] };
+      const bannedIPs = (await pluginStore.get({ key: 'banned_ips' })) || { ips: [] };
       
       // Remove IP from the banned list
       bannedIPs.ips = bannedIPs.ips.filter(ip => ip !== ipAddress);
@@ -560,10 +553,10 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
-      const settings = await pluginStore.get({ key: 'settings' }) || {};
+      const settings = (await pluginStore.get({ key: 'settings' })) || {};
       
       // 1. Bewerte Token-Lebensdauer: max. 20 Punkte
       // (Kürzere Lebensdauer ist sicherer)
@@ -604,7 +597,7 @@ module.exports = {
       let tokenStatusPoints = 0;
       
       // Hole alle Tokens
-      const tokens = await strapi.db.query('plugin::magic-link.token').findMany({});
+      const tokens = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findMany({});
       
       // Berechne Verhältnis von aktiven zu inaktiven Tokens
       const activeTokens = tokens.filter(token => token.is_active).length;
@@ -620,7 +613,7 @@ module.exports = {
       let bannedIPsPoints = 0;
       
       // Hole gebannte IPs
-      const bannedIPsData = await pluginStore.get({ key: 'banned_ips' }) || { ips: [] };
+      const bannedIPsData = (await pluginStore.get({ key: 'banned_ips' })) || { ips: [] };
       const bannedIPsCount = bannedIPsData.ips?.length || 0;
       
       // Bewerte basierend auf Anzahl der gebannten IPs
@@ -649,6 +642,36 @@ module.exports = {
       return { score };
     } catch (error) {
       ctx.throw(500, error);
+    }
+  },
+
+  async cleanupSessions(ctx) {
+    try {
+      // Deaktiviere alle abgelaufenen Token
+      await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').updateMany({
+        where: {
+          expires_at: { $lt: new Date() },
+          is_active: true
+        },
+        data: {
+          is_active: false
+        }
+      });
+
+      // ... existing code ...
+    } catch (error) {
+      // ... existing code ...
+    }
+  },
+
+  async exportTokens(ctx) {
+    try {
+      // Alle Token abrufen
+      const tokens = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findMany({});
+
+      // ... existing code ...
+    } catch (error) {
+      // ... existing code ...
     }
   },
 }; 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Main, 
   Typography, 
@@ -23,7 +23,7 @@ import {
   Field,
   useField,
 } from '@strapi/design-system';
-import { useFetchClient, useNotification } from '@strapi/strapi/admin';
+import { useFetchClient, useNotification, useFetchClient as useFetchClientHelper } from '@strapi/strapi/admin';
 import { 
   Information, 
   ArrowLeft, 
@@ -44,12 +44,13 @@ import {
   Trash,
   Check,
 } from '@strapi/icons';
-import { useFetchClient as useFetchClientHelper } from '@strapi/helper-plugin';
+import { useIntl } from 'react-intl';
 
 const TokensPage = () => {
-  const { get, post } = useFetchClient();
+  const { get, post, del } = useFetchClient();
   const { toggleNotification } = useNotification();
-  const { del } = useFetchClientHelper();
+  const { del: delHelper } = useFetchClientHelper();
+  const { formatMessage } = useIntl();
   
   // States
   const [tokens, setTokens] = useState([]);
@@ -75,92 +76,69 @@ const TokensPage = () => {
   const [isLoadingBannedIPs, setIsLoadingBannedIPs] = useState(false);
   const [ipToUnban, setIpToUnban] = useState('');
   const [showIPUnbanModal, setShowIPUnbanModal] = useState(false);
+  const [pluginSettings, setPluginSettings] = useState({});
 
   // Lade Magic Link Tokens
-  const fetchTokens = async () => {
-    setIsLoading(true);
+  const fetchTokens = useCallback(async () => {
     try {
-      const response = await get('/magic-link/tokens');
-      // Die Struktur der Antwort hat sich geändert, prüfe auf response.data.data
-      if (response && response.data) {
-        // Wenn response.data ein Objekt mit data-Eigenschaft ist (neue Struktur)
-        if (response.data.data) {
-          setTokens(response.data.data);
-        } else {
-          // Alte Struktur, wo response.data direkt das Array ist
-          setTokens(response.data);
-        }
-      } else {
-        setTokens([]);
-      }
+      setIsLoading(true);
+      const response = await get('/strapi-plugin-magic-link-v5/tokens');
+      setTokens(response.data);
     } catch (error) {
-      console.error("Fehler beim Laden der Tokens:", error);
-      setTokens([]); // Im Fehlerfall leeres Array setzen
+      console.error('Error fetching tokens', error);
       toggleNotification({
-        type: 'warning',
-        message: 'Fehler beim Laden der Magic Link Tokens'
+        type: 'danger',
+        message: formatMessage({ id: getTrad('tokens.notification.error.fetch'), defaultMessage: 'Failed to fetch tokens' }),
       });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [get, toggleNotification, formatMessage]);
 
   // Lade JWT Sessions
-  const fetchJwtSessions = async () => {
-    setIsLoadingJwt(true);
+  const fetchJwtSessions = useCallback(async () => {
     try {
-      const response = await get('/magic-link/jwt-sessions');
-      if (response && response.data) {
-        setJwtSessions(response.data);
-      } else {
-        // Wenn keine Daten zurückgegeben werden, leeres Array setzen
-        setJwtSessions([]);
-      }
+      setIsLoadingJwt(true);
+      const response = await get('/strapi-plugin-magic-link-v5/jwt-sessions');
+      setJwtSessions(response.data);
     } catch (error) {
-      console.error("Fehler beim Laden der JWT Sessions:", error);
-      // Bei Fehlern leeres Array setzen, damit die UI nicht abstürzt
-      setJwtSessions([]);
+      console.error('Error fetching JWT sessions', error);
       toggleNotification({
-        type: 'warning',
-        message: 'Fehler beim Laden der JWT Sessions'
+        type: 'danger',
+        message: formatMessage({ id: getTrad('tokens.notification.error.jwt'), defaultMessage: 'Failed to fetch JWT sessions' }),
       });
     } finally {
       setIsLoadingJwt(false);
     }
-  };
+  }, [get, toggleNotification, formatMessage]);
 
   // Lade gesperrte IPs
-  const fetchBannedIPs = async () => {
-    setIsLoadingBannedIPs(true);
+  const fetchBannedIPs = useCallback(async () => {
     try {
-      const response = await get('/magic-link/banned-ips');
-      if (response && response.ips) {
-        setBannedIPs(response.ips);
-      } else {
-        setBannedIPs([]);
-      }
+      setIsLoadingBannedIPs(true);
+      const response = await get('/strapi-plugin-magic-link-v5/banned-ips');
+      setBannedIPs(response.data);
     } catch (error) {
-      console.error("Fehler beim Laden der gesperrten IPs:", error);
-      setBannedIPs([]);
+      console.error('Error fetching banned IPs', error);
       toggleNotification({
-        type: 'warning',
-        message: 'Fehler beim Laden der gesperrten IPs'
+        type: 'danger',
+        message: formatMessage({ id: getTrad('tokens.notification.error.ips'), defaultMessage: 'Failed to fetch banned IPs' }),
       });
     } finally {
       setIsLoadingBannedIPs(false);
     }
-  };
+  }, [get, toggleNotification, formatMessage]);
 
   // IP entsperren
-  const unbanIP = async () => {
+  const unbanIP = async (ip) => {
     try {
-      await post('/magic-link/unban-ip', {
-        data: { ip: ipToUnban }
+      await post('/strapi-plugin-magic-link-v5/unban-ip', {
+        data: { ip }
       });
       
       toggleNotification({
         type: 'success',
-        message: `IP ${ipToUnban} wurde entsperrt`
+        message: `IP ${ip} wurde entsperrt`
       });
       
       // IPs neu laden
@@ -179,7 +157,7 @@ const TokensPage = () => {
   // Finde Benutzer anhand der E-Mail
   const findUserByEmail = async (email) => {
     try {
-      const response = await get('/magic-link/user-by-email', {
+      const response = await get('/strapi-plugin-magic-link-v5/user-by-email', {
         params: { email }
       });
       
@@ -249,7 +227,7 @@ const TokensPage = () => {
       }
 
       // Wenn der Benutzer nicht existiert, müssen wir die Plugin-Einstellungen prüfen
-      const settingsResponse = await get('/magic-link/settings');
+      const settingsResponse = await get('/strapi-plugin-magic-link-v5/settings');
       const settings = settingsResponse.data || {};
       
       // Wenn "create_new_user" aktiviert ist, kann trotzdem ein Token erstellt werden
@@ -282,7 +260,7 @@ const TokensPage = () => {
   // Magic Link Token blockieren
   const blockToken = async (tokenId) => {
     try {
-      await post(`/magic-link/tokens/${tokenId}/block`);
+      await post(`/strapi-plugin-magic-link-v5/tokens/${tokenId}/block`);
       
       setTokens(prevTokens => 
         prevTokens.map(token => 
@@ -306,7 +284,7 @@ const TokensPage = () => {
   // Magic Link Token aktivieren
   const activateToken = async (tokenId) => {
     try {
-      await post(`/magic-link/tokens/${tokenId}/activate`);
+      await post(`/strapi-plugin-magic-link-v5/tokens/${tokenId}/activate`);
       
       setTokens(prevTokens => 
         prevTokens.map(token => 
@@ -333,10 +311,10 @@ const TokensPage = () => {
   };
 
   // Gültigkeitsdauer eines Tokens verlängern
-  const extendTokenValidity = async (tokenId, days) => {
+  const extendToken = async (tokenId, additionalTime) => {
     try {
-      const response = await post(`/magic-link/tokens/${tokenId}/extend`, {
-        days: days
+      const response = await post(`/strapi-plugin-magic-link-v5/tokens/${tokenId}/extend`, {
+        data: { additionalTime }
       });
       
       if (response && response.data) {
@@ -354,7 +332,7 @@ const TokensPage = () => {
       
       toggleNotification({
         type: 'success',
-        message: `Gültigkeit des Tokens um ${days} Tage verlängert`
+        message: `Gültigkeit des Tokens um ${additionalTime} Tage verlängert`
       });
     } catch (error) {
       console.error("Fehler beim Verlängern des Tokens:", error);
@@ -366,11 +344,10 @@ const TokensPage = () => {
   };
 
   // Sperre einen JWT-Token
-  const revokeJwtSession = async (session) => {
+  const revokeJwt = async (jwtToken, userId) => {
     try {
-      await post('/magic-link/revoke-jwt', {
-        sessionId: session.id,
-        userId: session.userId
+      await post('/strapi-plugin-magic-link-v5/revoke-jwt', {
+        data: { jwt: jwtToken, userId }
       });
       
       fetchJwtSessions();
@@ -388,11 +365,10 @@ const TokensPage = () => {
   };
 
   // Entsperre einen JWT-Token
-  const unrevokeJwtSession = async (session) => {
+  const unrevokeJwt = async (jwtToken, userId) => {
     try {
-      await post('/magic-link/unrevoke-jwt', {
-        sessionId: session.id,
-        userId: session.userId
+      await post('/strapi-plugin-magic-link-v5/unrevoke-jwt', {
+        data: { jwt: jwtToken, userId }
       });
       
       fetchJwtSessions();
@@ -538,10 +514,10 @@ const TokensPage = () => {
         // Für JWT-Sessions den korrekten Endpunkt verwenden
         await Promise.all(
           selectedTokens.map(sessionId => 
-            post('/magic-link/revoke-jwt', {
-              sessionId: sessionId,
-              // Finde die entsprechende Session, um die userId zu erhalten
-              userId: jwtSessions.find(s => s.id === sessionId)?.userId || ''
+            post('/strapi-plugin-magic-link-v5/revoke-jwt', {
+              data: { 
+                sessionId: sessionId
+              }
             })
           )
         );
@@ -551,7 +527,7 @@ const TokensPage = () => {
         // Für Magic-Link-Tokens den bestehenden Endpunkt verwenden
         await Promise.all(
           selectedTokens.map(tokenId => 
-            del(`/magic-link/tokens/${tokenId}`)
+            delHelper(`/strapi-plugin-magic-link-v5/tokens/${tokenId}`)
           )
         );
         
@@ -573,9 +549,9 @@ const TokensPage = () => {
   };
 
   // IP-Bann Funktion implementieren
-  const banIP = async () => {
+  const banIP = async (ip) => {
     try {
-      if (!ipToBan) {
+      if (!ip) {
         toggleNotification({
           type: 'warning',
           message: 'Bitte gib eine gültige IP-Adresse ein',
@@ -584,13 +560,13 @@ const TokensPage = () => {
       }
 
       // Korrektes Format für die IP-Bann-Anfrage
-      await post('/magic-link/ban-ip', { 
-        data: { ip: ipToBan }
+      await post('/strapi-plugin-magic-link-v5/ban-ip', {
+        data: { ip }
       });
       
       toggleNotification({
         type: 'success',
-        message: `IP ${ipToBan} wurde erfolgreich gebannt`,
+        message: `IP ${ip} wurde erfolgreich gebannt`,
       });
 
       // Aktualisiere die Token-Liste
@@ -610,8 +586,7 @@ const TokensPage = () => {
   // Aufräumen der abgelaufenen Sessions
   const cleanupSessions = async () => {
     try {
-      setIsLoadingJwt(true);
-      const response = await post('/magic-link/cleanup-sessions');
+      const response = await post('/strapi-plugin-magic-link-v5/cleanup-sessions');
       fetchJwtSessions();
       
       toggleNotification({
@@ -624,8 +599,6 @@ const TokensPage = () => {
         type: 'danger',
         message: 'Fehler beim Aufräumen der abgelaufenen Sessions'
       });
-    } finally {
-      setIsLoadingJwt(false);
     }
   };
 

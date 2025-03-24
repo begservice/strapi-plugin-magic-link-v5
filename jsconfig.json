@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "jsx": "react",
+    "paths": {
+      "@strapi/design-system": ["../../node_modules/@strapi/design-system"],
+      "@strapi/strapi": ["../../node_modules/@strapi/strapi"],
+      "@strapi/icons": ["../../node_modules/@strapi/icons"]
+    }
+  },
+  "include": ["admin/src/**/*", "server/src/**/*"],
+  "exclude": ["node_modules", "dist"]
+} 

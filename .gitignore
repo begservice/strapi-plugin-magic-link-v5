@@ -101,7 +101,6 @@ public/uploads/*
 
 dist
 build
-.cache/
 
 
 ############################
@@ -130,10 +129,6 @@ node_modules
 !.yarn/versions
 .pnp.*
 yarn-error.log
-npm-debug.log
-.npmrc
-.yarnrc
-package-lock.json
 
 
 ############################
@@ -141,32 +136,3 @@ package-lock.json
 ############################
 
 coverage
-.nyc_output
-
-
-############################
-# Plugin specific
-############################
-
-# Local development files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Generated documentation
-/docs/generated
-
-# Semantic release
-.release-notes.md
-.semantic-release-prepare.md
-
-# Temporary token files
-/tokens-backup/
-
-# Email templates backup
-/email-templates-backup/
-
-# Generated type definitions
-*.d.ts
-types/

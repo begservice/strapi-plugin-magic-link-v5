@@ -108,11 +108,11 @@ module.exports = {
       const pluginStore = strapi.store({
         environment: '',
         type: 'plugin',
-        name: 'strapi-plugin-magic-link-v5',
+        name: 'magic-link',
       });
       
       // Hole aktuelle JWT-Sessions oder initialisiere leere Liste
-      const jwtSessions = await pluginStore.get({ key: 'jwt_sessions' }) || { sessions: [] };
+      const jwtSessions = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       
       // Erstelle eine neue Session mit einer eindeutigen ID
       const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;

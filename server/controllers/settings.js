@@ -13,7 +13,7 @@ module.exports = {
       const settings = await pluginStore.get();
 
       // Get email plugin settings
-      const emailConfig = strapi.config.get('plugin.email');
+      const emailConfig = strapi.config.get("plugin::email");
       const emailSettings = emailConfig?.settings || {};
 
       // Merge with email plugin settings if values are not set
