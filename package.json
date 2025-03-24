@@ -16,7 +16,8 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "lodash": "^4.17.21",
     "nanoid": "^3.3.4",
-    "semantic": "^0.0.1"
+    "semantic": "^0.0.1",
+    "semantic-release": "^24.2.3"
   },
   "devDependencies": {
     "@strapi/sdk-plugin": "^5.3.2",
