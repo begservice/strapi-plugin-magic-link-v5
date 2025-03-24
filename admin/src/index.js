@@ -1,10 +1,11 @@
-import { prefixPluginTranslations } from '@strapi/strapi/admin';
+// import { prefixPluginTranslations } from '@strapi/strapi/admin';
 import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
 import Initializer from './components/Initializer';
 import PluginIcon from './components/PluginIcon';
 import pluginPermissions from './permissions';
 import getTrad from './utils/getTrad';
+import prefixPluginTranslations from './utils/prefixPluginTranslations';
 
 const name = pluginPkg.strapi.name;
 
