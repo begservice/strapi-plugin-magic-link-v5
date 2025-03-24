@@ -16,7 +16,7 @@ const magicLinkActions = {
       displayName: 'Read',
       uid: 'settings.read',
       subCategory: 'Settings',
-      pluginName: 'magic-link',
+      pluginName: 'strapi-plugin-magic-link-v5',
     },
     {
       // Settings Update
@@ -24,7 +24,7 @@ const magicLinkActions = {
       displayName: 'Edit',
       uid: 'settings.update',
       subCategory: 'Settings',
-      pluginName: 'magic-link',
+      pluginName: 'strapi-plugin-magic-link-v5',
     },
   ],
 };
@@ -33,7 +33,7 @@ module.exports = async ({ strapi }) => {
   const pluginStore = strapi.store({
     environment: '',
     type: 'plugin',
-    name: 'magic-link',
+    name: 'strapi-plugin-magic-link-v5',
   });
   const settings = await pluginStore.get({ key: 'settings' });
 
@@ -91,7 +91,7 @@ Thanks.`,
     if (token && token.startsWith('Bearer ')) {
       try {
         const jwtToken = token.substring(7);
-        const { magicLink } = strapi.plugins['magic-link'].services;
+        const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
         
         // Prüfen, ob der Token gesperrt ist
         const isBlocked = await magicLink.isJwtTokenBlocked(jwtToken);

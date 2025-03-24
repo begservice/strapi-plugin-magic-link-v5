@@ -175,7 +175,7 @@ This link will expire in 1 hour.`,
       await pluginStore.set({ key: 'settings', value: defaultSettings });
 
       // Alle Magic Link Tokens löschen
-      await strapi.db.query('plugin::magic-link.token').deleteMany({
+      await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').deleteMany({
         where: {},
       });
 

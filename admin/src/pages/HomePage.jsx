@@ -354,7 +354,7 @@ const HomePage = () => {
                             variant="default"
                             endIcon={<ArrowRight />}
                             onClick={() => {
-                              window.location.href = '/admin/plugins/magic-link/tokens';
+                              window.location.href = '/admin/plugins/strapi-plugin-magic-link-v5/tokens';
                             }}
                           >
                             Öffnen
@@ -380,7 +380,7 @@ const HomePage = () => {
                             variant="default"
                             endIcon={<ArrowRight />}
                             onClick={() => {
-                              window.location.href = '/admin/settings/magic-link';
+                              window.location.href = '/admin/settings/strapi-plugin-magic-link-v5';
                             }}
                           >
                             Öffnen
@@ -488,7 +488,7 @@ const HomePage = () => {
                           startIcon={<Key />}
                           endIcon={<ArrowRight />}
                           onClick={() => {
-                            window.location.href = '/admin/plugins/magic-link/tokens';
+                            window.location.href = '/admin/plugins/strapi-plugin-magic-link-v5/tokens';
                           }}
                         >
                           Tokens verwalten
@@ -530,7 +530,7 @@ const HomePage = () => {
                           startIcon={<Shield />}
                           endIcon={<ArrowRight />}
                           onClick={() => {
-                            window.location.href = '/admin/settings/magic-link';
+                            window.location.href = '/admin/settings/strapi-plugin-magic-link-v5';
                           }}
                         >
                           Einstellungen öffnen
@@ -624,7 +624,7 @@ const HomePage = () => {
                     <Divider />
                     <Box as="pre" padding={4} background="neutral100" marginTop={4} hasRadius style={{overflow: 'auto'}}>
                       Current Path: {window.location.pathname}<br/>
-                      Plugin ID: magic-link<br/>
+                      Plugin ID: strapi-plugin-magic-link-v5<br/>
                       HomePage Component Status: Loaded<br/>
                       Session Active: Yes<br/>
                       Current Time: {new Date().toLocaleString()}<br/>
