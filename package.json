@@ -47,11 +47,11 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "magic-link",
+    "name": "strapi-plugin-magic-link-v5",
     "displayName": "Magic Link Authentication",
     "description": "This plugin provides passwordless authentication via magic links sent to email"
   },
-  "name": "magic-link",
+  "name": "strapi-plugin-magic-link-v5",
   "description": "This plugin provides passwordless authentication via magic links sent to email",
   "license": "MIT",
   "author": "Schero A. <124470865+begservice@users.noreply.github.com>"
