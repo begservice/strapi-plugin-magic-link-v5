@@ -23,44 +23,24 @@ export default {
       }))
     });
 
-    const plugin = {
+    app.addMenuLink({
+      to: `/plugins/${pluginId}/tokens`,
+      icon: PluginIcon,
+      intlLabel: {
+        id: getTrad('tokens.title'),
+        defaultMessage: 'Magic Link Tokens',
+      },
+      Component: () => import('./pages/Tokens').then(module => ({
+        default: module.default
+      })),
+      isDisplayed: false,
+    });
+
+    app.registerPlugin({
       id: pluginId,
       initializer: Initializer,
       isReady: false,
       name,
-    };
-
-    plugin.routes = [
-      {
-        method: 'GET',
-        path: '/',
-        handler: 'index',
-        config: {
-          policies: [],
-        },
-      },
-      {
-        method: 'GET',
-        path: '/tokens',
-        handler: 'tokens',
-        config: {
-          policies: [],
-        },
-      }
-    ];
-
-    app.registerPlugin(plugin);
-
-    app.createRoute({
-      method: 'GET',
-      path: `/plugins/${pluginId}/tokens`,
-      handler: 'tokens',
-      config: {
-        auth: false,
-      },
-      Component: () => import('./pages/Tokens').then(module => ({
-        default: module.default,
-      })),
     });
 
     app.createSettingSection(
