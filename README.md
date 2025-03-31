@@ -4,7 +4,7 @@ A secure passwordless authentication solution for Strapi, allowing users to log 
 
 ![Magic Link Overview](pics/pic6.png)
 
-## Core Features
+## Core Features!
 
 - **Passwordless Authentication**: Login via secure email links
 - **Token Management**: Admin dashboard for managing and monitoring tokens
@@ -14,7 +14,7 @@ A secure passwordless authentication solution for Strapi, allowing users to log 
 
 ![Core Features](pics/pic7.png)
 
-## Installation
+## Installation!
 
 ```bash
 # Using npm
