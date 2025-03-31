@@ -1,8 +1,7 @@
-import { prefixPluginTranslations } from '@strapi/strapi/admin';
 import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
-import Initializer from './components/Initializer';
-import PluginIcon from './components/PluginIcon';
+import { Initializer } from './components/Initializer';
+import { PluginIcon } from './components/PluginIcon';
 import pluginPermissions from './permissions';
 import getTrad from './utils/getTrad';
 
@@ -68,34 +67,5 @@ export default {
 
   bootstrap() {
     // Nothing to do here
-  },
-
-  async registerTrads({ locales }) {
-    const importedTrads = await Promise.all(
-      locales.map(locale => {
-        try {
-          return import(`./translations/${locale}.json`)
-            .then(({ default: data }) => {
-              return {
-                data: prefixPluginTranslations(data, pluginId),
-                locale,
-              };
-            })
-            .catch(() => {
-              return {
-                data: {},
-                locale,
-              };
-            });
-        } catch (error) {
-          return {
-            data: {},
-            locale,
-          };
-        }
-      })
-    );
-
-    return Promise.resolve(importedTrads);
   },
 };
