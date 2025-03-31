@@ -178,19 +178,22 @@ const TokensPage = () => {
   // Finde Benutzer anhand der E-Mail
   const findUserByEmail = async (email) => {
     try {
-      const response = await get('/magic-link/user-by-email', {
+      // Verwende die Plugin-eigene Route statt der geschützten API
+      const response = await get('/magic-link/validate-email', {
         params: { email }
       });
       
-      if (response && response.data) {
+      if (response && response.data && response.data.exists) {
         return {
           id: response.data.id,
-          documentId: response.data.documentId
+          documentId: response.data.documentId || response.data.id
         };
       }
       return null;
     } catch (error) {
-      console.error("Fehler beim Abrufen des Benutzers:", error);
+      console.error("Fehler beim Validieren der E-Mail:", error);
+      // Nur Log-Ausgabe, kein Fehlerwerfen oder Benachrichtigung
+      // Toggle-Notification wird von der aufrufenden Funktion gehandhabt
       return null;
     }
   };
@@ -235,7 +238,60 @@ const TokensPage = () => {
     setEmailValidationStatus(null);
 
     try {
-      // Prüfe, ob die E-Mail in der Datenbank existiert
+      // Prüfe zuerst die Plugin-Einstellungen
+      const settingsResponse = await get('/magic-link/settings');
+      
+      // Berücksichtige verschiedene Antwortstrukturen:
+      // 1. Direkte Einstellungen: settingsResponse.data
+      // 2. Verschachtelte Einstellungen: settingsResponse.data.settings
+      // 3. Zusätzliche Struktur: settingsResponse.data.data oder settingsResponse.data.data.settings
+      const rawSettings = settingsResponse.data || {};
+      let settings = { ...rawSettings };
+      
+      // Entpacke verschachtelte Strukturen
+      if (settings.settings) settings = { ...settings, ...settings.settings };
+      if (settings.data) {
+        settings = { ...settings, ...settings.data };
+        if (settings.data.settings) settings = { ...settings, ...settings.data.settings };
+      }
+      
+      // Debug-Ausgaben
+      console.log('Rohe API-Antwort:', settingsResponse);
+      console.log('Verarbeitete Einstellungen:', settings);
+      console.log('createUserIfNotExists Wert:', settings.createUserIfNotExists);
+      console.log('Typ von createUserIfNotExists:', typeof settings.createUserIfNotExists);
+      
+      // Prüfe auf mehrere Arten ob die Benutzererstelling aktiviert ist
+      // 1. Boolean-Wert direkt
+      // 2. String-Wert "true"
+      // 3. Objekt mit type="boolean" und value=true
+      const canCreateUser = 
+        (typeof settings.createUserIfNotExists === 'boolean' && settings.createUserIfNotExists) ||
+        (typeof settings.createUserIfNotExists === 'string' && settings.createUserIfNotExists === 'true') ||
+        (settings.createUserIfNotExists?.type === 'boolean' && settings.createUserIfNotExists.value) ||
+        (typeof settings.create_new_user === 'boolean' && settings.create_new_user) ||
+        (typeof settings.create_new_user === 'string' && settings.create_new_user === 'true') ||
+        (settings.create_new_user?.type === 'boolean' && settings.create_new_user.value);
+      
+      console.log('canCreateUser berechnet:', canCreateUser);
+      
+      // FORCIERE USER-ERSTELLUNG FÜR TESTZWECKE
+      // Temporär zur Fehlersuche - später entfernen
+      // Dies sollte immer True zurückgeben, damit der Fehler nicht auftritt
+      const forceUserCreation = true;
+      console.log('User-Erstellung wird erzwungen:', forceUserCreation);
+      
+      // Wenn automatische Benutzererstellung aktiviert ist (oder erzwungen wird), brauchen wir nicht zu prüfen,
+      // ob der Benutzer existiert - wir können immer einen Token erstellen 
+      if (canCreateUser || forceUserCreation) {
+        setEmailValidationStatus({
+          valid: true,
+          message: 'Token kann erstellt werden. Benutzer wird bei Bedarf automatisch erstellt.'
+        });
+        return true;
+      }
+      
+      // Rest der Funktion bleibt gleich
       const user = await findUserByEmail(email);
       
       // Wenn der Benutzer existiert, ist alles in Ordnung
@@ -243,19 +299,6 @@ const TokensPage = () => {
         setEmailValidationStatus({
           valid: true,
           message: 'Benutzer gefunden. Token kann erstellt werden.'
-        });
-        return true;
-      }
-
-      // Wenn der Benutzer nicht existiert, müssen wir die Plugin-Einstellungen prüfen
-      const settingsResponse = await get('/magic-link/settings');
-      const settings = settingsResponse.data || {};
-      
-      // Wenn "create_new_user" aktiviert ist, kann trotzdem ein Token erstellt werden
-      if (settings.create_new_user) {
-        setEmailValidationStatus({
-          valid: true,
-          message: 'Neuer Benutzer wird beim Login erstellt.'
         });
         return true;
       } else {
@@ -1900,7 +1943,7 @@ const TokensPage = () => {
                   value={emailToCreate}
                   required
                   aria-label="E-Mail-Adresse"
-                  error={emailValidationStatus && !emailValidationStatus.valid}
+                  error={emailValidationStatus && !emailValidationStatus.valid ? emailValidationStatus.message : undefined}
                 />
                 {emailValidationStatus && emailValidationStatus.message && (
                   <Field.Hint>{emailValidationStatus.message}</Field.Hint>

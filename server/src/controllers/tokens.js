@@ -103,13 +103,17 @@ module.exports = {
         select: ['id', 'username', 'email'],
       });
 
-      // If user doesn't exist and create_new_user is not enabled, return error
-      if (!user && !settings.create_new_user) {
+      // Verwende den richtigen Einstellungsnamen: createUserIfNotExists anstatt create_new_user
+      // Prüfe sowohl auf den neuen als auch auf den alten Namen für Abwärtskompatibilität
+      const canCreateUser = settings.createUserIfNotExists || settings.create_new_user;
+
+      // If user doesn't exist and automatic creation is not enabled, return error
+      if (!user && !canCreateUser) {
         return ctx.badRequest('User does not exist and automatic user creation is disabled');
       }
 
       // If user doesn't exist, create a new one
-      if (!user && settings.create_new_user) {
+      if (!user && canCreateUser) {
         // Generate a random username based on the email
         const username = email.split('@')[0] + Math.floor(Math.random() * 10000);
         
@@ -426,20 +430,58 @@ module.exports = {
         return ctx.badRequest('Email is required');
       }
 
-      // Find the user
+      // Überprüfe, ob die Plugin-Einstellungen das Erstellen neuer Benutzer erlauben
+      const pluginStore = strapi.store({
+        environment: '',
+        type: 'plugin',
+        name: 'magic-link',
+      });
+      
+      const settings = await pluginStore.get({ key: 'settings' });
+      
+      // Find the user - Entferne UUID aus der Abfrage, damit es in Strapi v5 funktioniert
       const user = await strapi.db.query('plugin::users-permissions.user').findOne({
         where: { email },
-        select: ['id', 'username', 'email', 'confirmed', 'blocked', 'documentId', 'UUID'],
+        select: ['id', 'username', 'email', 'confirmed', 'blocked', 'documentId'],
       });
 
       if (!user) {
-        return ctx.notFound('User not found');
+        // Mit createUserIfNotExists-Option kann die API weiterhin true zurückgeben
+        if (settings && settings.createUserIfNotExists) {
+          return { 
+            exists: false, 
+            canBeCreated: true,
+            autoCreationEnabled: true
+          };
+        }
+        
+        return {
+          exists: false,
+          canBeCreated: false,
+          autoCreationEnabled: false
+        };
       }
 
-      return user;
+      // Sicheres Benutzerobjekt ohne sensible Daten
+      return {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        documentId: user.documentId || null,
+        exists: true
+      };
     } catch (error) {
+      console.error("Error finding user by email:", error);
       ctx.throw(500, error);
     }
+  },
+
+  /**
+   * Validiert eine E-Mail (Alias für Frontend-Aufrufe)
+   * @param {Object} ctx - The request context
+   */
+  async validateEmail(ctx) {
+    return this.findUserByEmail(ctx);
   },
 
   /**
@@ -589,7 +631,8 @@ module.exports = {
       let configPoints = 0;
       
       // Ist das Auto-Create-User Feature deaktiviert? (sicherer)
-      if (settings.create_new_user === false) configPoints += 10;
+      // Prüfe sowohl auf den neuen als auch auf den alten Namen für Abwärtskompatibilität
+      if (settings.createUserIfNotExists === false && settings.create_new_user === false) configPoints += 10;
       
       // Ist das Email-Send Feature aktiviert? (sicherer)
       if (settings.enabled === true) configPoints += 5;

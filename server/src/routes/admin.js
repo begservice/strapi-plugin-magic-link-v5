@@ -51,6 +51,14 @@ module.exports = {
       },
     },
     {
+      method: 'GET',
+      path: '/validate-email',
+      handler: 'tokens.validateEmail',
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: 'POST',
       path: '/tokens/:id/block',
       handler: 'tokens.block',

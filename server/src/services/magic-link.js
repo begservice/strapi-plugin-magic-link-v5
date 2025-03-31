@@ -62,16 +62,31 @@ module.exports = ({ strapi }) => ({
   async user(email, username) {
     const settings = await this.settings();
     const createUserIfNotExists = settings.createUserIfNotExists;
+    
+    // --- DEBUG LOGGING START ---
+    strapi.log.info(`[MagicLink Service - user function] Checking user: ${email || username}`);
+    strapi.log.info(`[MagicLink Service - user function] createUserIfNotExists setting value: ${createUserIfNotExists} (Type: ${typeof createUserIfNotExists})`);
+    // --- DEBUG LOGGING END ---
 
     const user = await strapi.query('plugin::users-permissions.user').findOne({
       where: email ? { email } : { username },
     });
+    
+    // --- DEBUG LOGGING START ---
+    strapi.log.info(`[MagicLink Service - user function] User found: ${!!user}`);
+    // --- DEBUG LOGGING END ---
 
     if (!user && !createUserIfNotExists) {
-      throw new Error('User not found');
+      // --- DEBUG LOGGING START ---
+      strapi.log.warn(`[MagicLink Service - user function] User not found AND createUserIfNotExists is false. Throwing error.`);
+      // --- DEBUG LOGGING END ---
+      throw new Error('User not found and auto-creation disabled.'); // Slightly more specific error
     }
 
     if (!user && createUserIfNotExists) {
+      // --- DEBUG LOGGING START ---
+      strapi.log.info(`[MagicLink Service - user function] User not found BUT createUserIfNotExists is true. Creating user...`);
+      // --- DEBUG LOGGING END ---
       const newUser = await this.createUser({
         email,
         username: username || email.split('@')[0],

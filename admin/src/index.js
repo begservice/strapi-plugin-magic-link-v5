@@ -1,7 +1,7 @@
 import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
 import { Initializer } from './components/Initializer';
-import { PluginIcon } from './components/PluginIcon';
+import { Dashboard, Key } from '@strapi/icons';
 import pluginPermissions from './permissions';
 import getTrad from './utils/getTrad';
 
@@ -11,10 +11,10 @@ export default {
   register(app) {
     app.addMenuLink({
       to: `/plugins/${pluginId}`,
-      icon: PluginIcon,
+      icon: Dashboard,
       intlLabel: {
         id: `${pluginId}.plugin.name`,
-        defaultMessage: name,
+        defaultMessage: 'Magic Link Dashboard',
       },
       Component: () => import('./pages/HomePage').then(module => ({
         default: module.default
@@ -23,7 +23,7 @@ export default {
 
     app.addMenuLink({
       to: `/plugins/${pluginId}/tokens`,
-      icon: PluginIcon,
+      icon: Key,
       intlLabel: {
         id: getTrad('tokens.title'),
         defaultMessage: 'Magic Link Tokens',
