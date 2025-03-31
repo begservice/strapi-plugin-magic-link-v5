@@ -22,6 +22,7 @@ import {
   Modal,
   Field,
   useField,
+  Grid,
 } from '@strapi/design-system';
 import { useFetchClient, useNotification, useFetchClient as useFetchClientHelper } from '@strapi/strapi/admin';
 import { 
@@ -275,15 +276,9 @@ const TokensPage = () => {
       
       console.log('canCreateUser berechnet:', canCreateUser);
       
-      // FORCIERE USER-ERSTELLUNG FÜR TESTZWECKE
-      // Temporär zur Fehlersuche - später entfernen
-      // Dies sollte immer True zurückgeben, damit der Fehler nicht auftritt
-      const forceUserCreation = true;
-      console.log('User-Erstellung wird erzwungen:', forceUserCreation);
-      
-      // Wenn automatische Benutzererstellung aktiviert ist (oder erzwungen wird), brauchen wir nicht zu prüfen,
+      // Wenn automatische Benutzererstellung aktiviert ist, brauchen wir nicht zu prüfen,
       // ob der Benutzer existiert - wir können immer einen Token erstellen 
-      if (canCreateUser || forceUserCreation) {
+      if (canCreateUser) {
         setEmailValidationStatus({
           valid: true,
           message: 'Token kann erstellt werden. Benutzer wird bei Bedarf automatisch erstellt.'
@@ -677,6 +672,13 @@ const TokensPage = () => {
       // Validiere zuerst die E-Mail
       const isValid = await validateEmail(emailToCreate);
       if (!isValid) {
+        // Zeige die Validierungsfehlermeldung, falls vorhanden
+        if (emailValidationStatus && emailValidationStatus.message) {
+          toggleNotification({
+            type: 'warning',
+            message: emailValidationStatus.message
+          });
+        }
         return; // Beende die Funktion, wenn die E-Mail nicht gültig ist
       }
 
@@ -718,9 +720,14 @@ const TokensPage = () => {
       fetchTokens(); // Token-Liste aktualisieren
     } catch (error) {
       console.error('Fehler beim Erstellen des Tokens:', error);
+      // Zeige die spezifische Fehlermeldung vom Backend an
+      const errorMessage = error.response?.data?.error?.message || 
+                         error.response?.data?.message || 
+                         'Fehler beim Erstellen des Tokens';
       toggleNotification({
         type: 'danger',
-        message: error.response?.data?.message || 'Fehler beim Erstellen des Tokens',
+        // message: error.response?.data?.message || 'Fehler beim Erstellen des Tokens',
+        message: errorMessage,
       });
     } finally {
       setIsCreating(false);
@@ -2032,6 +2039,7 @@ const TokensPage = () => {
               <Modal.Title>Token Details</Modal.Title>
             </Modal.Header>
             <Modal.Body>
+              {/* Fallback auf Flex-Layout, da Grid Probleme verursacht */}
               <Box background="neutral100" padding={4} hasRadius style={{ marginBottom: '24px' }}>
                 <Typography variant="beta" textColor="primary600" style={{ marginBottom: '12px' }}>
                   Allgemeine Informationen
@@ -2178,34 +2186,32 @@ const TokensPage = () => {
                 </Box>
               )}
 
-              {/* Context JSON Feld */}
-              {selectedToken.context && (
-                <Box background="neutral100" padding={4} hasRadius>
-                  <Typography variant="beta" textColor="primary600" style={{ marginBottom: '12px' }}>
-                    Context Daten
-                  </Typography>
-                  <Box padding={3} background="neutral0" hasRadius shadow="filterShadow">
-                    <Typography variant="delta" fontWeight="bold" textColor="neutral800">Context JSON</Typography>
-                    <Box 
-                      marginTop={2} 
-                      background="neutral150" 
-                      padding={3} 
-                      hasRadius 
-                      style={{ 
-                        wordBreak: 'break-all',
-                        maxHeight: '200px',
-                        overflow: 'auto'
-                      }}
-                    >
-                      <Typography variant="pi" fontFamily="monospace">
-                        {typeof selectedToken.context === 'object' 
-                          ? JSON.stringify(selectedToken.context, null, 2) 
-                          : selectedToken.context || '{}'
-                        }
-                      </Typography>
+              {selectedToken.context && Object.keys(selectedToken.context).length > 0 && (
+                 <Box background="neutral100" padding={4} hasRadius>
+                   <Typography variant="beta" textColor="primary600" style={{ marginBottom: '12px' }}>
+                     Context Daten
+                   </Typography>
+                   <Box padding={3} background="neutral0" hasRadius shadow="filterShadow">
+                     <Typography variant="delta" fontWeight="bold" textColor="neutral800">Context JSON</Typography>
+                      <Box 
+                        background="neutral150" 
+                        padding={3} 
+                        hasRadius 
+                        style={{ 
+                          wordBreak: 'break-all',
+                          maxHeight: '200px',
+                          overflow: 'auto'
+                        }}
+                      >
+                        <Typography variant="pi" fontFamily="monospace">
+                          {typeof selectedToken.context === 'object' 
+                            ? JSON.stringify(selectedToken.context, null, 2) 
+                            : selectedToken.context
+                          }
+                        </Typography>
+                      </Box>
                     </Box>
                   </Box>
-                </Box>
               )}
             </Modal.Body>
             <Modal.Footer>

@@ -1,7 +1,7 @@
 import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
 import { Initializer } from './components/Initializer';
-import { Dashboard, Key } from '@strapi/icons';
+import { Faders, Key } from '@strapi/icons';
 import pluginPermissions from './permissions';
 import getTrad from './utils/getTrad';
 
@@ -11,7 +11,7 @@ export default {
   register(app) {
     app.addMenuLink({
       to: `/plugins/${pluginId}`,
-      icon: Dashboard,
+      icon: Faders,
       intlLabel: {
         id: `${pluginId}.plugin.name`,
         defaultMessage: 'Magic Link Dashboard',

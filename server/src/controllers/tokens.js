@@ -97,11 +97,22 @@ module.exports = {
       
       const settings = await pluginStore.get({ key: 'settings' });
       
+      // --- DEBUG LOGGING START ---
+      strapi.log.info('[MagicLink Controller - create function] Loaded settings from store:', settings);
+      // --- DEBUG LOGGING END ---
+      
       // Find the user
       let user = await strapi.db.query('plugin::users-permissions.user').findOne({
         where: { email },
         select: ['id', 'username', 'email'],
       });
+
+      // --- DEBUG LOGGING START ---
+      strapi.log.info(`[MagicLink Controller - create function] Checking user existence for: ${email}`);
+      strapi.log.info(`[MagicLink Controller - create function] User found: ${!!user}`);
+      strapi.log.info(`[MagicLink Controller - create function] Value of createUserIfNotExists from settings: ${settings.createUserIfNotExists}`);
+      strapi.log.info(`[MagicLink Controller - create function] Value of create_new_user from settings: ${settings.create_new_user}`);
+      // --- DEBUG LOGGING END ---
 
       // Verwende den richtigen Einstellungsnamen: createUserIfNotExists anstatt create_new_user
       // Prüfe sowohl auf den neuen als auch auf den alten Namen für Abwärtskompatibilität
@@ -109,11 +120,17 @@ module.exports = {
 
       // If user doesn't exist and automatic creation is not enabled, return error
       if (!user && !canCreateUser) {
+        // --- DEBUG LOGGING START ---
+        strapi.log.warn(`[MagicLink Controller - create function] User does not exist AND canCreateUser is false. Returning Bad Request.`);
+        // --- DEBUG LOGGING END ---
         return ctx.badRequest('User does not exist and automatic user creation is disabled');
       }
 
       // If user doesn't exist, create a new one
       if (!user && canCreateUser) {
+        // --- DEBUG LOGGING START ---
+        strapi.log.info(`[MagicLink Controller - create function] User does not exist BUT canCreateUser is true. Attempting to create user...`);
+        // --- DEBUG LOGGING END ---
         // Generate a random username based on the email
         const username = email.split('@')[0] + Math.floor(Math.random() * 10000);
         

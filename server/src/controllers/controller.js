@@ -68,13 +68,16 @@ module.exports = {
     const { body } = ctx.request;
 
     try {
-      // Stelle sicher, dass alle Boolean-Werte korrekt formatiert sind
-      const processedBody = { ...body };
+      // Extrahiere die tatsächlichen Einstellungen, prüfe ob sie direkt im Body oder in body.settings liegen
+      let settingsToProcess = body.settings ? { ...body.settings } : { ...body };
       
-      // Entferne verschachtelte settings-Objekte, falls vorhanden
-      if (processedBody && processedBody.settings) {
-        delete processedBody.settings;
+      // Entferne vorsichtshalber nochmals verschachtelte settings
+      if (settingsToProcess.settings) {
+          delete settingsToProcess.settings;
       }
+      
+      // Stelle sicher, dass alle Boolean-Werte korrekt formatiert sind
+      const processedBody = { ...settingsToProcess };
       
       // Verarbeite alle Eigenschaften, die als Boolean behandelt werden sollten
       const booleanFields = [
