@@ -89,7 +89,7 @@ module.exports = ({ strapi }) => ({
     const expires = new Date();
     expires.setHours(expires.getHours() + 1);
 
-    const tokenObject = await strapi.query('plugin::strapi-plugin-magic-link-v5.token').create({
+    const tokenObject = await strapi.query('plugin::magic-link.token').create({
       data: {
         email,
         token,
@@ -103,7 +103,7 @@ module.exports = ({ strapi }) => ({
   },
 
   async fetchToken(token) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
+    return strapi.query('plugin::magic-link.token').findOne({
       where: { token },
     });
   },
@@ -128,20 +128,39 @@ module.exports = ({ strapi }) => ({
   },
 
   async deactivateToken(token) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').update({
+    return strapi.query('plugin::magic-link.token').update({
       where: { id: token.id },
       data: { is_active: false },
     });
   },
 
   async updateTokenOnLogin(token, requestInfo = null) {
-    return strapi.query('plugin::strapi-plugin-magic-link-v5.token').update({
+    const settings = await this.settings();
+    const staysValid = settings.stays_valid;
+    const storeLoginInfo = settings.store_login_info;
+
+    // Prepare data to update
+    const updateData = { 
+      is_active: staysValid 
+    };
+
+    // Store login information if enabled
+    if (storeLoginInfo && requestInfo) {
+      updateData.last_used_at = new Date();
+      
+      if (requestInfo.userAgent) {
+        updateData.user_agent = requestInfo.userAgent;
+      }
+      
+      if (requestInfo.ipAddress) {
+        updateData.ip_address = requestInfo.ipAddress;
+      }
+    }
+
+    // Update token in database
+    return strapi.query('plugin::magic-link.token').update({
       where: { id: token.id },
-      data: {
-        last_used_at: new Date(),
-        last_used_ip: requestInfo?.ipAddress,
-        user_agent: requestInfo?.userAgent,
-      },
+      data: updateData
     });
   },
 

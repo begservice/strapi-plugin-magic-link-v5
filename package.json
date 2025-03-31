@@ -8,16 +8,14 @@
     "./strapi-server": "./server/src/index.js"
   },
   "scripts": {
-    "build": "strapi-plugin build",
+    "build": "node build.js",
     "dev": "strapi-plugin watch",
     "watch": "strapi-plugin watch"
   },
   "dependencies": {
     "@fortawesome/react-fontawesome": "^0.2.2",
-    "chalk": "^5.4.1",
     "lodash": "^4.17.21",
-    "nanoid": "^3.3.4",
-    "semantic-release": "^24.2.3"
+    "nanoid": "^3.3.4"
   },
   "devDependencies": {
     "@strapi/sdk-plugin": "^5.3.2",
@@ -47,7 +45,7 @@
   },
   "strapi": {
     "kind": "plugin",
-    "name": "strapi-plugin-magic-link-v5",
+    "name": "magic-link",
     "displayName": "Magic Link Authentication",
     "description": "This plugin provides passwordless authentication via magic links sent to email"
   },

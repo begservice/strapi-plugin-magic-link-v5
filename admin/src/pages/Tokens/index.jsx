@@ -63,9 +63,6 @@ const TokensPage = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [emailToCreate, setEmailToCreate] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showCreateTokenModal, setShowCreateTokenModal] = useState(false);
-  const [newTokenEmail, setNewTokenEmail] = useState('');
-  const [newTokenExpireDays, setNewTokenExpireDays] = useState('30');
   const [showTokenDetailModal, setShowTokenDetailModal] = useState(false);
   const [selectedToken, setSelectedToken] = useState(null);
   const [extensionDays, setExtensionDays] = useState(7); // Standardwert für Verlängerung: 7 Tage
@@ -82,7 +79,7 @@ const TokensPage = () => {
   const fetchTokens = async () => {
     setIsLoading(true);
     try {
-      const response = await get(`/strapi-plugin-magic-link-v5/tokens`);
+      const response = await get('/magic-link/tokens');
       // Die Struktur der Antwort hat sich geändert, prüfe auf response.data.data
       if (response && response.data) {
         // Wenn response.data ein Objekt mit data-Eigenschaft ist (neue Struktur)
@@ -111,7 +108,7 @@ const TokensPage = () => {
   const fetchJwtSessions = async () => {
     setIsLoadingJwt(true);
     try {
-      const response = await get(`/strapi-plugin-magic-link-v5/jwt-sessions`);
+      const response = await get('/magic-link/jwt-sessions');
       if (response && response.data) {
         setJwtSessions(response.data);
       } else {
@@ -135,7 +132,7 @@ const TokensPage = () => {
   const fetchBannedIPs = async () => {
     setIsLoadingBannedIPs(true);
     try {
-      const response = await get(`/strapi-plugin-magic-link-v5/banned-ips`);
+      const response = await get('/magic-link/banned-ips');
       if (response && response.ips) {
         setBannedIPs(response.ips);
       } else {
@@ -156,34 +153,44 @@ const TokensPage = () => {
   // IP entsperren
   const unbanIP = async () => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/unban-ip`, { data: { ip: ipToUnban } });
+      await post('/magic-link/unban-ip', {
+        data: { ip: ipToUnban }
+      });
+      
       toggleNotification({
         type: 'success',
-        message: `IP ${ipToUnban} wurde erfolgreich entsperrt`
+        message: `IP ${ipToUnban} wurde entsperrt`
       });
-      setShowIPUnbanModal(false);
+      
+      // IPs neu laden
+      fetchBannedIPs();
       setIpToUnban('');
-      await fetchBannedIPs(); // Liste der gesperrten IPs aktualisieren
+      setShowIPUnbanModal(false);
     } catch (error) {
       console.error("Fehler beim Entsperren der IP:", error);
       toggleNotification({
         type: 'warning',
-        message: `Fehler beim Entsperren der IP ${ipToUnban}`
+        message: 'Fehler beim Entsperren der IP'
       });
     }
   };
 
-  // Benutzer anhand der E-Mail finden
+  // Finde Benutzer anhand der E-Mail
   const findUserByEmail = async (email) => {
     try {
-      const response = await get(`/strapi-plugin-magic-link-v5/user-by-email?email=${encodeURIComponent(email)}`);
-      return response.data;
-    } catch (error) {
-      console.error("Fehler beim Suchen des Benutzers:", error);
-      toggleNotification({
-        type: 'warning',
-        message: `Benutzer mit der E-Mail ${email} wurde nicht gefunden`
+      const response = await get('/magic-link/user-by-email', {
+        params: { email }
       });
+      
+      if (response && response.data) {
+        return {
+          id: response.data.id,
+          documentId: response.data.documentId
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error("Fehler beim Abrufen des Benutzers:", error);
       return null;
     }
   };
@@ -274,18 +281,23 @@ const TokensPage = () => {
   // Magic Link Token blockieren
   const blockToken = async (tokenId) => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/tokens/${tokenId}/block`);
+      await post(`/magic-link/tokens/${tokenId}/block`);
+      
+      setTokens(prevTokens => 
+        prevTokens.map(token => 
+          token.id === tokenId ? { ...token, is_active: false } : token
+        )
+      );
+      
       toggleNotification({
         type: 'success',
-        message: 'Token wurde erfolgreich gesperrt'
+        message: 'Token erfolgreich blockiert'
       });
-      // Liste der Tokens aktualisieren
-      fetchTokens();
     } catch (error) {
-      console.error("Fehler beim Sperren des Tokens:", error);
+      console.error("Fehler beim Blockieren des Tokens:", error);
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Sperren des Tokens'
+        message: 'Fehler beim Blockieren des Tokens'
       });
     }
   };
@@ -293,13 +305,23 @@ const TokensPage = () => {
   // Magic Link Token aktivieren
   const activateToken = async (tokenId) => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/tokens/${tokenId}/activate`);
+      await post(`/magic-link/tokens/${tokenId}/activate`);
+      
+      setTokens(prevTokens => 
+        prevTokens.map(token => 
+          token.id === tokenId ? { ...token, is_active: true } : token
+        )
+      );
+      
+      // Falls der Token im Detail-Modal angezeigt wird, aktualisieren wir auch diesen
+      if (selectedToken && selectedToken.id === tokenId) {
+        setSelectedToken({ ...selectedToken, is_active: true });
+      }
+      
       toggleNotification({
         type: 'success',
-        message: 'Token wurde erfolgreich aktiviert'
+        message: 'Token erfolgreich aktiviert'
       });
-      // Liste der Tokens aktualisieren
-      fetchTokens();
     } catch (error) {
       console.error("Fehler beim Aktivieren des Tokens:", error);
       toggleNotification({
@@ -309,69 +331,79 @@ const TokensPage = () => {
     }
   };
 
-  // Token-Gültigkeit verlängern
+  // Gültigkeitsdauer eines Tokens verlängern
   const extendTokenValidity = async (tokenId, days) => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/tokens/${tokenId}/extend`, { days });
+      const response = await post(`/magic-link/tokens/${tokenId}/extend`, {
+        days: days
+      });
+      
+      if (response && response.data) {
+        setTokens(prevTokens => 
+          prevTokens.map(token => 
+            token.id === tokenId ? { ...token, expires_at: response.data.expires_at } : token
+          )
+        );
+        
+        // Falls der Token im Detail-Modal angezeigt wird, aktualisieren wir auch diesen
+        if (selectedToken && selectedToken.id === tokenId) {
+          setSelectedToken({ ...selectedToken, expires_at: response.data.expires_at });
+        }
+      }
+      
       toggleNotification({
         type: 'success',
-        message: `Token-Gültigkeit wurde um ${days} Tage verlängert`
+        message: `Gültigkeit des Tokens um ${days} Tage verlängert`
       });
-      // Liste der Tokens aktualisieren
-      fetchTokens();
     } catch (error) {
-      console.error("Fehler beim Verlängern der Token-Gültigkeit:", error);
+      console.error("Fehler beim Verlängern des Tokens:", error);
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Verlängern der Token-Gültigkeit'
+        message: 'Fehler beim Verlängern der Gültigkeit'
       });
     }
   };
 
-  // JWT-Session widerrufen
+  // Sperre einen JWT-Token
   const revokeJwtSession = async (session) => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/revoke-jwt`, { 
-        jti: session.jti, 
-        userId: session.user?.id 
+      await post('/magic-link/revoke-jwt', {
+        sessionId: session.id,
+        userId: session.userId
       });
       
+      fetchJwtSessions();
       toggleNotification({
         type: 'success',
-        message: 'JWT-Session wurde erfolgreich widerrufen'
+        message: 'Session wurde erfolgreich gesperrt'
       });
-      
-      // Liste der JWT-Sessions aktualisieren
-      fetchJwtSessions();
     } catch (error) {
-      console.error("Fehler beim Widerrufen der JWT-Session:", error);
+      console.error("Fehler beim Sperren:", error);
       toggleNotification({
-        type: 'warning',
-        message: 'Fehler beim Widerrufen der JWT-Session'
+        type: 'danger',
+        message: 'Fehler beim Sperren der Session'
       });
     }
   };
 
-  // JWT-Session-Widerruf aufheben
+  // Entsperre einen JWT-Token
   const unrevokeJwtSession = async (session) => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/unrevoke-jwt`, { 
-        jti: session.jti,
-        userId: session.user?.id 
+      await post('/magic-link/unrevoke-jwt', {
+        sessionId: session.id,
+        userId: session.userId
       });
       
+      fetchJwtSessions();
       toggleNotification({
         type: 'success',
-        message: 'JWT-Session wurde erfolgreich wiederhergestellt'
+        message: 'Session wurde erfolgreich entsperrt'
       });
-      
-      // Liste der JWT-Sessions aktualisieren
-      fetchJwtSessions();
     } catch (error) {
-      console.error("Fehler beim Wiederherstellen der JWT-Session:", error);
+      console.error("Fehler beim Entsperren:", error);
       toggleNotification({
-        type: 'warning',
-        message: 'Fehler beim Wiederherstellen der JWT-Session'
+        type: 'danger',
+        message: 'Fehler beim Entsperren der Session'
       });
     }
   };
@@ -542,23 +574,34 @@ const TokensPage = () => {
   // IP-Bann Funktion implementieren
   const banIP = async () => {
     try {
-      await post(`/strapi-plugin-magic-link-v5/ban-ip`, { data: { ip: ipToBan } });
+      if (!ipToBan) {
+        toggleNotification({
+          type: 'warning',
+          message: 'Bitte gib eine gültige IP-Adresse ein',
+        });
+        return;
+      }
+
+      // Korrektes Format für die IP-Bann-Anfrage
+      await post('/magic-link/ban-ip', { 
+        data: { ip: ipToBan }
+      });
       
       toggleNotification({
         type: 'success',
-        message: `IP ${ipToBan} wurde erfolgreich gesperrt`
+        message: `IP ${ipToBan} wurde erfolgreich gebannt`,
       });
-      
+
+      // Aktualisiere die Token-Liste
+      await fetchTokens();
       setShowIPBanModal(false);
       setIpToBan('');
       
-      // Liste der gesperrten IPs aktualisieren
-      await fetchBannedIPs();
     } catch (error) {
-      console.error("Fehler beim Sperren der IP:", error);
+      console.error('IP-Bann fehlgeschlagen:', error);
       toggleNotification({
-        type: 'warning',
-        message: `Fehler beim Sperren der IP ${ipToBan}`
+        type: 'danger',
+        message: error.response?.data?.message || 'Fehler beim Bannen der IP',
       });
     }
   };
@@ -588,55 +631,56 @@ const TokensPage = () => {
   // Neue Funktion zum Erstellen eines Tokens
   const createToken = async () => {
     try {
-      if (!newTokenEmail) {
-        toggleNotification({
-          type: 'warning',
-          message: 'Bitte geben Sie eine E-Mail an'
-        });
-        return;
+      // Validiere zuerst die E-Mail
+      const isValid = await validateEmail(emailToCreate);
+      if (!isValid) {
+        return; // Beende die Funktion, wenn die E-Mail nicht gültig ist
       }
+
+      setIsCreating(true);
       
-      // Parse jsonContext
-      let parsedJsonData = null;
-      if (jsonContext && jsonContext.trim() !== '') {
+      // Parse den JSON-Kontext, falls vorhanden
+      let parsedContext = {};
+      if (jsonContext.trim()) {
         try {
-          parsedJsonData = JSON.parse(jsonContext);
+          parsedContext = JSON.parse(jsonContext);
         } catch (e) {
           toggleNotification({
             type: 'warning',
-            message: 'Der JSON-Kontext ist nicht gültig'
+            message: 'Der JSON-Kontext ist nicht gültig. Bitte korrigieren Sie das Format.',
           });
+          setIsCreating(false);
           return;
         }
       }
       
-      // Sende Anfrage zum Erstellen des Tokens
-      await post(`/strapi-plugin-magic-link-v5/tokens`, {
-        email: newTokenEmail,
-        expires_in: parseInt(newTokenExpireDays) || 30,
-        context: parsedJsonData,
-        send_email: true
+      // Erstelle den Token mit allen Parametern
+      const { data } = await post('/magic-link/tokens', { 
+        email: emailToCreate,
+        send_email: sendEmail,
+        context: parsedContext
       });
       
       toggleNotification({
         type: 'success',
-        message: `Neuer Token für ${newTokenEmail} wurde erstellt`
+        message: `Token für ${emailToCreate} wurde erstellt!`,
       });
       
-      // Modal schließen und Formular zurücksetzen
-      setShowCreateTokenModal(false);
-      setNewTokenEmail('');
-      setNewTokenExpireDays('30');
+      // Zurücksetzen der Felder
+      setEmailToCreate('');
       setJsonContext('');
+      setSendEmail(true);
+      setEmailValidationStatus(null);
       
-      // Liste der Tokens aktualisieren
-      fetchTokens();
+      fetchTokens(); // Token-Liste aktualisieren
     } catch (error) {
-      console.error("Fehler beim Erstellen des Tokens:", error);
+      console.error('Fehler beim Erstellen des Tokens:', error);
       toggleNotification({
-        type: 'warning',
-        message: 'Fehler beim Erstellen des Tokens'
+        type: 'danger',
+        message: error.response?.data?.message || 'Fehler beim Erstellen des Tokens',
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -836,22 +880,13 @@ const TokensPage = () => {
             >
               Aktualisieren
             </Button>
-            <Flex>
-              <Button
-                onClick={() => window.location.href = '/admin/plugins/strapi-plugin-magic-link-v5'}
-                variant="tertiary"
-                startIcon={<ArrowLeft />}
-              >
-                Zurück
-              </Button>
-              <Button 
-                onClick={() => setShowCreateTokenModal(true)}
-                variant="default"
-                startIcon={<Plus />}
-              >
-                Token erstellen
-              </Button>
-            </Flex>
+            <Button
+              variant="secondary"
+              startIcon={<ArrowLeft fill="neutral600" />}
+              onClick={() => window.location.href = '/admin/plugins/magic-link'}
+            >
+              Zurück
+            </Button>
           </Flex>
         </Flex>
       </Box>
@@ -1815,15 +1850,13 @@ const TokensPage = () => {
           </Modal.Header>
           <Modal.Body>
             <Flex direction="column" gap={2}>
-              <Field.Root name="ip">
-                <Field.Label>IP-Adresse</Field.Label>
-                <Field.Input
-                  placeholder="z.B. 192.168.1.1"
-                  value={ipToBan}
-                  onChange={(e) => setIpToBan(e.target.value)}
-                />
-                <Field.Hint>Geben Sie die zu bannende IP-Adresse ein</Field.Hint>
-              </Field.Root>
+              <TextInput
+                name="ip"
+                label="IP-Adresse"
+                value={ipToBan}
+                onChange={(e) => setIpToBan(e.target.value)}
+                placeholder="z.B. 192.168.1.1"
+              />
             </Flex>
           </Modal.Body>
           <Modal.Footer>
@@ -1844,37 +1877,72 @@ const TokensPage = () => {
       <Modal.Root open={showCreateModal} onOpenChange={setShowCreateModal}>
         <Modal.Content>
           <Modal.Header>
-            <Modal.Title>Magic Link Token erstellen</Modal.Title>
-            <Modal.SubTitle>Erstellen Sie einen Token für einen Benutzer</Modal.SubTitle>
+            <Modal.Title>Neuen Token erstellen</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Box paddingTop={2}>
-              <Field.Root name="email-create">
-                <Field.Label>E-Mail</Field.Label>
+              <Field.Root 
+                name="email" 
+                id="email" 
+                required
+                hint={emailValidationStatus ? emailValidationStatus.message : "Die E-Mail-Adresse für den neuen Token"}
+                error={emailValidationStatus && !emailValidationStatus.valid ? emailValidationStatus.message : null}
+              >
+                <Field.Label>E-Mail-Adresse*</Field.Label>
                 <Field.Input
                   type="email"
-                  placeholder="email@example.com"
+                  placeholder="benutzer@beispiel.de"
+                  name="email"
+                  onChange={(e) => {
+                    setEmailToCreate(e.target.value);
+                    setEmailValidationStatus(null);
+                  }}
                   value={emailToCreate}
-                  onChange={(e) => setEmailToCreate(e.target.value)}
-                  aria-label="E-Mail für den neuen Token"
+                  required
+                  aria-label="E-Mail-Adresse"
+                  error={emailValidationStatus && !emailValidationStatus.valid}
                 />
-                <Field.Hint>Die E-Mail des Benutzers, für den der Token erstellt werden soll</Field.Hint>
+                {emailValidationStatus && emailValidationStatus.message && (
+                  <Field.Hint>{emailValidationStatus.message}</Field.Hint>
+                )}
+                {emailValidationStatus && !emailValidationStatus.valid && (
+                  <Field.Error>{emailValidationStatus.message}</Field.Error>
+                )}
               </Field.Root>
-            </Box>
-            
-            <Box paddingTop={4}>
-              <Field.Root name="send-email">
-                <Flex gap={2} alignItems="center">
+              
+              <Box paddingTop={4}>
+                <Field.Root 
+                  name="json-context" 
+                  id="json-context" 
+                >
+                  <Field.Label>JSON-Kontext</Field.Label>
                   <Field.Input
-                    type="checkbox"
-                    id="send-email"
-                    name="send-email"
-                    checked={sendEmail}
-                    onChange={(e) => setSendEmail(e.target.checked)}
+                    as="textarea"
+                    placeholder='{"key": "value"}'
+                    name="json-context"
+                    onChange={(e) => setJsonContext(e.target.value)}
+                    value={jsonContext}
+                    aria-label="JSON-Kontext"
+                    style={{ height: '80px', fontFamily: 'monospace' }}
                   />
-                  <Field.Label htmlFor="send-email">E-Mail mit Magic Link senden</Field.Label>
-                </Flex>
-              </Field.Root>
+                  <Field.Hint>Optionaler JSON-Kontext für den Token (z.B. in Form von Key-Value-Paaren)</Field.Hint>
+                </Field.Root>
+              </Box>
+              
+              <Box paddingTop={4}>
+                <Field.Root name="send-email" id="send-email">
+                  <Flex gap={2} alignItems="center">
+                    <Field.Input
+                      type="checkbox"
+                      id="send-email"
+                      name="send-email"
+                      checked={sendEmail}
+                      onChange={(e) => setSendEmail(e.target.checked)}
+                    />
+                    <Field.Label htmlFor="send-email">E-Mail mit Magic Link senden</Field.Label>
+                  </Flex>
+                </Field.Root>
+              </Box>
             </Box>
           </Modal.Body>
           <Modal.Footer>
@@ -2170,83 +2238,6 @@ const TokensPage = () => {
             </Button>
             <Button onClick={unbanIP} startIcon={<CheckCircle />} variant="success">
               IP entsperren
-            </Button>
-          </Modal.Footer>
-        </Modal.Content>
-      </Modal.Root>
-
-      {/* Create Token Modal */}
-      <Modal.Root open={showCreateTokenModal} onOpenChange={setShowCreateTokenModal}>
-        <Modal.Content>
-          <Modal.Header>
-            <Modal.Title>Neuen Magic Link Token erstellen</Modal.Title>
-            <Modal.SubTitle>Erstellen Sie einen neuen Token für einen Benutzer</Modal.SubTitle>
-          </Modal.Header>
-          <Modal.Body>
-            <Box paddingTop={2}>
-              <Field.Root name="email">
-                <Field.Label>E-Mail</Field.Label>
-                <Field.Input
-                  type="email"
-                  placeholder="email@example.com"
-                  value={newTokenEmail}
-                  onChange={(e) => setNewTokenEmail(e.target.value)}
-                  aria-label="E-Mail für den neuen Token"
-                />
-                <Field.Hint>Die E-Mail des Benutzers, für den der Token erstellt werden soll</Field.Hint>
-              </Field.Root>
-            </Box>
-            
-            <Box paddingTop={4}>
-              <Field.Root name="expire-days">
-                <Field.Label>Gültigkeit (Tage)</Field.Label>
-                <Field.Input
-                  type="number"
-                  placeholder="30"
-                  value={newTokenExpireDays}
-                  onChange={(e) => setNewTokenExpireDays(e.target.value)}
-                  aria-label="Gültigkeitsdauer in Tagen"
-                  min="1"
-                />
-                <Field.Hint>Anzahl der Tage, für die der Token gültig sein soll</Field.Hint>
-              </Field.Root>
-            </Box>
-            
-            <Box paddingTop={4}>
-              <Field.Root name="json-context">
-                <Field.Label>JSON-Kontext</Field.Label>
-                <Field.Input
-                  as="textarea"
-                  placeholder='{"key": "value"}'
-                  name="json-context"
-                  onChange={(e) => setJsonContext(e.target.value)}
-                  value={jsonContext}
-                  aria-label="JSON-Kontext"
-                  style={{ height: '80px', fontFamily: 'monospace' }}
-                />
-                <Field.Hint>Optionaler JSON-Kontext für den Token (z.B. in Form von Key-Value-Paaren)</Field.Hint>
-              </Field.Root>
-            </Box>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button 
-              onClick={() => {
-                setShowCreateTokenModal(false);
-                setNewTokenEmail('');
-                setNewTokenExpireDays('30');
-                setJsonContext('');
-              }}
-              variant="tertiary"
-            >
-              Abbrechen
-            </Button>
-            <Button 
-              onClick={createToken}
-              variant="default"
-              startIcon={<Check />}
-              disabled={!newTokenEmail}
-            >
-              Token erstellen
             </Button>
           </Modal.Footer>
         </Modal.Content>

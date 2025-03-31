@@ -1,3 +1,3 @@
-export const PLUGIN_ID = 'strapi-plugin-magic-link-v5';
+export const PLUGIN_ID = 'magic-link';
 
 export default PLUGIN_ID;

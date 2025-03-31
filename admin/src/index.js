@@ -1,11 +1,10 @@
-// import { prefixPluginTranslations } from '@strapi/strapi/admin';
+import { prefixPluginTranslations } from '@strapi/strapi/admin';
 import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
 import Initializer from './components/Initializer';
 import PluginIcon from './components/PluginIcon';
 import pluginPermissions from './permissions';
 import getTrad from './utils/getTrad';
-import prefixPluginTranslations from './utils/prefixPluginTranslations';
 
 const name = pluginPkg.strapi.name;
 
@@ -23,21 +22,33 @@ export default {
       }))
     });
 
+    app.addMenuLink({
+      to: `/plugins/${pluginId}/tokens`,
+      icon: PluginIcon,
+      intlLabel: {
+        id: getTrad('tokens.title'),
+        defaultMessage: 'Magic Link Tokens',
+      },
+      Component: () => import('./pages/Tokens').then(module => ({
+        default: module.default
+      }))
+    });
+
     app.createSettingSection(
       {
         id: pluginId,
         intlLabel: {
-          id: getTrad('Settings.header.title'),
+          id: getTrad('Header.Settings'),
           defaultMessage: 'Magic Link',
         },
       },
       [
         {
           intlLabel: {
-            id: getTrad('Settings.general.title'),
+            id: getTrad('Form.title.Settings'),
             defaultMessage: 'Settings',
           },
-          id: 'settings',
+          id: 'magic-link-settings',
           to: `/settings/${pluginId}`,
           Component: () => import('./pages/Settings').then(module => ({
             default: module.default
@@ -52,16 +63,6 @@ export default {
       initializer: Initializer,
       isReady: false,
       name,
-      routes: [
-        {
-          method: 'GET',
-          path: '/tokens',
-          handler: 'tokens.find',
-          config: {
-            policies: [],
-          },
-        },
-      ]
     });
   },
 

@@ -110,7 +110,7 @@ const Settings = () => {
     console.log('Initiating API call to fetch Magic Link settings');
     
     try {
-      const res = await get('/strapi-plugin-magic-link-v5/settings');
+      const res = await get('/magic-link/settings');
       console.log('Magic Link API response:', res);
       
       // Check if data property exists in the response
@@ -256,7 +256,7 @@ const Settings = () => {
       });
       
       // Sende die Änderungen an die API
-      const response = await put('/strapi-plugin-magic-link-v5/settings', settingsToSubmit);
+      const response = await put('/magic-link/settings', settingsToSubmit);
       console.log('Settings saved response:', response);
       
       // Aktualisiere den API-Zustand
@@ -1248,7 +1248,7 @@ const Settings = () => {
                     if (window.confirm(safeTranslate('settings.reset.confirmMessage', 'Sind Sie sicher, dass Sie alle Magic Link Daten zurücksetzen möchten? Diese Aktion kann nicht rückgängig gemacht werden!'))) {
                       setIsLoading(true);
                       // API-Anfrage senden
-                      post('/strapi-plugin-magic-link-v5/reset-data')
+                      post('/magic-link/reset-data')
                         .then(response => {
                           // Benachrichtigung anzeigen
                           toggleNotification({

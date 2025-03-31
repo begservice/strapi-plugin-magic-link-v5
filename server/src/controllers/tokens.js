@@ -57,7 +57,7 @@ module.exports = {
   async find(ctx) {
     try {
       // Query all tokens
-      const tokens = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findMany({
+      const tokens = await strapi.db.query('plugin::magic-link.token').findMany({
         orderBy: { createdAt: 'desc' },
       });
 
@@ -167,7 +167,7 @@ module.exports = {
       };
 
       // Create the token
-      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').create({
+      const token = await strapi.db.query('plugin::magic-link.token').create({
         data: {
           token: tokenValue,
           email: user.email,
@@ -281,7 +281,7 @@ module.exports = {
       const { id } = ctx.params;
 
       // Check if token exists
-      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
+      const token = await strapi.db.query('plugin::magic-link.token').findOne({
         where: { id },
       });
 
@@ -290,7 +290,7 @@ module.exports = {
       }
 
       // Update the token to be inactive
-      const updatedToken = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').update({
+      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
         where: { id },
         data: {
           is_active: false,
@@ -312,7 +312,7 @@ module.exports = {
       const { id } = ctx.params;
 
       // Check if token exists
-      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
+      const token = await strapi.db.query('plugin::magic-link.token').findOne({
         where: { id },
       });
 
@@ -321,7 +321,7 @@ module.exports = {
       }
 
       // Delete the token
-      await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').delete({
+      await strapi.db.query('plugin::magic-link.token').delete({
         where: { id },
       });
 
@@ -341,7 +341,7 @@ module.exports = {
       const { id } = ctx.params;
 
       // Prüfe, ob Token existiert
-      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
+      const token = await strapi.db.query('plugin::magic-link.token').findOne({
         where: { id },
       });
 
@@ -350,7 +350,7 @@ module.exports = {
       }
 
       // Aktualisiere den Token auf aktiv
-      const updatedToken = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').update({
+      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
         where: { id },
         data: {
           is_active: true,
@@ -374,7 +374,7 @@ module.exports = {
       const { days } = ctx.request.body;
 
       // Prüfe, ob Token existiert
-      const token = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findOne({
+      const token = await strapi.db.query('plugin::magic-link.token').findOne({
         where: { id },
       });
 
@@ -400,7 +400,7 @@ module.exports = {
       newExpiryDate.setDate(newExpiryDate.getDate() + daysToAdd);
 
       // Aktualisiere den Token mit dem neuen Ablaufdatum
-      const updatedToken = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').update({
+      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
         where: { id },
         data: {
           expires_at: newExpiryDate,
@@ -474,7 +474,7 @@ module.exports = {
         await pluginStore.set({ key: 'banned_ips', value: bannedIPs });
         
         // Deactivate all tokens associated with this IP
-        await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').updateMany({
+        await strapi.db.query('plugin::magic-link.token').updateMany({
           where: { ip_address: ipAddress },
           data: { is_active: false },
         });
@@ -604,7 +604,7 @@ module.exports = {
       let tokenStatusPoints = 0;
       
       // Hole alle Tokens
-      const tokens = await strapi.db.query('plugin::strapi-plugin-magic-link-v5.token').findMany({});
+      const tokens = await strapi.db.query('plugin::magic-link.token').findMany({});
       
       // Berechne Verhältnis von aktiven zu inaktiven Tokens
       const activeTokens = tokens.filter(token => token.is_active).length;

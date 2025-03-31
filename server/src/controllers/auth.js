@@ -13,154 +13,147 @@ const emailRegExp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"
 
 module.exports = {
   async login(ctx) {
-    const token = ctx.query.token;
+    const { loginToken } = ctx.query;
+    const { magicLink } = strapi.plugins['magic-link'].services;
+    const { user: userService, jwt: jwtService } = strapi.plugins['users-permissions'].services;
+    const isEnabled = await magicLink.isEnabled();
+
+    if (!isEnabled) {
+      return ctx.badRequest('plugin.disabled');
+    }
+
+    if (_.isEmpty(loginToken)) {
+      return ctx.badRequest('token.invalid');
+    }
+    const token = await magicLink.fetchToken(loginToken);
+
+    if (!token || !token.is_active) {
+      return ctx.badRequest('token.invalid');
+    }
+
+    const isValid = await magicLink.isTokenValid(token);
+
+    if (!isValid) {
+      await magicLink.deactivateToken(token);
+      return ctx.badRequest('token.invalid');
+    }
+
+    // Collect request information for security logging
+    const requestInfo = {
+      userAgent: ctx.request.header['user-agent'],
+      ipAddress: ctx.request.ip
+    };
+
+    await magicLink.updateTokenOnLogin(token, requestInfo);
+
+    const user = await strapi.db.query('plugin::users-permissions.user').findOne({
+      where: { email: token.email },
+    });
+
+    if (!user) {
+      return ctx.badRequest('wrong.email');
+    }
+
+    if (user.blocked) {
+      return ctx.badRequest('blocked.user');
+    }
+
+    if (!user.confirmed) {
+      await userService.edit(user.id, { confirmed: true });
+    }
     
-    if (!token) {
-      return ctx.badRequest('Token is missing');
+    // In Strapi v5, sanitization works differently
+    // We need to handle it differently to avoid the "Missing schema" error
+    const sanitizedUser = { ...user };
+    delete sanitizedUser.password;
+    delete sanitizedUser.resetPasswordToken;
+    delete sanitizedUser.confirmationToken;
+    delete sanitizedUser.roles;
+
+    let context;
+    try {
+      context = token.context || {};
+    } catch (e) {
+      context = {};
+    }
+    
+    // Generiere JWT-Token mit dem originalen Context
+    const jwtToken = jwtService.issue({ 
+      id: user.id,
+      context: context
+    });
+    
+    // Hole JWT-Konfiguration, um Ablaufzeit zu berechnen
+    const settings = await magicLink.settings();
+    let expirationTime = settings.jwt_token_expires_in || '30d';
+    
+    // Parse die Ablaufzeit (z.B. "30d" -> 30 Tage)
+    let expiresAt = new Date();
+    if (expirationTime.endsWith('d')) {
+      const days = parseInt(expirationTime.slice(0, -1), 10);
+      expiresAt.setDate(expiresAt.getDate() + days);
+    } else if (expirationTime.endsWith('h')) {
+      const hours = parseInt(expirationTime.slice(0, -1), 10);
+      expiresAt.setHours(expiresAt.getHours() + hours);
+    } else if (expirationTime.endsWith('m')) {
+      const minutes = parseInt(expirationTime.slice(0, -1), 10);
+      expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
+    } else {
+      // Fallback auf 30 Tage
+      expiresAt.setDate(expiresAt.getDate() + 30);
     }
     
     try {
-      const { magicLink } = strapi.plugins['strapi-plugin-magic-link-v5'].services;
-      const { user: userService, jwt: jwtService } = strapi.plugins['users-permissions'].services;
-      const isEnabled = await magicLink.isEnabled();
-
-      if (!isEnabled) {
-        return ctx.badRequest('plugin.disabled');
-      }
-
-      const tokenObj = await magicLink.fetchToken(token);
-
-      if (!tokenObj || !tokenObj.is_active) {
-        return ctx.badRequest('token.invalid');
-      }
-
-      const isValid = await magicLink.isTokenValid(tokenObj);
-
-      if (!isValid) {
-        await magicLink.deactivateToken(tokenObj);
-        return ctx.badRequest('token.invalid');
-      }
-
-      // Collect request information for security logging
-      const requestInfo = {
-        userAgent: ctx.request.header['user-agent'],
-        ipAddress: ctx.request.ip
-      };
-
-      await magicLink.updateTokenOnLogin(tokenObj, requestInfo);
-
-      const user = await strapi.db.query('plugin::users-permissions.user').findOne({
-        where: { email: tokenObj.email },
-      });
-
-      if (!user) {
-        return ctx.badRequest('wrong.email');
-      }
-
-      if (user.blocked) {
-        return ctx.badRequest('blocked.user');
-      }
-
-      if (!user.confirmed) {
-        await userService.edit(user.id, { confirmed: true });
-      }
-      
-      // In Strapi v5, sanitization works differently
-      // We need to handle it differently to avoid the "Missing schema" error
-      const sanitizedUser = { ...user };
-      delete sanitizedUser.password;
-      delete sanitizedUser.resetPasswordToken;
-      delete sanitizedUser.confirmationToken;
-      delete sanitizedUser.roles;
-
-      let context;
-      try {
-        context = tokenObj.context || {};
-      } catch (e) {
-        context = {};
-      }
-      
-      // Generiere JWT-Token mit dem originalen Context
-      const jwtToken = jwtService.issue({ 
-        id: user.id,
-        context: context
+      // Speichere die JWT-Session im Plugin-Store
+      const pluginStore = strapi.store({
+        environment: '',
+        type: 'plugin',
+        name: 'magic-link',
       });
       
-      // Hole JWT-Konfiguration, um Ablaufzeit zu berechnen
-      const settings = await magicLink.settings();
-      let expirationTime = settings.jwt_token_expires_in || '30d';
+      // Hole aktuelle JWT-Sessions oder initialisiere leere Liste
+      const jwtSessions = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       
-      // Parse die Ablaufzeit (z.B. "30d" -> 30 Tage)
-      let expiresAt = new Date();
-      if (expirationTime.endsWith('d')) {
-        const days = parseInt(expirationTime.slice(0, -1), 10);
-        expiresAt.setDate(expiresAt.getDate() + days);
-      } else if (expirationTime.endsWith('h')) {
-        const hours = parseInt(expirationTime.slice(0, -1), 10);
-        expiresAt.setHours(expiresAt.getHours() + hours);
-      } else if (expirationTime.endsWith('m')) {
-        const minutes = parseInt(expirationTime.slice(0, -1), 10);
-        expiresAt.setMinutes(expiresAt.getMinutes() + minutes);
-      } else {
-        // Fallback auf 30 Tage
-        expiresAt.setDate(expiresAt.getDate() + 30);
-      }
+      // Erstelle eine neue Session mit einer eindeutigen ID
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
       
-      try {
-        // Speichere die JWT-Session im Plugin-Store
-        const pluginStore = strapi.store({
-          environment: '',
-          type: 'plugin',
-          name: 'magic-link',
-        });
-        
-        // Hole aktuelle JWT-Sessions oder initialisiere leere Liste
-        const jwtSessions = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
-        
-        // Erstelle eine neue Session mit einer eindeutigen ID
-        const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        
-        // Füge neue Session zur Liste hinzu
-        jwtSessions.sessions.push({
-          id: sessionId,
-          userId: user.id,
-          userEmail: user.email,
-          username: user.username || user.email.split('@')[0],
-          jwtToken: jwtToken,
-          createdAt: new Date().toISOString(),
-          expiresAt: expiresAt.toISOString(),
-          isRevoked: false,
-          ipAddress: requestInfo.ipAddress,
-          userAgent: requestInfo.userAgent,
-          source: 'Magic Link Login',
-          lastUsedAt: new Date().toISOString(),
-          context: context  // Speichere den Context auch in der Session
-        });
-        
-        // Speichere aktualisierte Liste
-        await pluginStore.set({ key: 'jwt_sessions', value: jwtSessions });
-      } catch (error) {
-        console.error("Fehler beim Speichern der JWT-Session:", error);
-        // Hier nicht abbrechen, damit der Login trotzdem funktioniert
-      }
-      
-      ctx.send({
-        jwt: jwtToken,
-        user: sanitizedUser,
-        context,
-        expires_at: expiresAt.toISOString(),
-        expiry_formatted: new Intl.DateTimeFormat('de-DE', {
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        }).format(expiresAt)
+      // Füge neue Session zur Liste hinzu
+      jwtSessions.sessions.push({
+        id: sessionId,
+        userId: user.id,
+        userEmail: user.email,
+        username: user.username || user.email.split('@')[0],
+        jwtToken: jwtToken,
+        createdAt: new Date().toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        isRevoked: false,
+        ipAddress: requestInfo.ipAddress,
+        userAgent: requestInfo.userAgent,
+        source: 'Magic Link Login',
+        lastUsedAt: new Date().toISOString(),
+        context: context  // Speichere den Context auch in der Session
       });
+      
+      // Speichere aktualisierte Liste
+      await pluginStore.set({ key: 'jwt_sessions', value: jwtSessions });
     } catch (error) {
-      console.error("Fehler beim Login:", error);
-      return ctx.badRequest('An error occurred');
+      console.error("Fehler beim Speichern der JWT-Session:", error);
+      // Hier nicht abbrechen, damit der Login trotzdem funktioniert
     }
+    
+    ctx.send({
+      jwt: jwtToken,
+      user: sanitizedUser,
+      context,
+      expires_at: expiresAt.toISOString(),
+      expiry_formatted: new Intl.DateTimeFormat('de-DE', {
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(expiresAt)
+    });
   },
 
   async sendLink(ctx) {

@@ -9,11 +9,10 @@ module.exports = ({ strapi }) => ({
    * @returns {Object} The plugin settings
    */
   async get() {
-    const { name } = strapi.plugin('strapi-plugin-magic-link-v5') || {};
     const pluginStore = strapi.store({
       environment: '',
       type: 'plugin',
-      name: 'strapi-plugin-magic-link-v5',
+      name: 'magic-link',
     });
     
     return pluginStore.get({ key: 'settings' });
@@ -25,11 +24,10 @@ module.exports = ({ strapi }) => ({
    * @returns {Object} The stored settings
    */
   async set(settings) {
-    const { name } = strapi.plugin('strapi-plugin-magic-link-v5') || {};
     const pluginStore = strapi.store({
       environment: '',
       type: 'plugin',
-      name: 'strapi-plugin-magic-link-v5',
+      name: 'magic-link',
     });
     
     return pluginStore.set({ key: 'settings', value: settings });

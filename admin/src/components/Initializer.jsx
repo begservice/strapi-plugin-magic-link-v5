@@ -16,4 +16,3 @@ const Initializer = ({ setPlugin }) => {
 };
 
 export { Initializer };
-export default Initializer;
