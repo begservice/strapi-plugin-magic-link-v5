@@ -65,10 +65,10 @@
   "author": "Schero A. <124470865+begservice@users.noreply.github.com>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/begservice/strapi-magic-link"
+    "url": "https://github.com/begservice/strapi-plugin-magic-link-v5.git"
   },
   "bugs": {
-    "url": "https://github.com/begservice/strapi-magic-link/issues"
+    "url": "https://github.com/begservice/strapi-plugin-magic-link-v5/issues"
   },
-  "homepage": "https://github.com/begservice/strapi-magic-link#readme"
+  "homepage": "https://github.com/begservice/strapi-plugin-magic-link-v5#readme"
 }
