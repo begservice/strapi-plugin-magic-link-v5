@@ -10,7 +10,7 @@ const os = require('os');
 // For development/testing, you can override with LICENSE_SERVER_URL environment variable
 const LICENSE_SERVER_URL = process.env.NODE_ENV === 'development' 
   ? (process.env.LICENSE_SERVER_URL || 'http://localhost:1337')
-  : 'https://your-license-server.com'; // TODO: Replace with your actual license server URL before publishing
+  : 'https://magicapi.fitlex.me';
 
 module.exports = ({ strapi }) => ({
   /**
