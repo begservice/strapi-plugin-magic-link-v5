@@ -50,29 +50,6 @@ yarn add begservice/strapi-magic-link
 
 After installation, restart your Strapi server and the plugin will be available in the admin panel.
 
-## License Server
-
-This plugin uses a **centralized license server** for validation and activation.
-
-### How It Works
-
-- The plugin connects to a fixed license server URL for all license operations
-- License keys are validated against this server
-- The server URL is hardcoded for security (cannot be changed by end users)
-- Supports **24-hour grace period** for offline operation
-
-### For Developers (Development Mode)
-
-During development, you can override the license server URL:
-
-```bash
-# .env file
-LICENSE_SERVER_URL=http://localhost:1337
-NODE_ENV=development
-```
-
-**Note**: This override only works in development mode for testing purposes.
-
 ## How It Works
 
 ### Email User with Login Link
