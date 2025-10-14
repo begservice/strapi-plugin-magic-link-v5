@@ -1,3 +1,7 @@
 'use strict';
 
-module.exports = {};
+const licenseCheck = require('./license-check');
+
+module.exports = {
+  'license-check': licenseCheck,
+};

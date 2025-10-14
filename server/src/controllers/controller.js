@@ -4,7 +4,6 @@ module.exports = {
   async getSettings(ctx) {
     try {
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -105,7 +104,6 @@ module.exports = {
       }
       
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -129,7 +127,6 @@ module.exports = {
     try {
       // Plugin Store für die Einstellungen
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });

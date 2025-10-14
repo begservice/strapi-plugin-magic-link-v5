@@ -15,18 +15,16 @@ module.exports = ({ strapi }) => ({
     // Initialization logic if needed
   },
 
-  settings() {
+  async settings() {
     const pluginStore = strapi.store({
-      environment: '',
       type: 'plugin',
       name: 'magic-link',
     });
     return pluginStore.get({ key: 'settings' });
   },
 
-  userSettings() {
+  async userSettings() {
     const pluginStore = strapi.store({
-      environment: '',
       type: 'plugin',
       name: 'users-permissions',
     });
@@ -35,7 +33,8 @@ module.exports = ({ strapi }) => ({
 
   async isEnabled() {
     const settings = await this.settings();
-    return !!settings.enabled;
+    // Wenn keine Settings existieren oder enabled nicht gesetzt ist, standardmäßig true zurückgeben
+    return settings ? (settings.enabled !== false) : true;
   },
 
   async createUser(user) {
@@ -61,7 +60,7 @@ module.exports = ({ strapi }) => ({
 
   async user(email, username) {
     const settings = await this.settings();
-    const createUserIfNotExists = settings.createUserIfNotExists;
+    const createUserIfNotExists = settings?.createUserIfNotExists !== false;
     
     // --- DEBUG LOGGING START ---
     strapi.log.info(`[MagicLink Service - user function] Checking user: ${email || username}`);
@@ -99,7 +98,7 @@ module.exports = ({ strapi }) => ({
 
   async createToken(email, context = {}) {
     const settings = await this.settings();
-    const tokenLength = settings.token_length || 20;
+    const tokenLength = settings?.token_length || 20;
     const token = nanoid(tokenLength);
     const expires = new Date();
     expires.setHours(expires.getHours() + 1);
@@ -126,7 +125,7 @@ module.exports = ({ strapi }) => ({
   async isTokenValid(token) {
     const { is_active, expires_at } = token;
     const settings = await this.settings();
-    const staysValid = settings.stays_valid;
+    const staysValid = settings?.stays_valid || false;
 
     if (!is_active) {
       return false;
@@ -151,8 +150,8 @@ module.exports = ({ strapi }) => ({
 
   async updateTokenOnLogin(token, requestInfo = null) {
     const settings = await this.settings();
-    const staysValid = settings.stays_valid;
-    const storeLoginInfo = settings.store_login_info;
+    const staysValid = settings?.stays_valid || false;
+    const storeLoginInfo = settings?.store_login_info !== false;
 
     // Prepare data to update
     const updateData = { 
@@ -182,20 +181,20 @@ module.exports = ({ strapi }) => ({
   async sendLoginLink(token) {
     const settings = await this.settings();
     const emailTemplate = {
-      subject: settings.object,
-      text: settings.message_text,
-      html: settings.message_html,
+      subject: settings?.object || 'Your Magic Link',
+      text: settings?.message_text || 'Click here to login: <%= URL %>?loginToken=<%= CODE %>',
+      html: settings?.message_html || '<a href="<%= URL %>?loginToken=<%= CODE %>">Click here to login</a>',
     };
 
     const emailConfig = {
-      from: `${settings.from_name} <${settings.from_email}>`,
-      response_email: settings.response_email,
-      object: settings.object,
-      message: settings.message_text,
+      from: `${settings?.from_name || 'Magic Link'} <${settings?.from_email || 'noreply@example.com'}>`,
+      response_email: settings?.response_email,
+      object: settings?.object || 'Your Magic Link',
+      message: settings?.message_text || 'Click here to login',
     };
 
     // Replace variables in the email template
-    const url = settings.confirmationUrl;
+    const url = settings?.confirmationUrl || `${process.env.URL || 'http://localhost:1337'}/api/magic-link/login`;
     const code = token.token;
 
     // Replace variables in the email template
@@ -210,7 +209,7 @@ module.exports = ({ strapi }) => ({
     });
 
     // Send the email
-    await strapi.plugins['email'].services.email.send({
+    await strapi.plugin('email').service('email').send({
       to: token.email,
       from: emailConfig.from,
       replyTo: emailConfig.response_email,
@@ -232,8 +231,7 @@ module.exports = ({ strapi }) => ({
     try {
       // Holen des aktuellen Sets gesperrter Tokens
       const pluginStore = strapi.store({
-        environment: '',
-        type: 'plugin',
+      type: 'plugin',
         name: 'magic-link',
       });
       
@@ -271,8 +269,7 @@ module.exports = ({ strapi }) => ({
     try {
       // Holen des aktuellen Sets gesperrter Tokens
       const pluginStore = strapi.store({
-        environment: '',
-        type: 'plugin',
+      type: 'plugin',
         name: 'magic-link',
       });
       
@@ -301,8 +298,7 @@ module.exports = ({ strapi }) => ({
   async isJwtTokenBlocked(token) {
     try {
       const pluginStore = strapi.store({
-        environment: '',
-        type: 'plugin',
+      type: 'plugin',
         name: 'magic-link',
       });
       
@@ -323,8 +319,7 @@ module.exports = ({ strapi }) => ({
   async getBlockedJwtTokens() {
     try {
       const pluginStore = strapi.store({
-        environment: '',
-        type: 'plugin',
+      type: 'plugin',
         name: 'magic-link',
       });
       
@@ -354,8 +349,7 @@ module.exports = ({ strapi }) => ({
   async isIPBanned(ipAddress) {
     try {
       const pluginStore = strapi.store({
-        environment: '',
-        type: 'plugin',
+      type: 'plugin',
         name: 'magic-link',
       });
       

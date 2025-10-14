@@ -28,8 +28,8 @@ const sendStandardEmail = async (user, magicLink, settings, token) => {
       .replace(/{username}/g, user.username || '')
       .replace(/{email}/g, user.email || '');
     
-    // Sende die Email
-    await strapi.plugins.email.services.email.send({
+    // Sende die Email (Strapi v5 konform)
+    await strapi.plugin('email').service('email').send({
       to: user.email,
       from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
       replyTo: settings.response_email || undefined,
@@ -90,7 +90,6 @@ module.exports = {
       
       // Überprüfe, ob die Plugin-Einstellungen das Erstellen neuer Benutzer erlauben
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -148,7 +147,7 @@ module.exports = {
         }
         
         // Create the user
-        user = await strapi.plugins['users-permissions'].services.user.add({
+        user = await strapi.plugin('users-permissions').service('user').add({
           username,
           email,
           password,
@@ -165,9 +164,10 @@ module.exports = {
       const tokenValue = Math.random().toString(36).substring(2, 10) + 
                          Math.random().toString(36).substring(2, 10);
       
-      // Set expiration (24 hours from now)
+      // Set expiration (TTL from context, settings, or default 24 hours)
+      const ttl = context.ttl || settings.token_lifetime || 24;
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + 24);
+      expiresAt.setHours(expiresAt.getHours() + ttl);
 
       // Erweitere den Kontext mit Ablaufdatum und Benutzerinformationen
       const enrichedContext = {
@@ -283,10 +283,8 @@ module.exports = {
         }
       }
       
-      // Entferne den Token-Wert aus der Antwort aus Sicherheitsgründen
-      const { token: _, ...safeToken } = token;
-
-      return safeToken;
+      // Gebe den kompletten Token zurück (inkl. Token-Wert für Admin-Ansicht)
+      return token;
     } catch (error) {
       strapi.log.error('Error creating token:', error);
       ctx.throw(500, error);
@@ -449,7 +447,6 @@ module.exports = {
 
       // Überprüfe, ob die Plugin-Einstellungen das Erstellen neuer Benutzer erlauben
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -517,7 +514,6 @@ module.exports = {
       
       // Get plugin store to save banned IPs
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -554,7 +550,6 @@ module.exports = {
     try {
       // Get plugin store to retrieve banned IPs
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -585,7 +580,6 @@ module.exports = {
       
       // Get plugin store
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -617,7 +611,6 @@ module.exports = {
       
       // Hol die Plugin-Einstellungen
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });

@@ -1,0 +1,849 @@
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import styled, { keyframes } from 'styled-components';
+import {
+  Typography,
+  Box,
+  Flex,
+  Button,
+  Loader,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Td,
+  Th,
+  Badge,
+  Searchbar,
+  SingleSelect,
+  SingleSelectOption,
+  Pagination,
+  PreviousLink,
+  PageLink,
+  NextLink,
+  Checkbox,
+  IconButton,
+} from '@strapi/design-system';
+import { useFetchClient, useNotification } from '@strapi/strapi/admin';
+import {
+  ArrowClockwise,
+  Shield,
+  User,
+  Calendar,
+  Clock,
+  Trash,
+  Eye,
+  Lock,
+  Check,
+  Cross,
+  CaretDown,
+  Monitor,
+} from '@strapi/icons';
+
+// ================ DESIGN TOKENS ================
+const theme = {
+  colors: {
+    primary: { 600: '#0284C7', 500: '#0EA5E9', 100: '#E0F2FE', 50: '#F0F9FF' },
+    success: { 600: '#16A34A', 500: '#22C55E', 100: '#DCFCE7', 50: '#F0FDF4' },
+    warning: { 600: '#D97706', 500: '#F59E0B', 100: '#FEF3C7', 50: '#FFFBEB' },
+    danger: { 600: '#DC2626', 500: '#EF4444', 100: '#FEE2E2', 50: '#FEF2F2' },
+    neutral: {
+      0: '#FFFFFF',
+      50: '#F9FAFB',
+      100: '#F3F4F6',
+      200: '#E5E7EB',
+      500: '#6B7280',
+      600: '#4B5563',
+      700: '#374151',
+      800: '#1F2937',
+      900: '#111827',
+    }
+  },
+  shadows: {
+    sm: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+  },
+  transitions: {
+    fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+    normal: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+  spacing: {
+    md: '16px',
+    lg: '24px',
+    xl: '32px',
+  },
+  borderRadius: {
+    md: '8px',
+    lg: '12px',
+    xl: '16px',
+    full: '9999px',
+  }
+};
+
+// ================ ANIMATIONEN ================
+const fadeIn = keyframes`
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+const rotate = keyframes`
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+`;
+
+const float = keyframes`
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+`;
+
+// ================ STYLED COMPONENTS ================
+const Container = styled(Box)`
+  animation: ${fadeIn} 0.5s;
+  min-height: calc(100vh - 200px);
+`;
+
+const StatsGrid = styled(Box)`
+  margin-bottom: ${theme.spacing.xl};
+  display: flex;
+  gap: ${theme.spacing.md};
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+`;
+
+const StatCard = styled(Box)`
+  background: ${theme.colors.neutral[0]};
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.lg};
+  transition: all ${theme.transitions.normal};
+  animation: ${fadeIn} 0.5s backwards;
+  animation-delay: ${props => props.$delay || '0s'};
+  box-shadow: ${theme.shadows.sm};
+  border: 1px solid ${theme.colors.neutral[200]};
+  min-width: 220px;
+  max-width: 260px;
+  flex: 1;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: ${theme.shadows.xl};
+    border-color: ${props => props.$color || theme.colors.primary[500]};
+    
+    .stat-icon {
+      transform: rotate(10deg) scale(1.1);
+    }
+  }
+`;
+
+const StatIcon = styled(Box)`
+  width: 48px;
+  height: 48px;
+  border-radius: ${theme.borderRadius.md};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${props => props.$bg};
+  transition: all ${theme.transitions.normal};
+  
+  svg {
+    width: 24px;
+    height: 24px;
+    color: ${props => props.$color};
+  }
+`;
+
+const StatValue = styled(Typography)`
+  font-size: 2rem;
+  font-weight: 700;
+  color: ${theme.colors.neutral[900]};
+  margin: ${theme.spacing.md} 0 4px;
+`;
+
+const StatLabel = styled(Typography)`
+  font-size: 0.875rem;
+  color: ${theme.colors.neutral[600]};
+  font-weight: 500;
+`;
+
+const DataTable = styled(Box)`
+  background: ${theme.colors.neutral[0]};
+  border-radius: ${theme.borderRadius.xl};
+  overflow: hidden;
+  box-shadow: ${theme.shadows.sm};
+  border: 1px solid ${theme.colors.neutral[200]};
+`;
+
+const StyledTable = styled(Table)`
+  thead {
+    background: ${theme.colors.neutral[50]};
+    border-bottom: 1px solid ${theme.colors.neutral[200]};
+    
+    th {
+      font-weight: 600;
+      color: ${theme.colors.neutral[700]};
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: ${theme.spacing.md};
+    }
+  }
+  
+  tbody tr {
+    transition: all ${theme.transitions.fast};
+    border-bottom: 1px solid ${theme.colors.neutral[100]};
+    
+    &:hover {
+      background: ${theme.colors.primary[50]};
+    }
+    
+    td {
+      padding: ${theme.spacing.md};
+      color: ${theme.colors.neutral[700]};
+    }
+  }
+`;
+
+const AnimatedBadge = styled(Badge)`
+  font-weight: 600;
+  padding: 4px 8px;
+  transition: transform ${theme.transitions.fast};
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+`;
+
+const EmptyState = styled(Box)`
+  background: ${theme.colors.neutral[0]};
+  border-radius: ${theme.borderRadius.xl};
+  padding: 64px;
+  text-align: center;
+  border: 2px dashed ${theme.colors.neutral[300]};
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &::after {
+    content: '🔐';
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    font-size: 72px;
+    opacity: 0.08;
+    animation: ${float} 4s ease-in-out infinite;
+  }
+`;
+
+const FilterBar = styled(Flex)`
+  background: ${theme.colors.neutral[0]};
+  border-radius: ${theme.borderRadius.lg};
+  padding: ${theme.spacing.md};
+  margin-bottom: ${theme.spacing.lg};
+  box-shadow: ${theme.shadows.sm};
+  border: 1px solid ${theme.colors.neutral[200]};
+`;
+
+const ActionBar = styled(Flex)`
+  padding: ${theme.spacing.md};
+  background: linear-gradient(90deg, ${theme.colors.primary[50]} 0%, ${theme.colors.primary[100]} 100%);
+  border-radius: ${theme.borderRadius.lg};
+  margin-bottom: ${theme.spacing.md};
+`;
+
+const LoadingOverlay = styled(Flex)`
+  min-height: 400px;
+  justify-content: center;
+  align-items: center;
+  
+  .loader-icon {
+    animation: ${rotate} 1s linear infinite;
+  }
+`;
+
+// ================ HELPER FUNKTIONEN ================
+const formatDate = (dateString) => {
+  if (!dateString) return '—';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '—';
+  
+  return new Intl.DateTimeFormat('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+};
+
+// ================ HAUPTKOMPONENTE ================
+const JWTSessions = () => {
+  const { get, post } = useFetchClient();
+  const { toggleNotification } = useNotification();
+  
+  // States
+  const [sessions, setSessions] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedSessions, setSelectedSessions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('desc');
+  
+  // Stats berechnen
+  const stats = useMemo(() => ({
+    total: sessions.length,
+    active: sessions.filter(s => !s.revoked && !s.isExpired).length,
+    expired: sessions.filter(s => s.isExpired).length,
+    revoked: sessions.filter(s => s.revoked).length,
+  }), [sessions]);
+  
+  // Gefilterte und sortierte Sessions
+  const filteredAndSortedSessions = useMemo(() => {
+    let filtered = sessions;
+    
+    // Search Filter
+    if (searchQuery) {
+      filtered = filtered.filter(session =>
+        session.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        session.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        session.ipAddress?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Status Filter
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(session => {
+        switch (filterStatus) {
+          case 'active':
+            return !session.revoked && !session.isExpired;
+          case 'expired':
+            return session.isExpired;
+          case 'revoked':
+            return session.revoked;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Sortierung
+    filtered.sort((a, b) => {
+      const aValue = a[sortBy];
+      const bValue = b[sortBy];
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+    
+    return filtered;
+  }, [sessions, searchQuery, filterStatus, sortBy, sortOrder]);
+  
+  // Pagination
+  const paginatedSessions = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    const end = start + pageSize;
+    return filteredAndSortedSessions.slice(start, end);
+  }, [filteredAndSortedSessions, currentPage, pageSize]);
+  
+  const totalPages = Math.ceil(filteredAndSortedSessions.length / pageSize);
+  
+  // Stat Cards Konfiguration
+  const statCards = [
+    {
+      title: 'Gesamt',
+      value: stats.total,
+      icon: Shield,
+      color: theme.colors.primary[600],
+      bg: theme.colors.primary[100],
+      delay: '0s'
+    },
+    {
+      title: 'Aktiv',
+      value: stats.active,
+      icon: Check,
+      color: theme.colors.success[600],
+      bg: theme.colors.success[100],
+      delay: '0.1s'
+    },
+    {
+      title: 'Abgelaufen',
+      value: stats.expired,
+      icon: Clock,
+      color: theme.colors.warning[600],
+      bg: theme.colors.warning[100],
+      delay: '0.2s'
+    },
+    {
+      title: 'Gesperrt',
+      value: stats.revoked,
+      icon: Lock,
+      color: theme.colors.danger[600],
+      bg: theme.colors.danger[100],
+      delay: '0.3s'
+    }
+  ];
+  
+  // Fetch Functions
+  const fetchSessions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await get('/magic-link/jwt-sessions');
+      setSessions(response?.data || []);
+    } catch (error) {
+      console.error('Error fetching JWT sessions:', error);
+      toggleNotification({
+        type: 'warning',
+        message: 'Fehler beim Laden der JWT Sessions',
+        title: 'Fehler'
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [get, toggleNotification]);
+  
+  useEffect(() => {
+    fetchSessions();
+  }, [fetchSessions]);
+  
+  // Handlers
+  const handleRefresh = () => {
+    fetchSessions();
+    toggleNotification({
+      type: 'success',
+      message: 'Daten wurden aktualisiert',
+      title: 'Erfolg'
+    });
+  };
+  
+  const handleRevoke = async (sessionId) => {
+    try {
+      await post('/magic-link/revoke-jwt', { sessionId });
+      await fetchSessions();
+      toggleNotification({
+        type: 'success',
+        message: 'Session wurde gesperrt',
+        title: 'Erfolg'
+      });
+    } catch (error) {
+      toggleNotification({
+        type: 'warning',
+        message: 'Fehler beim Sperren der Session',
+        title: 'Fehler'
+      });
+    }
+  };
+  
+  const handleUnrevoke = async (sessionId, userId) => {
+    try {
+      await post('/magic-link/unrevoke-jwt', { sessionId, userId });
+      await fetchSessions();
+      toggleNotification({
+        type: 'success',
+        message: 'Session wurde entsperrt',
+        title: 'Erfolg'
+      });
+    } catch (error) {
+      toggleNotification({
+        type: 'warning',
+        message: 'Fehler beim Entsperren der Session',
+        title: 'Fehler'
+      });
+    }
+  };
+  
+  const handleCleanup = async () => {
+    try {
+      const response = await post('/magic-link/cleanup-sessions');
+      await fetchSessions();
+      toggleNotification({
+        type: 'success',
+        message: response?.data?.message || 'Sessions wurden aufgeräumt',
+        title: 'Erfolg'
+      });
+    } catch (error) {
+      toggleNotification({
+        type: 'warning',
+        message: 'Fehler beim Aufräumen der Sessions',
+        title: 'Fehler'
+      });
+    }
+  };
+  
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedSessions(paginatedSessions.map(session => session.id));
+    } else {
+      setSelectedSessions([]);
+    }
+  };
+  
+  const handleSelectSession = (sessionId, checked) => {
+    if (checked) {
+      setSelectedSessions([...selectedSessions, sessionId]);
+    } else {
+      setSelectedSessions(selectedSessions.filter(id => id !== sessionId));
+    }
+  };
+  
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+  
+  const getStatusBadge = (session) => {
+    if (session.revoked) {
+      return <AnimatedBadge variant="danger">Gesperrt</AnimatedBadge>;
+    }
+    if (session.isExpired) {
+      return <AnimatedBadge variant="warning">Abgelaufen</AnimatedBadge>;
+    }
+    return <AnimatedBadge variant="success">Aktiv</AnimatedBadge>;
+  };
+  
+  // Loading State
+  if (isLoading) {
+    return (
+      <Container>
+        <LoadingOverlay>
+          <Box className="loader-icon">
+            <Loader>Lade JWT Sessions...</Loader>
+          </Box>
+        </LoadingOverlay>
+      </Container>
+    );
+  }
+  
+  return (
+    <Container paddingBottom={10}>
+      {/* Statistik Cards */}
+      <StatsGrid>
+        {statCards.map((stat, index) => {
+          const IconComponent = stat.icon;
+          return (
+            <StatCard 
+              key={index}
+              $color={stat.color}
+              $delay={stat.delay}
+            >
+              <Flex direction="column" alignItems="center">
+                <StatIcon 
+                  className="stat-icon"
+                  $bg={stat.bg}
+                  $color={stat.color}
+                >
+                  <IconComponent />
+                </StatIcon>
+                <StatValue>
+                  {stat.value}
+                </StatValue>
+                <StatLabel>{stat.title}</StatLabel>
+              </Flex>
+            </StatCard>
+          );
+        })}
+      </StatsGrid>
+      
+      {/* Filter Bar */}
+      <FilterBar gap={3} alignItems="center">
+        <Box flex="1">
+          <Searchbar
+            name="session-search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Suche nach E-Mail, Username oder IP..."
+            clearLabel="Löschen"
+            onClear={() => setSearchQuery('')}
+          />
+        </Box>
+        <SingleSelect
+          value={filterStatus}
+          onChange={setFilterStatus}
+          placeholder="Status filtern"
+        >
+          <SingleSelectOption value="all">Alle anzeigen</SingleSelectOption>
+          <SingleSelectOption value="active">Nur Aktive</SingleSelectOption>
+          <SingleSelectOption value="expired">Nur Abgelaufene</SingleSelectOption>
+          <SingleSelectOption value="revoked">Nur Gesperrte</SingleSelectOption>
+        </SingleSelect>
+        <SingleSelect
+          value={pageSize.toString()}
+          onChange={(value) => setPageSize(parseInt(value))}
+          placeholder="Einträge pro Seite"
+        >
+          <SingleSelectOption value="10">10 Einträge</SingleSelectOption>
+          <SingleSelectOption value="25">25 Einträge</SingleSelectOption>
+          <SingleSelectOption value="50">50 Einträge</SingleSelectOption>
+          <SingleSelectOption value="100">100 Einträge</SingleSelectOption>
+        </SingleSelect>
+        <Button
+          onClick={handleCleanup}
+          startIcon={<Trash />}
+          variant="secondary"
+          size="S"
+        >
+          Aufräumen
+        </Button>
+        <Button
+          onClick={handleRefresh}
+          startIcon={<ArrowClockwise />}
+          variant="secondary"
+          size="S"
+        >
+          Aktualisieren
+        </Button>
+      </FilterBar>
+      
+      {/* Action Bar für Bulk Actions */}
+      {selectedSessions.length > 0 && (
+        <ActionBar justifyContent="space-between" alignItems="center">
+          <Typography fontWeight="semiBold">
+            {selectedSessions.length} Session{selectedSessions.length !== 1 && 's'} ausgewählt
+          </Typography>
+          <Button
+            onClick={() => setSelectedSessions([])}
+            variant="tertiary"
+            size="S"
+          >
+            Auswahl aufheben
+          </Button>
+        </ActionBar>
+      )}
+      
+      {/* Data Table */}
+      <DataTable>
+        {filteredAndSortedSessions.length === 0 ? (
+          <EmptyState>
+            <Flex direction="column" alignItems="center" gap={6}>
+              <Box
+                style={{
+                  width: '120px',
+                  height: '120px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${theme.colors.primary[100]} 0%, ${theme.colors.primary[200]} 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: theme.shadows.xl,
+                }}
+              >
+                <Shield style={{ width: '60px', height: '60px', color: theme.colors.primary[600] }} />
+              </Box>
+              
+              <Typography 
+                variant="alpha" 
+                style={{ 
+                  fontSize: '1.75rem',
+                  fontWeight: '700',
+                  color: theme.colors.neutral[800],
+                  marginBottom: '8px',
+                }}
+              >
+                Keine JWT Sessions gefunden
+              </Typography>
+              
+              <Typography 
+                variant="omega" 
+                textColor="neutral600"
+                style={{
+                  fontSize: '1rem',
+                  maxWidth: '400px',
+                  lineHeight: '1.6',
+                }}
+              >
+                Es sind momentan keine JWT Sessions aktiv oder ändere deine Filterkriterien
+              </Typography>
+              
+              <Flex gap={3} justifyContent="center" style={{ marginTop: '16px' }}>
+                <Button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterStatus('all');
+                  }}
+                  variant="secondary"
+                  size="L"
+                >
+                  Filter zurücksetzen
+                </Button>
+              </Flex>
+            </Flex>
+          </EmptyState>
+        ) : (
+          <>
+            <StyledTable>
+              <Thead>
+                <Tr>
+                  <Th>
+                    <Checkbox
+                      value={selectedSessions.length === paginatedSessions.length && paginatedSessions.length > 0}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </Th>
+                  <Th action={<IconButton label="Nach Benutzer sortieren" onClick={() => handleSort('username')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    Benutzer
+                  </Th>
+                  <Th>IP-Adresse</Th>
+                  <Th>User Agent</Th>
+                  <Th action={<IconButton label="Nach Status sortieren" onClick={() => handleSort('revoked')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    Status
+                  </Th>
+                  <Th action={<IconButton label="Nach Erstelldatum sortieren" onClick={() => handleSort('createdAt')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    Erstellt
+                  </Th>
+                  <Th action={<IconButton label="Nach Ablaufdatum sortieren" onClick={() => handleSort('expiresAt')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    Gültig bis
+                  </Th>
+                  <Th>Aktionen</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {paginatedSessions.map((session) => (
+                  <Tr key={session.id}>
+                    <Td>
+                      <Checkbox
+                        value={selectedSessions.includes(session.id)}
+                        onCheckedChange={(checked) => handleSelectSession(session.id, checked)}
+                      />
+                    </Td>
+                    <Td>
+                      <Flex alignItems="center" gap={2}>
+                        <Box
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: theme.borderRadius.full,
+                            background: `linear-gradient(135deg, ${theme.colors.primary[500]} 0%, ${theme.colors.primary[600]} 100%)`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                          }}
+                        >
+                          <User style={{ width: '18px', height: '18px', color: 'white' }} />
+                        </Box>
+                        <Flex direction="column" alignItems="flex-start" gap={0}>
+                          <Typography fontWeight="semiBold" ellipsis>
+                            {session.username || 'N/A'}
+                          </Typography>
+                          <Typography variant="omega" textColor="neutral600">
+                            {session.email}
+                          </Typography>
+                        </Flex>
+                      </Flex>
+                    </Td>
+                    <Td>
+                      <Typography variant="pi" textColor="neutral600">
+                        {session.ipAddress || 'Unbekannt'}
+                      </Typography>
+                    </Td>
+                    <Td>
+                      <Flex alignItems="center" gap={1}>
+                        <Monitor style={{ width: '14px', height: '14px', color: theme.colors.neutral[500] }} />
+                        <Typography 
+                          variant="pi" 
+                          textColor="neutral600"
+                          ellipsis
+                          style={{ maxWidth: '200px' }}
+                          title={session.userAgent}
+                        >
+                          {session.userAgent || 'Unbekannt'}
+                        </Typography>
+                      </Flex>
+                    </Td>
+                    <Td>
+                      {getStatusBadge(session)}
+                    </Td>
+                    <Td>
+                      <Flex alignItems="center" gap={1}>
+                        <Calendar style={{ width: '14px', height: '14px', color: theme.colors.neutral[500] }} />
+                        <Typography variant="pi">
+                          {formatDate(session.createdAt)}
+                        </Typography>
+                      </Flex>
+                    </Td>
+                    <Td>
+                      <Flex alignItems="center" gap={1}>
+                        <Clock style={{ width: '14px', height: '14px', color: theme.colors.warning[500] }} />
+                        <Typography 
+                          variant="pi" 
+                          textColor={session.isExpired ? 'danger600' : 'neutral800'}
+                          fontWeight={session.isExpired ? 'semiBold' : 'normal'}
+                        >
+                          {formatDate(session.expiresAt)}
+                          {session.isExpired && ' (Abgelaufen)'}
+                        </Typography>
+                      </Flex>
+                    </Td>
+                    <Td>
+                      <Flex gap={1} justifyContent="flex-end">
+                        {session.revoked ? (
+                          <IconButton
+                            label="Session entsperren"
+                            variant="success-ghost"
+                            onClick={() => handleUnrevoke(session.id, session.userId)}
+                            withTooltip={false}
+                            disabled={session.isExpired}
+                          >
+                            <Check />
+                          </IconButton>
+                        ) : (
+                          <IconButton
+                            label="Session sperren"
+                            variant="danger-ghost"
+                            onClick={() => handleRevoke(session.id)}
+                            withTooltip={false}
+                          >
+                            <Lock />
+                          </IconButton>
+                        )}
+                      </Flex>
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </StyledTable>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <Box paddingTop={4} paddingBottom={4}>
+                <Flex justifyContent="center">
+                  <Pagination activePage={currentPage} pageCount={totalPages}>
+                    <PreviousLink onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+                      Zurück
+                    </PreviousLink>
+                    {[...Array(totalPages)].map((_, i) => (
+                      <PageLink
+                        key={i + 1}
+                        number={i + 1}
+                        onClick={() => setCurrentPage(i + 1)}
+                      >
+                        {i + 1}
+                      </PageLink>
+                    ))}
+                    <NextLink onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
+                      Weiter
+                    </NextLink>
+                  </Pagination>
+                </Flex>
+              </Box>
+            )}
+          </>
+        )}
+      </DataTable>
+    </Container>
+  );
+};
+
+export default JWTSessions;
+

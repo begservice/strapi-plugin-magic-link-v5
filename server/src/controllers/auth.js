@@ -14,8 +14,10 @@ const emailRegExp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"
 module.exports = {
   async login(ctx) {
     const { loginToken } = ctx.query;
-    const { magicLink } = strapi.plugins['magic-link'].services;
-    const { user: userService, jwt: jwtService } = strapi.plugins['users-permissions'].services;
+    // Strapi v5 pattern für Service Zugriff
+    const magicLink = strapi.plugin('magic-link').service('magic-link');
+    const userService = strapi.plugin('users-permissions').service('user');
+    const jwtService = strapi.plugin('users-permissions').service('jwt');
     const isEnabled = await magicLink.isEnabled();
 
     if (!isEnabled) {
@@ -106,7 +108,6 @@ module.exports = {
     try {
       // Speichere die JWT-Session im Plugin-Store
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -157,7 +158,8 @@ module.exports = {
   },
 
   async sendLink(ctx) {
-    const { magicLink } = strapi.plugins['magic-link'].services;
+    // Strapi v5 pattern für Service Zugriff
+    const magicLink = strapi.plugin('magic-link').service('magic-link');
 
     const isEnabled = await magicLink.isEnabled();
 

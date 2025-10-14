@@ -3,9 +3,17 @@
   "keywords": [],
   "type": "commonjs",
   "exports": {
-    "./package.json": "./package.json",
-    "./strapi-admin": "./admin/src/index.js",
-    "./strapi-server": "./server/src/index.js"
+    "./strapi-admin": {
+      "import": "./admin/src/index.js",
+      "require": "./admin/src/index.js",
+      "default": "./admin/src/index.js"
+    },
+    "./strapi-server": {
+      "import": "./server/src/index.js",
+      "require": "./server/src/index.js",
+      "default": "./server/src/index.js"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
     "build": "node build.js",
@@ -52,6 +60,15 @@
   },
   "name": "strapi-plugin-magic-link-v5",
   "description": "This plugin provides passwordless authentication via magic links sent to email",
-  "license": "MIT",
-  "author": "Schero A. <124470865+begservice@users.noreply.github.com>"
+  "license": "SEE LICENSE IN LICENSE",
+  "private": false,
+  "author": "Schero A. <124470865+begservice@users.noreply.github.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/begservice/strapi-magic-link"
+  },
+  "bugs": {
+    "url": "https://github.com/begservice/strapi-magic-link/issues"
+  },
+  "homepage": "https://github.com/begservice/strapi-magic-link#readme"
 }

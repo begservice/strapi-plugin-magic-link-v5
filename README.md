@@ -2,6 +2,25 @@
 
 A secure passwordless authentication solution for Strapi, allowing users to log in via email links without requiring passwords.
 
+---
+
+## ⚠️ LICENSE & USAGE NOTICE
+
+**This is proprietary commercial software.** 
+
+- ❌ **NOT** open source or free to use
+- ❌ **NOT** licensed under MIT, Apache, or similar permissive licenses
+- ✅ Requires a **valid commercial license** for production use
+- ✅ Source code is visible for transparency and evaluation only
+
+**Using this software without a valid license is copyright infringement.**
+
+📄 See [LICENSE](./LICENSE) for full terms  
+💼 Purchase a license: [Your Website]  
+📧 Questions? Contact: [Your Email]
+
+---
+
 ![Magic Link Overview](pics/pic6.png)
 
 ## Core Features!
@@ -30,6 +49,29 @@ yarn add begservice/strapi-magic-link
 ```
 
 After installation, restart your Strapi server and the plugin will be available in the admin panel.
+
+## License Server
+
+This plugin uses a **centralized license server** for validation and activation.
+
+### How It Works
+
+- The plugin connects to a fixed license server URL for all license operations
+- License keys are validated against this server
+- The server URL is hardcoded for security (cannot be changed by end users)
+- Supports **24-hour grace period** for offline operation
+
+### For Developers (Development Mode)
+
+During development, you can override the license server URL:
+
+```bash
+# .env file
+LICENSE_SERVER_URL=http://localhost:1337
+NODE_ENV=development
+```
+
+**Note**: This override only works in development mode for testing purposes.
 
 ## How It Works
 

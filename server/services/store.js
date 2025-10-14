@@ -10,7 +10,6 @@ module.exports = ({ strapi }) => ({
    */
   async get() {
     const pluginStore = strapi.store({
-      environment: '',
       type: 'plugin',
       name: 'magic-link',
     });
@@ -25,7 +24,6 @@ module.exports = ({ strapi }) => ({
    */
   async set(settings) {
     const pluginStore = strapi.store({
-      environment: '',
       type: 'plugin',
       name: 'magic-link',
     });

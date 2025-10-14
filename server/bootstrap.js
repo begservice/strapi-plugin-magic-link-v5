@@ -98,9 +98,14 @@ The Team`
   strapi.server.use(async (ctx, next) => {
     const clientIP = ctx.request.ip;
     
-    // Check if IP is banned using the service method
-    const { magicLink } = strapi.plugins['magic-link'].services;
-    if (magicLink.isIPBanned && (await magicLink.isIPBanned(clientIP))) {
+    // Sicherer Service-Zugriff mit Null-Check
+    const magicLinkPlugin = strapi.plugin('magic-link');
+    if (!magicLinkPlugin || !magicLinkPlugin.service) {
+      return next();
+    }
+    
+    const magicLink = magicLinkPlugin.service('magic-link');
+    if (magicLink && magicLink.isIPBanned && (await magicLink.isIPBanned(clientIP))) {
       return ctx.forbidden('Access denied: Your IP has been banned');
     }
     
@@ -115,9 +120,14 @@ The Team`
     if (authorization.startsWith(prefix)) {
       const token = authorization.substring(prefix.length);
       
-      // Überprüfen, ob der Token gesperrt wurde
-      const { magicLink } = strapi.plugins['magic-link'].services;
-      if (magicLink.isJwtTokenBlocked && (await magicLink.isJwtTokenBlocked(token))) {
+      // Sicherer Service-Zugriff mit Null-Check
+      const magicLinkPlugin = strapi.plugin('magic-link');
+      if (!magicLinkPlugin || !magicLinkPlugin.service) {
+        return next();
+      }
+      
+      const magicLink = magicLinkPlugin.service('magic-link');
+      if (magicLink && magicLink.isJwtTokenBlocked && (await magicLink.isJwtTokenBlocked(token))) {
         return ctx.unauthorized('Token has been revoked');
       }
     }

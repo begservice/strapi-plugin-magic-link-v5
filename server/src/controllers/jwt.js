@@ -13,7 +13,6 @@ module.exports = {
     try {
       // Aus dem Plugin-Store auslesen
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -57,7 +56,6 @@ module.exports = {
       
       // Hole aktuelle JWT-Sessions
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -81,7 +79,7 @@ module.exports = {
         
         // Sperrung auch in der Sperrliste erfassen
         if (jwtSessions[sessionIndex].jwtToken) {
-          const { magicLink } = strapi.plugins['magic-link'].services;
+          const magicLink = strapi.plugin('magic-link').service('magic-link');
           await magicLink.blockJwtToken(
             jwtSessions[sessionIndex].jwtToken,
             jwtSessions[sessionIndex].userId,
@@ -100,7 +98,7 @@ module.exports = {
       
       // Möglichkeit 2: Sperren über Token (Legacy)
       if (token) {
-        const { magicLink } = strapi.plugins['magic-link'].services;
+        const magicLink = strapi.plugin('magic-link').service('magic-link');
         const result = await magicLink.blockJwtToken(
           token, 
           ctx.request.body.userId || 'unknown', 
@@ -153,7 +151,6 @@ module.exports = {
       
       // Hole aktuelle JWT-Sessions
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });
@@ -183,7 +180,7 @@ module.exports = {
       
       // Token aus der Sperrliste entfernen, falls vorhanden
       if (jwtSessions[sessionIndex].jwtToken) {
-        const { magicLink } = strapi.plugins['magic-link'].services;
+        const magicLink = strapi.plugin('magic-link').service('magic-link');
         
         try {
           // JWT von der Blacklist entfernen
@@ -220,7 +217,6 @@ module.exports = {
       
       // Hole aktuelle JWT-Sessions
       const pluginStore = strapi.store({
-        environment: '',
         type: 'plugin',
         name: 'magic-link',
       });

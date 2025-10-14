@@ -12,7 +12,8 @@ module.exports = {
       path: '/login',
       handler: 'auth.login',
       config: {
-        auth: false
+        auth: false,
+        policies: ['plugin::magic-link.license-check']
       }
     },
     {
@@ -20,7 +21,8 @@ module.exports = {
       path: '/send-link',
       handler: 'auth.sendLink',
       config: {
-        auth: false
+        auth: false,
+        policies: ['plugin::magic-link.license-check']
       }
     }
   ],

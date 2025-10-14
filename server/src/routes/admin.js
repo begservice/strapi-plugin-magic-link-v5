@@ -164,5 +164,55 @@ module.exports = {
         policies: [],
       },
     },
+
+    // License Management
+    {
+      method: 'GET',
+      path: '/license/status',
+      handler: 'license.getStatus',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/license/create',
+      handler: 'license.createAndActivate',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/license/ping',
+      handler: 'license.ping',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/license/stats',
+      handler: 'license.getStats',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/license/deactivate',
+      handler: 'license.deactivate',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/license/store-key',
+      handler: 'license.storeKey',
+      config: {
+        policies: [],
+      },
+    },
   ],
 }; 
