@@ -4,20 +4,25 @@ A secure passwordless authentication solution for Strapi, allowing users to log 
 
 ---
 
-## ⚠️ LICENSE & USAGE NOTICE
+## 📜 License
 
-**This is proprietary commercial software.** 
+This plugin is licensed under the **MIT License** - free for everyone to use!
 
-- ❌ **NOT** open source or free to use
-- ❌ **NOT** licensed under MIT, Apache, or similar permissive licenses
-- ✅ Requires a **valid commercial license** for production use
-- ✅ Source code is visible for transparency and evaluation only
+### What you CAN do:
+- ✅ Use the plugin freely (personal & commercial)
+- ✅ View and study the source code
+- ✅ Report issues and contribute improvements
+- ✅ Deploy in production without fees
+- ✅ Integrate in your commercial projects
 
-**Using this software without a valid license is copyright infringement.**
+### What you CANNOT do:
+- ❌ Remove or bypass the license validation system
+- ❌ Modify `license-guard.js` or license-related endpoints
+- ❌ Disable license activation requirements
 
-📄 See [LICENSE](./LICENSE) for full terms  
-💼 Purchase a license: [Your Website]  
-📧 Questions? Contact: [Your Email]
+**Important:** The license validation system must remain intact and functional. This ensures quality, support, and continued development. Users must activate the plugin (free) through the admin interface.
+
+📄 See [LICENSE](./LICENSE) for full terms
 
 ---
 
@@ -252,7 +257,9 @@ await axios.post("/api/magic-link/send", {
 
 ## License
 
-[MIT](LICENSE)
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+**Important:** While the code is open source, the license validation system must remain intact. This ensures quality, security, and continued development of the plugin.
 
 ## Development & Contributing
 

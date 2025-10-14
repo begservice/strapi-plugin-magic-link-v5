@@ -1,20 +1,19 @@
 /**
  * Magic Link - Passwordless Authentication for Strapi
  * 
- * Copyright (c) 2025 [Dein Name/Firma]
- * All Rights Reserved.
+ * Copyright (c) 2025 Schero A. (begservice)
  * 
- * PROPRIETARY AND CONFIDENTIAL
+ * Licensed under the MIT License
  * 
- * This file is part of Magic Link plugin for Strapi.
+ * This plugin is free to use for personal and commercial projects.
  * 
- * Unauthorized copying, modification, distribution, or use of this software
- * via any medium is strictly prohibited without prior written permission.
+ * IMPORTANT RESTRICTION:
+ * The license validation system (license-guard.js and related components)
+ * must remain intact and functional. Removing or bypassing this system
+ * is strictly prohibited.
  * 
- * This software is licensed under a proprietary commercial license.
  * See LICENSE file for full terms.
  * 
- * For licensing inquiries: [Deine Email]
- * Website: [Deine Website]
+ * Repository: https://github.com/begservice/strapi-plugin-magic-link-v5
+ * Issues: https://github.com/begservice/strapi-plugin-magic-link-v5/issues
  */
-

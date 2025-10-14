@@ -1,48 +1,27 @@
-PROPRIETARY LICENSE AGREEMENT
+MIT License
 
-Copyright (c) 2025 [Dein Name/Firma]
+Copyright (c) 2025 Schero A. (begservice)
 
-This software and associated documentation files (the "Software") are proprietary 
-and confidential. All rights reserved.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-TERMS AND CONDITIONS:
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-1. LICENSE GRANT
-   This Software is licensed, not sold. Subject to payment of applicable license 
-   fees and compliance with these terms, you are granted a limited, non-exclusive, 
-   non-transferable license to use the Software.
+**ADDITIONAL CONDITION:**
+The license validation system (including but not limited to license-guard.js, 
+license controller, and related API endpoints) must remain intact and functional. 
+Removing, bypassing, or disabling the license validation system is strictly 
+prohibited.
 
-2. RESTRICTIONS
-   You may NOT:
-   - Copy, modify, or distribute the Software
-   - Reverse engineer, decompile, or disassemble the Software
-   - Remove or modify any proprietary notices or labels
-   - Use the Software for any unlicensed purpose
-   - Share your license key with unauthorized parties
-   - Host the Software on multiple servers without appropriate licensing
-
-3. INTELLECTUAL PROPERTY
-   All title, ownership rights, and intellectual property rights in and to the 
-   Software remain with the copyright holder. The Software is protected by 
-   copyright laws and international treaty provisions.
-
-4. TERMINATION
-   This license is effective until terminated. Your rights under this license 
-   will terminate automatically without notice if you fail to comply with any 
-   term of this license.
-
-5. WARRANTY DISCLAIMER
-   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-   IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS 
-   FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-
-6. LIMITATION OF LIABILITY
-   IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR 
-   OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
-
-7. LICENSE PURCHASE
-   To obtain a valid license, visit: [Deine Website]
-   Each license is subject to separate terms and pricing.
-
-For licensing inquiries, contact: [Deine Email]
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
