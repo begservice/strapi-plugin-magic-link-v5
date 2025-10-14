@@ -683,9 +683,15 @@ const TokensProfessional = () => {
   // Stats berechnen
   const stats = useMemo(() => ({
     total: tokens.length,
-    active: tokens.filter(t => !t.expired && !t.used).length,
-    expired: tokens.filter(t => t.expired).length,
-    used: tokens.filter(t => t.used).length,
+    active: tokens.filter(t => {
+      const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
+      return t.is_active && !isExpired;
+    }).length,
+    expired: tokens.filter(t => {
+      const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
+      return isExpired;
+    }).length,
+    used: tokens.filter(t => !t.is_active).length,
   }), [tokens]);
   
   // Gefilterte und sortierte Tokens
@@ -703,13 +709,14 @@ const TokensProfessional = () => {
     // Status Filter
     if (filterStatus !== 'all') {
       filtered = filtered.filter(token => {
+        const isExpired = token.expires_at && new Date(token.expires_at) < new Date();
         switch (filterStatus) {
           case 'active':
-            return !token.expired && !token.used;
+            return token.is_active && !isExpired;
           case 'expired':
-            return token.expired;
+            return isExpired;
           case 'used':
-            return token.used;
+            return !token.is_active;
           default:
             return true;
         }
@@ -939,12 +946,16 @@ const TokensProfessional = () => {
   };
   
   const getStatusBadge = (token) => {
-    if (token.used) {
+    // Prüfe zuerst is_active - wenn false, wurde der Token verwendet oder blockiert
+    if (!token.is_active) {
       return <AnimatedBadge variant="secondary">{formatMessage({ id: getTrad('tokens.status.used') })}</AnimatedBadge>;
     }
-    if (token.expired) {
+    // Prüfe ob abgelaufen
+    const isExpired = token.expires_at && new Date(token.expires_at) < new Date();
+    if (isExpired) {
       return <AnimatedBadge variant="warning">{formatMessage({ id: getTrad('tokens.status.expired') })}</AnimatedBadge>;
     }
+    // Token ist aktiv und nicht abgelaufen
     return <AnimatedBadge variant="success">{formatMessage({ id: getTrad('tokens.status.active') })}</AnimatedBadge>;
   };
   

@@ -369,9 +369,15 @@ const TokensRedesign = () => {
   // Stats berechnen
   const stats = {
     total: tokens.length,
-    active: tokens.filter(t => !t.expired && !t.used).length,
-    expired: tokens.filter(t => t.expired).length,
-    used: tokens.filter(t => t.used).length,
+    active: tokens.filter(t => {
+      const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
+      return t.is_active && !isExpired;
+    }).length,
+    expired: tokens.filter(t => {
+      const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
+      return isExpired;
+    }).length,
+    used: tokens.filter(t => !t.is_active).length,
   };
   
   // Stat Cards Konfiguration
