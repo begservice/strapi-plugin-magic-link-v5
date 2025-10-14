@@ -61,12 +61,18 @@ module.exports = {
         orderBy: { createdAt: 'desc' },
       });
 
+      // SQLite speichert Booleans als 0/1 - konvertiere zu echten Booleans
+      const normalizedTokens = tokens.map(token => ({
+        ...token,
+        is_active: !!token.is_active  // Konvertiere 0/1 zu false/true
+      }));
+
       // Berechne den Sicherheitswert
       const securityScore = await this.calculateSecurityScore();
       
       // Füge den Sicherheitswert als Metadaten hinzu
       return {
-        data: tokens,
+        data: normalizedTokens,
         meta: {
           securityScore
         }
