@@ -5,6 +5,18 @@ Secure passwordless authentication for Strapi using email-based magic links. No 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm version](https://badge.fury.io/js/strapi-plugin-magic-link-v5.svg)](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
 
+## 🌍 Supported Languages
+
+The admin interface is available in **5 languages** for international accessibility:
+
+- 🇬🇧 **English** - Global standard
+- 🇩🇪 **Deutsch** - German (DACH region)
+- 🇫🇷 **Français** - French (Strapi's home & community)
+- 🇪🇸 **Español** - Spanish (Spain & Latin America)
+- 🇵🇹 **Português** - Portuguese (Brazil & Portugal)
+
+Users can switch languages in **Settings → Magic Link → Interface Language**.
+
 ---
 
 ## 📜 License
