@@ -63,6 +63,40 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 
 ---
 
+## 📸 Screenshots
+
+### Token Management Dashboard
+Professional interface for managing magic link tokens with real-time statistics.
+
+![Token Dashboard](pics/token-dashboard.png)
+
+### Create New Token
+Simple modal to create tokens with custom TTL and context data.
+
+![Create Token](pics/createToken.png)
+
+### JWT Session Management
+Monitor and manage all active JWT sessions across your application.
+
+![JWT Sessions](pics/jwt-dashboard.png)
+
+### IP Ban Management
+Security feature to block suspicious IP addresses.
+
+![IP Bans](pics/ipban-dashboard.png)
+
+### Settings Interface
+Comprehensive settings panel with modern UI.
+
+![Settings Overview](pics/settings.png)
+
+### General Settings
+Configure core functionality and authentication options.
+
+![General Settings](pics/settings-general.png)
+
+---
+
 ## 📋 Prerequisites
 
 This plugin requires a **configured email provider** to send magic link emails.
