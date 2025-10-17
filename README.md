@@ -63,6 +63,71 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 
 ---
 
+## 📋 Prerequisites
+
+This plugin requires a **configured email provider** to send magic link emails.
+
+### Email Provider Setup
+
+**Option 1: Nodemailer (Recommended)**
+
+Install the Strapi email plugin:
+
+```bash
+npm install @strapi/provider-email-nodemailer
+```
+
+Configure in `config/plugins.js`:
+
+```javascript
+module.exports = ({ env }) => ({
+  email: {
+    config: {
+      provider: 'nodemailer',
+      providerOptions: {
+        host: env('SMTP_HOST', 'smtp.gmail.com'),
+        port: env('SMTP_PORT', 587),
+        auth: {
+          user: env('SMTP_USERNAME'),
+          pass: env('SMTP_PASSWORD'),
+        },
+      },
+      settings: {
+        defaultFrom: env('SMTP_DEFAULT_FROM', 'noreply@example.com'),
+        defaultReplyTo: env('SMTP_DEFAULT_REPLY_TO', 'support@example.com'),
+      },
+    },
+  },
+});
+```
+
+**Option 2: Other Email Providers**
+
+You can use any Strapi-compatible email provider:
+- SendGrid
+- Mailgun  
+- Amazon SES
+- Postmark
+- Any SMTP service
+
+See [Strapi Email Documentation](https://docs.strapi.io/dev-docs/plugins/email) for details.
+
+### Email Designer 5 Integration (Optional)
+
+This plugin is **fully compatible** with [Strapi Email Designer 5](https://www.npmjs.com/package/strapi-plugin-email-designer-5)!
+
+```bash
+# Install Email Designer 5
+npm install strapi-plugin-email-designer-5
+```
+
+Once installed, you can:
+- ✅ Create beautiful email templates in the visual designer
+- ✅ Use template variables: `magicLink`, `token`, `user`, `expiresAt`
+- ✅ Enable in Settings → Magic Link → Email Settings
+
+---
+
 ## 🚀 Installation
 
 ```bash
