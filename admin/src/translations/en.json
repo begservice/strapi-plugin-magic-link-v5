@@ -19,6 +19,8 @@
   "magic-link.settings.language.hint": "Select the language for the admin interface",
   "magic-link.settings.language.en": "English",
   "magic-link.settings.language.de": "Deutsch",
+  "magic-link.settings.language.fr": "Français",
+  "magic-link.settings.language.es": "Español",
   
   "magic-link.settings.info.header": "Important Configuration Notes",
   "magic-link.settings.info.line1": "All changes take effect immediately after saving",

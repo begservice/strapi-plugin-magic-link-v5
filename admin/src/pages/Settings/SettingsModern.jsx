@@ -314,6 +314,8 @@ const SettingsModern = () => {
                       >
                         <SingleSelectOption value="en">{formatMessage({ id: getTrad('settings.language.en') })}</SingleSelectOption>
                         <SingleSelectOption value="de">{formatMessage({ id: getTrad('settings.language.de') })}</SingleSelectOption>
+                        <SingleSelectOption value="fr">{formatMessage({ id: getTrad('settings.language.fr') })}</SingleSelectOption>
+                        <SingleSelectOption value="es">{formatMessage({ id: getTrad('settings.language.es') })}</SingleSelectOption>
                       </SingleSelect>
                     </Box>
                     <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', flex: 1 }}>

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { IntlProvider } from 'react-intl';
 import enTranslations from '../translations/en.json';
 import deTranslations from '../translations/de.json';
+import frTranslations from '../translations/fr.json';
+import esTranslations from '../translations/es.json';
 
 const LanguageContext = createContext();
 
@@ -16,6 +18,8 @@ export const usePluginLanguage = () => {
 const translations = {
   en: enTranslations,
   de: deTranslations,
+  fr: frTranslations,
+  es: esTranslations,
 };
 
 export const LanguageProvider = ({ children }) => {
