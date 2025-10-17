@@ -147,9 +147,24 @@ After installation, **restart your Strapi server**. The plugin will appear in yo
 
 ## 🎯 Quick Start
 
-### 1️⃣ Activate License
+### 1️⃣ First Time Setup - License Activation (Free)
 
-After installing, navigate to **Settings → Magic Link → License** in your Strapi admin panel and activate the plugin (free).
+**After installation, you'll see a license activation modal on first visit.**
+
+Enter your details to activate the plugin (completely free):
+
+```
+Email Address: your-email@example.com
+First Name: John
+Last Name: Doe
+```
+
+Click **"Create License"** and you're done! The plugin will:
+- ✅ Automatically register your installation
+- ✅ Activate all features (no payment required)
+- ✅ Connect to the license validation system
+
+**Important:** This is a **free activation** - not a payment. It helps us track installations, provide support, and ensure security. You can also use an existing license key if you already have one.
 
 ### 2️⃣ Configure Settings
 
