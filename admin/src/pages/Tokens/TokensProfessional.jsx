@@ -481,24 +481,24 @@ const StatIcon = styled(Box)`
 const StatValue = styled(Typography)`
   font-size: 2rem;
   font-weight: 700;
-  color: ${theme.colors.neutral[900]};
+  color: ${theme.colors.neutral[900]} !important;
   line-height: 1;
   margin: ${theme.spacing.sm} 0 ${theme.spacing.xs};
   transition: transform ${theme.transitions.normal};
   
   @media (prefers-color-scheme: dark) {
-    color: rgba(255, 255, 255, 0.95);
+    color: rgba(255, 255, 255, 0.95) !important;
   }
 `;
 
 const StatLabel = styled(Typography)`
   font-size: 0.875rem;
-  color: ${theme.colors.neutral[600]};
+  color: ${theme.colors.neutral[600]} !important;
   font-weight: 500;
   letter-spacing: 0.025em;
   
   @media (prefers-color-scheme: dark) {
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.7) !important;
   }
 `;
 
