@@ -272,6 +272,11 @@ const EmptyState = styled(Box)`
     opacity: 0.08;
     animation: ${float} 4s ease-in-out infinite;
   }
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 const FilterBar = styled(Flex)`

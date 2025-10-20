@@ -175,12 +175,20 @@ const StatValue = styled(Typography)`
   font-weight: 700;
   color: ${theme.colors.neutral[900]};
   margin: ${theme.spacing.md} 0 4px;
+  
+  @media (prefers-color-scheme: dark) {
+    color: rgba(255, 255, 255, 0.95);
+  }
 `;
 
 const StatLabel = styled(Typography)`
   font-size: 0.875rem;
   color: ${theme.colors.neutral[600]};
   font-weight: 500;
+  
+  @media (prefers-color-scheme: dark) {
+    color: rgba(255, 255, 255, 0.7);
+  }
 `;
 
 const DataTable = styled(Box)`
@@ -277,6 +285,11 @@ const EmptyState = styled(Box)`
     opacity: 0.08;
     animation: ${float} 4s ease-in-out infinite;
   }
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 const FilterBar = styled(Flex)`
@@ -298,6 +311,10 @@ const ActionBar = styled(Flex)`
   background: linear-gradient(90deg, ${theme.colors.primary[50]} 0%, ${theme.colors.primary[100]} 100%);
   border-radius: ${theme.borderRadius.lg};
   margin-bottom: ${theme.spacing.md};
+  
+  @media (prefers-color-scheme: dark) {
+    background: linear-gradient(90deg, rgba(2, 132, 199, 0.2) 0%, rgba(2, 132, 199, 0.3) 100%);
+  }
 `;
 
 const LoadingOverlay = styled(Flex)`

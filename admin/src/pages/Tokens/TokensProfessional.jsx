@@ -485,6 +485,10 @@ const StatValue = styled(Typography)`
   line-height: 1;
   margin: ${theme.spacing.sm} 0 ${theme.spacing.xs};
   transition: transform ${theme.transitions.normal};
+  
+  @media (prefers-color-scheme: dark) {
+    color: rgba(255, 255, 255, 0.95);
+  }
 `;
 
 const StatLabel = styled(Typography)`
@@ -492,6 +496,10 @@ const StatLabel = styled(Typography)`
   color: ${theme.colors.neutral[600]};
   font-weight: 500;
   letter-spacing: 0.025em;
+  
+  @media (prefers-color-scheme: dark) {
+    color: rgba(255, 255, 255, 0.7);
+  }
 `;
 
 const DataTable = styled(Box)`
@@ -628,6 +636,19 @@ const EmptyState = styled(Box)`
     width: 100%;
     max-width: 600px;
   }
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.2);
+    
+    &::before {
+      background: linear-gradient(135deg, 
+        rgba(2, 132, 199, 0.1) 0%, 
+        rgba(147, 51, 234, 0.1) 100%
+      );
+      opacity: 0.5;
+    }
+  }
 `;
 
 const LoadingOverlay = styled(Flex)`
@@ -654,6 +675,11 @@ const FilterBar = styled(Flex)`
   margin-bottom: ${theme.spacing.lg};
   box-shadow: ${theme.shadows.sm};
   border: 1px solid ${theme.colors.neutral[200]};
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const ActionBar = styled(Flex)`
@@ -665,6 +691,10 @@ const ActionBar = styled(Flex)`
   border-radius: ${theme.borderRadius.lg};
   margin-bottom: ${theme.spacing.md};
   animation: ${slideIn} ${theme.transitions.normal};
+  
+  @media (prefers-color-scheme: dark) {
+    background: linear-gradient(90deg, rgba(2, 132, 199, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%);
+  }
 `;
 
 // ================ HELPER FUNKTIONEN ================
