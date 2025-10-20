@@ -143,11 +143,11 @@ const StatCard = styled(Box)`
   }
   
   @media (prefers-color-scheme: dark) {
-    background: rgba(30, 30, 40, 0.6);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.15);
     
     &:hover {
-      background: rgba(40, 40, 50, 0.8);
+      background: rgba(255, 255, 255, 0.08);
       border-color: ${props => props.$color || theme.colors.primary[500]};
     }
   }
@@ -199,8 +199,8 @@ const DataTable = styled(Box)`
   border: 1px solid ${theme.colors.neutral[200]};
   
   @media (prefers-color-scheme: dark) {
-    background: rgba(30, 30, 40, 0.6);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 `;
 
@@ -219,8 +219,8 @@ const StyledTable = styled(Table)`
     }
     
     @media (prefers-color-scheme: dark) {
-      background: rgba(40, 40, 50, 0.4);
-      border-bottom-color: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom-color: rgba(255, 255, 255, 0.15);
       
       th {
         color: rgba(255, 255, 255, 0.9);
@@ -301,8 +301,8 @@ const FilterBar = styled(Flex)`
   border: 1px solid ${theme.colors.neutral[200]};
   
   @media (prefers-color-scheme: dark) {
-    background: rgba(30, 30, 40, 0.6);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 `;
 
