@@ -138,8 +138,13 @@ const SettingsModern = () => {
     callback_url: '',
     allow_magic_links_on_public_registration: false,
     store_login_info: true,
-    ui_language: 'en'
+    ui_language: 'en',
+    rate_limit_enabled: true,
+    rate_limit_max_attempts: 5,
+    rate_limit_window_minutes: 15
   });
+  
+  const [rateLimitStats, setRateLimitStats] = useState(null);
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
@@ -147,6 +152,16 @@ const SettingsModern = () => {
       const res = await get('/magic-link/settings');
       const settingsData = res.data.settings || res.data.data || res.data;
       setSettings(prev => ({ ...prev, ...settingsData }));
+      
+      // Load rate limit stats
+      try {
+        const statsRes = await get('/magic-link/rate-limit/stats');
+        if (statsRes?.data?.data) {
+          setRateLimitStats(statsRes.data.data);
+        }
+      } catch (error) {
+        console.error('Error loading rate limit stats:', error);
+      }
     } catch (error) {
       if (error.name !== 'AbortError') {
         console.error('Error loading settings:', error);
@@ -193,6 +208,40 @@ const SettingsModern = () => {
 
   const handleLanguageChange = (newLang) => {
     changeLanguage(newLang);
+  };
+  
+  const handleRateLimitCleanup = async () => {
+    try {
+      await get('/magic-link/rate-limit/cleanup');
+      toggleNotification({
+        type: 'success',
+        message: formatMessage({ id: getTrad('settings.rateLimit.cleanupSuccess') })
+      });
+      loadSettings();
+    } catch (error) {
+      toggleNotification({
+        type: 'danger',
+        message: formatMessage({ id: getTrad('settings.rateLimit.cleanupError') })
+      });
+    }
+  };
+  
+  const handleRateLimitReset = async () => {
+    if (window.confirm(formatMessage({ id: getTrad('settings.rateLimit.resetConfirm') }))) {
+      try {
+        await get('/magic-link/rate-limit/reset');
+        toggleNotification({
+          type: 'success',
+          message: formatMessage({ id: getTrad('settings.rateLimit.resetSuccess') })
+        });
+        loadSettings();
+      } catch (error) {
+        toggleNotification({
+          type: 'danger',
+          message: formatMessage({ id: getTrad('settings.rateLimit.resetError') })
+        });
+      }
+    }
   };
 
   if (isLoading) {
@@ -1111,6 +1160,159 @@ ${language === 'de' ? 'Der Link läuft in 1 Stunde ab.' : 'The link expires in 1
                     </ToggleCard>
                   </Grid.Item>
                 </Grid.Root>
+              </Box>
+            </Accordion.Content>
+          </Accordion.Item>
+
+          {/* Rate Limiting */}
+          <Accordion.Item value="ratelimit">
+            <Accordion.Header>
+              <Accordion.Trigger
+                icon={Shield}
+                description={formatMessage({ id: getTrad('settings.section.rateLimit.description') })}
+              >
+                {formatMessage({ id: getTrad('settings.section.rateLimit') })}
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content>
+              <Box padding={6}>
+                {/* Rate Limit Toggle */}
+                <Box background="neutral100" padding={5} style={{ borderRadius: theme.borderRadius.md, marginBottom: '24px' }}>
+                  <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '8px', display: 'block', textAlign: 'center', color: theme.colors.neutral[700] }}>
+                    {formatMessage({ id: getTrad('settings.rateLimit.title') })}
+                  </Typography>
+                  <Typography variant="pi" textColor="neutral600" style={{ marginBottom: '20px', display: 'block', textAlign: 'center', fontSize: '12px' }}>
+                    {formatMessage({ id: getTrad('settings.rateLimit.subtitle') })}
+                  </Typography>
+                  <Grid.Root gap={4}>
+                    <Grid.Item col={12}>
+                      <ToggleCard $active={settings.rate_limit_enabled} $statusLabel={settings.rate_limit_enabled ? statusActive : statusInactive}>
+                        <Flex direction="column" gap={3}>
+                          <Flex justifyContent="center" alignItems="center" style={{ marginBottom: '8px' }}>
+                            <Toggle
+                              checked={settings.rate_limit_enabled}
+                              onChange={(e) => updateSetting('rate_limit_enabled', e.target.checked)}
+                              size="L"
+                            />
+                          </Flex>
+                          <Box>
+                            <Typography variant="pi" fontWeight="bold" style={{ fontSize: '14px', marginBottom: '6px', display: 'block', textAlign: 'center' }}>
+                              {formatMessage({ id: getTrad('settings.rateLimit.enable.title') })}
+                            </Typography>
+                            <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px', lineHeight: '1.4', textAlign: 'center' }}>
+                              {formatMessage({ id: getTrad('settings.rateLimit.enable.description') })}
+                            </Typography>
+                          </Box>
+                        </Flex>
+                      </ToggleCard>
+                    </Grid.Item>
+                  </Grid.Root>
+                </Box>
+
+                {/* Rate Limit Configuration */}
+                <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '16px', display: 'block', color: theme.colors.neutral[700] }}>
+                  {formatMessage({ id: getTrad('settings.rateLimit.config.title') })}
+                </Typography>
+                <Grid.Root gap={6} style={{ marginBottom: '32px' }}>
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        {formatMessage({ id: getTrad('settings.rateLimit.maxAttempts.label') })}
+                      </Typography>
+                      <NumberInput
+                        hint={formatMessage({ id: getTrad('settings.rateLimit.maxAttempts.hint') })}
+                        value={settings.rate_limit_max_attempts}
+                        onChange={val => updateSetting('rate_limit_max_attempts', val)}
+                        min={1}
+                        max={100}
+                      />
+                    </Box>
+                  </Grid.Item>
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        {formatMessage({ id: getTrad('settings.rateLimit.windowMinutes.label') })}
+                      </Typography>
+                      <NumberInput
+                        hint={formatMessage({ id: getTrad('settings.rateLimit.windowMinutes.hint') })}
+                        value={settings.rate_limit_window_minutes}
+                        onChange={val => updateSetting('rate_limit_window_minutes', val)}
+                        min={1}
+                        max={1440}
+                      />
+                    </Box>
+                  </Grid.Item>
+                </Grid.Root>
+
+                {/* Rate Limit Stats */}
+                {rateLimitStats && (
+                  <>
+                    <Divider style={{ marginBottom: '24px' }} />
+                    <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '16px', display: 'block', color: theme.colors.neutral[700] }}>
+                      {formatMessage({ id: getTrad('settings.rateLimit.stats.title') })}
+                    </Typography>
+                    <Grid.Root gap={4} style={{ marginBottom: '24px' }}>
+                      <Grid.Item col={3} s={6} xs={12}>
+                        <Box padding={4} background="neutral100" style={{ borderRadius: '8px', textAlign: 'center' }}>
+                          <Typography variant="alpha" style={{ color: theme.colors.primary[600] }}>
+                            {rateLimitStats.totalEntries || 0}
+                          </Typography>
+                          <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '4px' }}>
+                            {formatMessage({ id: getTrad('settings.rateLimit.stats.total') })}
+                          </Typography>
+                        </Box>
+                      </Grid.Item>
+                      <Grid.Item col={3} s={6} xs={12}>
+                        <Box padding={4} background="danger100" style={{ borderRadius: '8px', textAlign: 'center' }}>
+                          <Typography variant="alpha" style={{ color: theme.colors.danger[600] }}>
+                            {rateLimitStats.blocked || 0}
+                          </Typography>
+                          <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '4px' }}>
+                            {formatMessage({ id: getTrad('settings.rateLimit.stats.blocked') })}
+                          </Typography>
+                        </Box>
+                      </Grid.Item>
+                      <Grid.Item col={3} s={6} xs={12}>
+                        <Box padding={4} background="primary100" style={{ borderRadius: '8px', textAlign: 'center' }}>
+                          <Typography variant="alpha" style={{ color: theme.colors.primary[600] }}>
+                            {rateLimitStats.ipLimits || 0}
+                          </Typography>
+                          <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '4px' }}>
+                            {formatMessage({ id: getTrad('settings.rateLimit.stats.ipLimits') })}
+                          </Typography>
+                        </Box>
+                      </Grid.Item>
+                      <Grid.Item col={3} s={6} xs={12}>
+                        <Box padding={4} background="success100" style={{ borderRadius: '8px', textAlign: 'center' }}>
+                          <Typography variant="alpha" style={{ color: theme.colors.success[600] }}>
+                            {rateLimitStats.emailLimits || 0}
+                          </Typography>
+                          <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '4px' }}>
+                            {formatMessage({ id: getTrad('settings.rateLimit.stats.emailLimits') })}
+                          </Typography>
+                        </Box>
+                      </Grid.Item>
+                    </Grid.Root>
+                    
+                    {/* Management Buttons */}
+                    <Flex gap={3} justifyContent="center">
+                      <Button
+                        onClick={handleRateLimitCleanup}
+                        variant="secondary"
+                        size="M"
+                      >
+                        {formatMessage({ id: getTrad('settings.rateLimit.cleanup') })}
+                      </Button>
+                      <Button
+                        onClick={handleRateLimitReset}
+                        variant="danger"
+                        size="M"
+                      >
+                        {formatMessage({ id: getTrad('settings.rateLimit.reset') })}
+                      </Button>
+                    </Flex>
+                  </>
+                )}
               </Box>
             </Accordion.Content>
           </Accordion.Item>
