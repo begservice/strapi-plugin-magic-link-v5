@@ -343,8 +343,8 @@ const IPBans = () => {
     if (!newIP || !isValidIP(newIP)) {
       toggleNotification({
         type: 'warning',
-        message: 'Bitte geben Sie eine gültige IP-Adresse ein',
-        title: 'Ungültige IP'
+        message: formatMessage({ id: getTrad('ipban.modal.invalidIP') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.validation') })
       });
       return;
     }
@@ -535,9 +535,9 @@ const IPBans = () => {
             <StyledTable>
               <Thead>
                 <Tr>
-                  <Th>IP-Adresse</Th>
-                  <Th>Status</Th>
-                  <Th>Aktionen</Th>
+                  <Th>{formatMessage({ id: getTrad('common.tableHeaders.ipAddress') })}</Th>
+                  <Th>{formatMessage({ id: getTrad('common.status') })}</Th>
+                  <Th>{formatMessage({ id: getTrad('common.actions') })}</Th>
                 </Tr>
               </Thead>
               <Tbody>
@@ -691,7 +691,7 @@ const IPBans = () => {
                   <Flex gap={2} alignItems="flex-start">
                     <WarningCircle style={{ width: '20px', height: '20px', color: theme.colors.warning[600], flexShrink: 0 }} />
                     <Typography variant="pi" style={{ fontSize: '12px', lineHeight: '1.5' }}>
-                      <strong>Warnung:</strong> Diese IP-Adresse wird sofort gesperrt und alle zugehörigen Tokens werden deaktiviert.
+                      {formatMessage({ id: getTrad('ipban.modal.warning') })}
                     </Typography>
                   </Flex>
                 </Box>

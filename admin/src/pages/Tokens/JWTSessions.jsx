@@ -421,8 +421,8 @@ const JWTSessions = () => {
     fetchSessions();
     toggleNotification({
       type: 'success',
-      message: 'Daten wurden aktualisiert',
-      title: 'Erfolg'
+      message: formatMessage({ id: getTrad('jwt.notifications.refreshSuccess') }),
+      title: formatMessage({ id: getTrad('tokens.notifications.success') })
     });
   };
   
@@ -583,12 +583,12 @@ const JWTSessions = () => {
         <SingleSelect
           value={pageSize.toString()}
           onChange={(value) => setPageSize(parseInt(value))}
-          placeholder="Einträge pro Seite"
+          placeholder={formatMessage({ id: getTrad('common.entriesPerPage') })}
         >
-          <SingleSelectOption value="10">10 Einträge</SingleSelectOption>
-          <SingleSelectOption value="25">25 Einträge</SingleSelectOption>
-          <SingleSelectOption value="50">50 Einträge</SingleSelectOption>
-          <SingleSelectOption value="100">100 Einträge</SingleSelectOption>
+          <SingleSelectOption value="10">{formatMessage({ id: getTrad('common.entries') }, { count: 10 })}</SingleSelectOption>
+          <SingleSelectOption value="25">{formatMessage({ id: getTrad('common.entries') }, { count: 25 })}</SingleSelectOption>
+          <SingleSelectOption value="50">{formatMessage({ id: getTrad('common.entries') }, { count: 50 })}</SingleSelectOption>
+          <SingleSelectOption value="100">{formatMessage({ id: getTrad('common.entries') }, { count: 100 })}</SingleSelectOption>
         </SingleSelect>
         <Button
           onClick={handleCleanup}
@@ -612,14 +612,14 @@ const JWTSessions = () => {
       {selectedSessions.length > 0 && (
         <ActionBar justifyContent="space-between" alignItems="center">
           <Typography fontWeight="semiBold">
-            {selectedSessions.length} Session{selectedSessions.length !== 1 && 's'} ausgewählt
+            {formatMessage({ id: getTrad('common.selectedSessions') }, { count: selectedSessions.length })}
           </Typography>
           <Button
             onClick={() => setSelectedSessions([])}
             variant="tertiary"
             size="S"
           >
-            Auswahl aufheben
+            {formatMessage({ id: getTrad('common.clearSelection') })}
           </Button>
         </ActionBar>
       )}
@@ -693,21 +693,21 @@ const JWTSessions = () => {
                       onCheckedChange={handleSelectAll}
                     />
                   </Th>
-                  <Th action={<IconButton label="Nach Benutzer sortieren" onClick={() => handleSort('username')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
-                    Benutzer
+                  <Th action={<IconButton label={formatMessage({ id: getTrad('common.tableHeaders.sortByUser') })} onClick={() => handleSort('username')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    {formatMessage({ id: getTrad('common.user') })}
                   </Th>
-                  <Th>IP-Adresse</Th>
-                  <Th>User Agent</Th>
-                  <Th action={<IconButton label="Nach Status sortieren" onClick={() => handleSort('revoked')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
-                    Status
+                  <Th>{formatMessage({ id: getTrad('common.tableHeaders.ipAddress') })}</Th>
+                  <Th>{formatMessage({ id: getTrad('common.userAgent') })}</Th>
+                  <Th action={<IconButton label={formatMessage({ id: getTrad('common.tableHeaders.sortByStatus') })} onClick={() => handleSort('revoked')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    {formatMessage({ id: getTrad('common.status') })}
                   </Th>
-                  <Th action={<IconButton label="Nach Erstelldatum sortieren" onClick={() => handleSort('createdAt')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
-                    Erstellt
+                  <Th action={<IconButton label={formatMessage({ id: getTrad('common.tableHeaders.sortByCreated') })} onClick={() => handleSort('createdAt')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    {formatMessage({ id: getTrad('common.created') })}
                   </Th>
-                  <Th action={<IconButton label="Nach Ablaufdatum sortieren" onClick={() => handleSort('expiresAt')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
-                    Gültig bis
+                  <Th action={<IconButton label={formatMessage({ id: getTrad('common.tableHeaders.sortByExpiry') })} onClick={() => handleSort('expiresAt')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
+                    {formatMessage({ id: getTrad('common.expiresAt') })}
                   </Th>
-                  <Th>Aktionen</Th>
+                  <Th>{formatMessage({ id: getTrad('common.actions') })}</Th>
                 </Tr>
               </Thead>
               <Tbody>

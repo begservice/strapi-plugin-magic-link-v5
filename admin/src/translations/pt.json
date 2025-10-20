@@ -335,6 +335,7 @@
   "magic-link.ipban.modal.label": "Endereço IP",
   "magic-link.ipban.modal.placeholder": "ex. 192.168.1.1",
   "magic-link.ipban.modal.hint": "Digite um endereço IPv4 ou IPv6",
+  "magic-link.ipban.modal.invalidIP": "Por favor, insira um endereço IP válido",
   "magic-link.ipban.modal.cancel": "Cancelar",
   "magic-link.ipban.modal.submit": "Banir IP",
   "magic-link.ipban.status.banned": "Banido",
@@ -370,6 +371,14 @@
   "magic-link.common.submit": "Enviar",
   "magic-link.common.entriesPerPage": "Entradas por página",
   "magic-link.common.entries": "{count} entradas",
-  "magic-link.common.selectedCount": "{count} selecionado(s)"
+  "magic-link.common.selectedCount": "{count} selecionado(s)",
+  "magic-link.common.selectedSessions": "{count} sessão/sessões selecionada(s)",
+  "magic-link.common.clearSelection": "Limpar seleção",
+  "magic-link.common.tableHeaders.ipAddress": "Endereço IP",
+  "magic-link.common.tableHeaders.tokens": "Tokens",
+  "magic-link.common.tableHeaders.sortByUser": "Ordenar por usuário",
+  "magic-link.common.tableHeaders.sortByStatus": "Ordenar por status",
+  "magic-link.common.tableHeaders.sortByCreated": "Ordenar por data de criação",
+  "magic-link.common.tableHeaders.sortByExpiry": "Ordenar por data de expiração"
 }
 
