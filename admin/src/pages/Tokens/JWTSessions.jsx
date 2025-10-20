@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useIntl } from 'react-intl';
 import {
   Typography,
   Box,
@@ -38,6 +39,7 @@ import {
   CaretDown,
   Monitor,
 } from '@strapi/icons';
+import getTrad from '../../utils/getTrad';
 
 // ================ DESIGN TOKENS ================
 const theme = {
@@ -280,6 +282,7 @@ const formatDate = (dateString) => {
 
 // ================ HAUPTKOMPONENTE ================
 const JWTSessions = () => {
+  const { formatMessage } = useIntl();
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
   
@@ -358,7 +361,7 @@ const JWTSessions = () => {
   // Stat Cards Konfiguration
   const statCards = [
     {
-      title: 'Gesamt',
+      title: formatMessage({ id: getTrad('jwt.stats.total') }),
       value: stats.total,
       icon: Shield,
       color: theme.colors.primary[600],
@@ -366,7 +369,7 @@ const JWTSessions = () => {
       delay: '0s'
     },
     {
-      title: 'Aktiv',
+      title: formatMessage({ id: getTrad('jwt.stats.active') }),
       value: stats.active,
       icon: Check,
       color: theme.colors.success[600],
@@ -374,7 +377,7 @@ const JWTSessions = () => {
       delay: '0.1s'
     },
     {
-      title: 'Abgelaufen',
+      title: formatMessage({ id: getTrad('jwt.stats.expired') }),
       value: stats.expired,
       icon: Clock,
       color: theme.colors.warning[600],
@@ -382,7 +385,7 @@ const JWTSessions = () => {
       delay: '0.2s'
     },
     {
-      title: 'Gesperrt',
+      title: formatMessage({ id: getTrad('jwt.stats.revoked') }),
       value: stats.revoked,
       icon: Lock,
       color: theme.colors.danger[600],
@@ -435,8 +438,8 @@ const JWTSessions = () => {
     } catch (error) {
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Sperren der Session',
-        title: 'Fehler'
+        message: formatMessage({ id: getTrad('jwt.notifications.revokeError') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.error') })
       });
     }
   };
@@ -447,14 +450,14 @@ const JWTSessions = () => {
       await fetchSessions();
       toggleNotification({
         type: 'success',
-        message: 'Session wurde entsperrt',
-        title: 'Erfolg'
+        message: formatMessage({ id: getTrad('jwt.notifications.unrevokeSuccess') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.success') })
       });
     } catch (error) {
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Entsperren der Session',
-        title: 'Fehler'
+        message: formatMessage({ id: getTrad('jwt.notifications.unrevokeError') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.error') })
       });
     }
   };
@@ -465,14 +468,14 @@ const JWTSessions = () => {
       await fetchSessions();
       toggleNotification({
         type: 'success',
-        message: response?.data?.message || 'Sessions wurden aufgeräumt',
-        title: 'Erfolg'
+        message: response?.data?.message || formatMessage({ id: getTrad('jwt.notifications.cleanupSuccess') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.success') })
       });
     } catch (error) {
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Aufräumen der Sessions',
-        title: 'Fehler'
+        message: formatMessage({ id: getTrad('jwt.notifications.cleanupError') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.error') })
       });
     }
   };
@@ -504,12 +507,12 @@ const JWTSessions = () => {
   
   const getStatusBadge = (session) => {
     if (session.revoked) {
-      return <AnimatedBadge variant="danger">Gesperrt</AnimatedBadge>;
+      return <AnimatedBadge variant="danger">{formatMessage({ id: getTrad('jwt.status.revoked') })}</AnimatedBadge>;
     }
     if (session.isExpired) {
-      return <AnimatedBadge variant="warning">Abgelaufen</AnimatedBadge>;
+      return <AnimatedBadge variant="warning">{formatMessage({ id: getTrad('jwt.status.expired') })}</AnimatedBadge>;
     }
-    return <AnimatedBadge variant="success">Aktiv</AnimatedBadge>;
+    return <AnimatedBadge variant="success">{formatMessage({ id: getTrad('jwt.status.active') })}</AnimatedBadge>;
   };
   
   // Loading State
@@ -570,12 +573,12 @@ const JWTSessions = () => {
         <SingleSelect
           value={filterStatus}
           onChange={setFilterStatus}
-          placeholder="Status filtern"
+          placeholder={formatMessage({ id: getTrad('tokens.filter.status') })}
         >
-          <SingleSelectOption value="all">Alle anzeigen</SingleSelectOption>
-          <SingleSelectOption value="active">Nur Aktive</SingleSelectOption>
-          <SingleSelectOption value="expired">Nur Abgelaufene</SingleSelectOption>
-          <SingleSelectOption value="revoked">Nur Gesperrte</SingleSelectOption>
+          <SingleSelectOption value="all">{formatMessage({ id: getTrad('jwt.filter.all') })}</SingleSelectOption>
+          <SingleSelectOption value="active">{formatMessage({ id: getTrad('jwt.filter.active') })}</SingleSelectOption>
+          <SingleSelectOption value="expired">{formatMessage({ id: getTrad('jwt.filter.expired') })}</SingleSelectOption>
+          <SingleSelectOption value="revoked">{formatMessage({ id: getTrad('jwt.filter.revoked') })}</SingleSelectOption>
         </SingleSelect>
         <SingleSelect
           value={pageSize.toString()}
@@ -593,7 +596,7 @@ const JWTSessions = () => {
           variant="secondary"
           size="S"
         >
-          Aufräumen
+          {formatMessage({ id: getTrad('jwt.actions.cleanup') })}
         </Button>
         <Button
           onClick={handleRefresh}
@@ -601,7 +604,7 @@ const JWTSessions = () => {
           variant="secondary"
           size="S"
         >
-          Aktualisieren
+          {formatMessage({ id: getTrad('jwt.actions.refresh') })}
         </Button>
       </FilterBar>
       
