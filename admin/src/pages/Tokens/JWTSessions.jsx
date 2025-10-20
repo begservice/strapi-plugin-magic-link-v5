@@ -565,8 +565,8 @@ const JWTSessions = () => {
             name="session-search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Suche nach E-Mail, Username oder IP..."
-            clearLabel="Löschen"
+            placeholder={formatMessage({ id: getTrad('common.searchPlaceholder') })}
+            clearLabel={formatMessage({ id: getTrad('common.clearLabel') })}
             onClear={() => setSearchQuery('')}
           />
         </Box>

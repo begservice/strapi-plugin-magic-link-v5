@@ -446,8 +446,8 @@ const IPBans = () => {
             name="ip-search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Suche nach IP-Adresse..."
-            clearLabel="Löschen"
+            placeholder={formatMessage({ id: getTrad('common.searchIPPlaceholder') })}
+            clearLabel={formatMessage({ id: getTrad('common.clearLabel') })}
             onClear={() => setSearchQuery('')}
           />
         </Box>
