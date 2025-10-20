@@ -97,10 +97,7 @@ const float = keyframes`
 const Container = styled(Box)`
   animation: ${fadeIn} 0.5s;
   min-height: calc(100vh - 200px);
-  
-  @media (prefers-color-scheme: dark) {
-    background: transparent;
-  }
+  background: transparent;
 `;
 
 const StatsGrid = styled(Box)`
@@ -115,14 +112,14 @@ const StatsGrid = styled(Box)`
 `;
 
 const StatCard = styled(Box)`
-  background: ${theme.colors.neutral[0]};
+  background: ${props => props.theme.colors.neutral0};
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.lg};
   transition: all ${theme.transitions.normal};
   animation: ${fadeIn} 0.5s backwards;
   animation-delay: ${props => props.$delay || '0s'};
   box-shadow: ${theme.shadows.sm};
-  border: 1px solid ${theme.colors.neutral[200]};
+  border: 1px solid ${props => props.theme.colors.neutral200};
   min-width: 220px;
   max-width: 300px;
   flex: 1;
@@ -134,16 +131,6 @@ const StatCard = styled(Box)`
     
     .stat-icon {
       transform: rotate(10deg) scale(1.1);
-    }
-  }
-  
-  @media (prefers-color-scheme: dark) {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.15);
-    
-    &:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: ${props => props.$color || theme.colors.primary[500]};
     }
   }
 `;
@@ -168,84 +155,50 @@ const StatIcon = styled(Box)`
 const StatValue = styled(Typography)`
   font-size: 2rem;
   font-weight: 700;
-  color: ${theme.colors.neutral[900]} !important;
+  color: ${props => props.theme.colors.neutral800};
   margin: ${theme.spacing.md} 0 4px;
-  
-  @media (prefers-color-scheme: dark) {
-    color: rgba(255, 255, 255, 0.95) !important;
-  }
 `;
 
 const StatLabel = styled(Typography)`
   font-size: 0.875rem;
-  color: ${theme.colors.neutral[600]} !important;
+  color: ${props => props.theme.colors.neutral600};
   font-weight: 500;
-  
-  @media (prefers-color-scheme: dark) {
-    color: rgba(255, 255, 255, 0.7) !important;
-  }
 `;
 
 const DataTable = styled(Box)`
-  background: ${theme.colors.neutral[0]};
+  background: ${props => props.theme.colors.neutral0};
   border-radius: ${theme.borderRadius.xl};
   overflow: hidden;
   box-shadow: ${theme.shadows.sm};
-  border: 1px solid ${theme.colors.neutral[200]};
-  
-  @media (prefers-color-scheme: dark) {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
+  border: 1px solid ${props => props.theme.colors.neutral200};
 `;
 
 const StyledTable = styled(Table)`
   thead {
-    background: ${theme.colors.neutral[50]};
-    border-bottom: 1px solid ${theme.colors.neutral[200]};
+    background: ${props => props.theme.colors.neutral50};
+    border-bottom: 1px solid ${props => props.theme.colors.neutral200};
     
     th {
       font-weight: 600;
-      color: ${theme.colors.neutral[700]};
+      color: ${props => props.theme.colors.neutral800};
       font-size: 0.875rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       padding: ${theme.spacing.md};
     }
-    
-    @media (prefers-color-scheme: dark) {
-      background: rgba(255, 255, 255, 0.04);
-      border-bottom-color: rgba(255, 255, 255, 0.15);
-      
-      th {
-        color: rgba(255, 255, 255, 0.9);
-      }
-    }
   }
   
   tbody tr {
     transition: all ${theme.transitions.fast};
-    border-bottom: 1px solid ${theme.colors.neutral[100]};
+    border-bottom: 1px solid ${props => props.theme.colors.neutral100};
     
     &:hover {
-      background: ${theme.colors.danger[50]};
+      background: ${props => props.theme.colors.danger100};
     }
     
     td {
       padding: ${theme.spacing.md};
-      color: ${theme.colors.neutral[700]};
-    }
-    
-    @media (prefers-color-scheme: dark) {
-      border-bottom-color: rgba(255, 255, 255, 0.05);
-      
-      &:hover {
-        background: rgba(220, 38, 38, 0.15);
-      }
-      
-      td {
-        color: rgba(255, 255, 255, 0.85);
-      }
+      color: ${props => props.theme.colors.neutral800};
     }
   }
 `;
@@ -261,11 +214,11 @@ const AnimatedBadge = styled(Badge)`
 `;
 
 const EmptyState = styled(Box)`
-  background: ${theme.colors.neutral[0]};
+  background: ${props => props.theme.colors.neutral0};
   border-radius: ${theme.borderRadius.xl};
   padding: 64px;
   text-align: center;
-  border: 2px dashed ${theme.colors.neutral[300]};
+  border: 2px dashed ${props => props.theme.colors.neutral300};
   min-height: 400px;
   display: flex;
   align-items: center;
@@ -280,25 +233,15 @@ const EmptyState = styled(Box)`
     opacity: 0.08;
     animation: ${float} 4s ease-in-out infinite;
   }
-  
-  @media (prefers-color-scheme: dark) {
-    background: rgba(30, 30, 40, 0.6);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
 `;
 
 const FilterBar = styled(Flex)`
-  background: ${theme.colors.neutral[0]};
+  background: ${props => props.theme.colors.neutral0};
   border-radius: ${theme.borderRadius.lg};
   padding: ${theme.spacing.md};
   margin-bottom: ${theme.spacing.lg};
   box-shadow: ${theme.shadows.sm};
-  border: 1px solid ${theme.colors.neutral[200]};
-  
-  @media (prefers-color-scheme: dark) {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
+  border: 1px solid ${props => props.theme.colors.neutral200};
 `;
 
 const LoadingOverlay = styled(Flex)`
