@@ -214,5 +214,31 @@ module.exports = {
         policies: [],
       },
     },
+    
+    // Rate Limiting
+    {
+      method: 'GET',
+      path: '/rate-limit/stats',
+      handler: 'rateLimit.getStats',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/rate-limit/cleanup',
+      handler: 'rateLimit.cleanup',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/rate-limit/reset',
+      handler: 'rateLimit.reset',
+      config: {
+        policies: [],
+      },
+    },
   ],
 }; 

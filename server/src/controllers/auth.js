@@ -160,6 +160,7 @@ module.exports = {
   async sendLink(ctx) {
     // Strapi v5 pattern für Service Zugriff
     const magicLink = strapi.plugin('magic-link').service('magic-link');
+    const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
 
     const isEnabled = await magicLink.isEnabled();
 
@@ -177,6 +178,22 @@ module.exports = {
 
     if (email && !isEmail) {
       return ctx.badRequest('wrong.email');
+    }
+    
+    // Rate limiting check - both IP and email
+    const ipAddress = ctx.request.ip;
+    const ipCheck = await rateLimiter.checkRateLimit(ipAddress, 'ip');
+    
+    if (!ipCheck.allowed) {
+      return ctx.tooManyRequests(`Too many requests. Please try again in ${ipCheck.retryAfter} seconds.`);
+    }
+    
+    if (email) {
+      const emailCheck = await rateLimiter.checkRateLimit(email, 'email');
+      
+      if (!emailCheck.allowed) {
+        return ctx.tooManyRequests(`Too many requests for this email. Please try again in ${emailCheck.retryAfter} seconds.`);
+      }
     }
 
     let user;

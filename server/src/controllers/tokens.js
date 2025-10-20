@@ -94,6 +94,21 @@ module.exports = {
         return ctx.badRequest('Email is required');
       }
       
+      // Rate limiting check
+      const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
+      const ipAddress = ctx.request.ip;
+      const ipCheck = await rateLimiter.checkRateLimit(ipAddress, 'ip');
+      
+      if (!ipCheck.allowed) {
+        return ctx.tooManyRequests(`Too many token creation requests. Please try again in ${ipCheck.retryAfter} seconds.`);
+      }
+      
+      const emailCheck = await rateLimiter.checkRateLimit(email, 'email');
+      
+      if (!emailCheck.allowed) {
+        return ctx.tooManyRequests(`Too many requests for this email. Please try again in ${emailCheck.retryAfter} seconds.`);
+      }
+      
       // Überprüfe, ob die Plugin-Einstellungen das Erstellen neuer Benutzer erlauben
       const pluginStore = strapi.store({
         type: 'plugin',

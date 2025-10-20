@@ -70,6 +70,10 @@ Thanks.`,
       jwt_token_expires_in: '30d',
       callback_url: serverUrl,
       allow_magic_links_on_public_registration: false,
+      // Rate Limiting Settings
+      rate_limit_enabled: true,
+      rate_limit_max_attempts: 5,
+      rate_limit_window_minutes: 15,
     };
 
     await pluginStore.set({ key: 'settings', value });
@@ -118,6 +122,19 @@ Thanks.`,
     
     return next();
   });
+
+  // Initialize Rate Limiter Cleanup Job
+  const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
+  
+  // Initial cleanup
+  setTimeout(() => {
+    rateLimiter.cleanupExpired();
+  }, 5000);
+  
+  // Cleanup every 30 minutes
+  setInterval(() => {
+    rateLimiter.cleanupExpired();
+  }, 30 * 60 * 1000);
 
   // Initialize License Guard
   try {
