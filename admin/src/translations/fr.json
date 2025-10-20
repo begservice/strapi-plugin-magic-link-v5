@@ -341,7 +341,32 @@
   "magic-link.ipban.empty.title": "Aucune IP bannie",
   "magic-link.ipban.empty.description": "Aucune adresse IP n'est actuellement bannie. Ajoutez une IP pour la bloquer.",
   "magic-link.ipban.empty.action": "Bannir la première IP",
+  "magic-link.ipban.notifications.banSuccess": "IP {ip} a été bannie",
+  "magic-link.ipban.notifications.unbanSuccess": "IP {ip} a été débannie",
   "magic-link.ipban.notifications.banError": "Erreur lors du bannissement de l'IP",
-  "magic-link.ipban.notifications.unbanError": "Erreur lors du débannissement de l'IP"
+  "magic-link.ipban.notifications.unbanError": "Erreur lors du débannissement de l'IP",
+  "magic-link.ipban.notifications.refreshSuccess": "Liste IP mise à jour",
+  
+  "magic-link.common.loading": "Chargement...",
+  "magic-link.common.loadingSessions": "Chargement des sessions JWT...",
+  "magic-link.common.loadingBannedIPs": "Chargement des adresses IP bannies...",
+  "magic-link.common.search": "Rechercher",
+  "magic-link.common.clear": "Effacer",
+  "magic-link.common.previous": "Précédent",
+  "magic-link.common.next": "Suivant",
+  "magic-link.common.user": "Utilisateur",
+  "magic-link.common.ipAddress": "Adresse IP",
+  "magic-link.common.userAgent": "User Agent",
+  "magic-link.common.status": "Statut",
+  "magic-link.common.created": "Créé",
+  "magic-link.common.expiresAt": "Expire le",
+  "magic-link.common.actions": "Actions",
+  "magic-link.common.tokens": "Jetons",
+  "magic-link.common.close": "Fermer",
+  "magic-link.common.cancel": "Annuler",
+  "magic-link.common.submit": "Soumettre",
+  "magic-link.common.entriesPerPage": "Entrées par page",
+  "magic-link.common.entries": "{count} entrées",
+  "magic-link.common.selectedCount": "{count} sélectionné(s)"
 }
 

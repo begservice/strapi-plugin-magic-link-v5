@@ -521,7 +521,7 @@ const JWTSessions = () => {
       <Container>
         <LoadingOverlay>
           <Box className="loader-icon">
-            <Loader>Lade JWT Sessions...</Loader>
+            <Loader>{formatMessage({ id: getTrad('common.loadingSessions') })}</Loader>
           </Box>
         </LoadingOverlay>
       </Container>
@@ -653,7 +653,7 @@ const JWTSessions = () => {
                   marginBottom: '8px',
                 }}
               >
-                Keine JWT Sessions gefunden
+                {formatMessage({ id: getTrad('jwt.empty.title') })}
               </Typography>
               
               <Typography 
@@ -665,7 +665,7 @@ const JWTSessions = () => {
                   lineHeight: '1.6',
                 }}
               >
-                Es sind momentan keine JWT Sessions aktiv oder ändere deine Filterkriterien
+                {formatMessage({ id: getTrad('jwt.empty.description') })}
               </Typography>
               
               <Flex gap={3} justifyContent="center" style={{ marginTop: '16px' }}>
@@ -677,7 +677,7 @@ const JWTSessions = () => {
                   variant="secondary"
                   size="L"
                 >
-                  Filter zurücksetzen
+                  {formatMessage({ id: getTrad('jwt.empty.resetFilters') })}
                 </Button>
               </Flex>
             </Flex>
@@ -792,7 +792,7 @@ const JWTSessions = () => {
                       <Flex gap={1} justifyContent="flex-end">
                         {session.revoked ? (
                           <IconButton
-                            label="Session entsperren"
+                            label={formatMessage({ id: getTrad('jwt.actions.unrevoke') })}
                             variant="success-ghost"
                             onClick={() => handleUnrevoke(session.id, session.userId)}
                             withTooltip={false}
@@ -802,7 +802,7 @@ const JWTSessions = () => {
                           </IconButton>
                         ) : (
                           <IconButton
-                            label="Session sperren"
+                            label={formatMessage({ id: getTrad('jwt.actions.revoke') })}
                             variant="danger-ghost"
                             onClick={() => handleRevoke(session.id)}
                             withTooltip={false}
@@ -823,7 +823,7 @@ const JWTSessions = () => {
                 <Flex justifyContent="center">
                   <Pagination activePage={currentPage} pageCount={totalPages}>
                     <PreviousLink onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
-                      Zurück
+                      {formatMessage({ id: getTrad('common.previous') })}
                     </PreviousLink>
                     {[...Array(totalPages)].map((_, i) => (
                       <PageLink
@@ -835,7 +835,7 @@ const JWTSessions = () => {
                       </PageLink>
                     ))}
                     <NextLink onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
-                      Weiter
+                      {formatMessage({ id: getTrad('common.next') })}
                     </NextLink>
                   </Pagination>
                 </Flex>

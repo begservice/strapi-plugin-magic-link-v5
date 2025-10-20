@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { useIntl } from 'react-intl';
 import {
   Typography,
   Box,
@@ -33,6 +34,7 @@ import {
   Plus,
   WarningCircle,
 } from '@strapi/icons';
+import getTrad from '../../utils/getTrad';
 
 // ================ DESIGN TOKENS ================
 const theme = {
@@ -253,6 +255,7 @@ const LoadingOverlay = styled(Flex)`
 
 // ================ HAUPTKOMPONENTE ================
 const IPBans = () => {
+  const { formatMessage } = useIntl();
   const { get, post } = useFetchClient();
   const { toggleNotification } = useNotification();
   
@@ -295,7 +298,7 @@ const IPBans = () => {
   // Stat Cards Konfiguration
   const statCards = [
     {
-      title: 'Gesperrte IPs',
+      title: formatMessage({ id: getTrad('ipban.stats.total') }),
       value: stats.total,
       icon: Lock,
       color: theme.colors.danger[600],
@@ -331,8 +334,8 @@ const IPBans = () => {
     fetchBannedIPs();
     toggleNotification({
       type: 'success',
-      message: 'Daten wurden aktualisiert',
-      title: 'Erfolg'
+      message: formatMessage({ id: getTrad('ipban.notifications.refreshSuccess') }),
+      title: formatMessage({ id: getTrad('tokens.notifications.success') })
     });
   };
   
@@ -355,14 +358,14 @@ const IPBans = () => {
       setNewIP('');
       toggleNotification({
         type: 'success',
-        message: `IP ${newIP} wurde gesperrt`,
-        title: 'Erfolg'
+        message: formatMessage({ id: getTrad('ipban.notifications.banSuccess') }, { ip: newIP }),
+        title: formatMessage({ id: getTrad('tokens.notifications.success') })
       });
     } catch (error) {
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Sperren der IP',
-        title: 'Fehler'
+        message: formatMessage({ id: getTrad('ipban.notifications.banError') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.error') })
       });
     }
   };
@@ -375,14 +378,14 @@ const IPBans = () => {
       await fetchBannedIPs();
       toggleNotification({
         type: 'success',
-        message: `IP ${ip} wurde entsperrt`,
-        title: 'Erfolg'
+        message: formatMessage({ id: getTrad('ipban.notifications.unbanSuccess') }, { ip }),
+        title: formatMessage({ id: getTrad('tokens.notifications.success') })
       });
     } catch (error) {
       toggleNotification({
         type: 'warning',
-        message: 'Fehler beim Entsperren der IP',
-        title: 'Fehler'
+        message: formatMessage({ id: getTrad('ipban.notifications.unbanError') }),
+        title: formatMessage({ id: getTrad('tokens.notifications.error') })
       });
     }
   };
@@ -399,7 +402,7 @@ const IPBans = () => {
       <Container>
         <LoadingOverlay>
           <Box className="loader-icon">
-            <Loader>Lade gesperrte IPs...</Loader>
+            <Loader>{formatMessage({ id: getTrad('common.loadingBannedIPs') })}</Loader>
           </Box>
         </LoadingOverlay>
       </Container>
@@ -454,7 +457,7 @@ const IPBans = () => {
           variant="default"
           size="S"
         >
-          IP sperren
+          {formatMessage({ id: getTrad('ipban.actions.ban') })}
         </Button>
         <Button
           onClick={handleRefresh}
@@ -462,7 +465,7 @@ const IPBans = () => {
           variant="secondary"
           size="S"
         >
-          Aktualisieren
+          {formatMessage({ id: getTrad('ipban.actions.refresh') })}
         </Button>
       </FilterBar>
       
@@ -495,7 +498,7 @@ const IPBans = () => {
                   marginBottom: '8px',
                 }}
               >
-                Keine gesperrten IPs
+                {formatMessage({ id: getTrad('ipban.empty.title') })}
               </Typography>
               
               <Typography 
@@ -507,7 +510,7 @@ const IPBans = () => {
                   lineHeight: '1.6',
                 }}
               >
-                Es sind momentan keine IP-Adressen gesperrt. Fügen Sie eine IP hinzu, um sie zu blockieren.
+                {formatMessage({ id: getTrad('ipban.empty.description') })}
               </Typography>
               
               <Flex gap={3} justifyContent="center" style={{ marginTop: '16px' }}>
@@ -522,7 +525,7 @@ const IPBans = () => {
                     fontWeight: '600',
                   }}
                 >
-                  Erste IP sperren
+                  {formatMessage({ id: getTrad('ipban.empty.action') })}
                 </Button>
               </Flex>
             </Flex>
@@ -568,12 +571,12 @@ const IPBans = () => {
                       </Flex>
                     </Td>
                     <Td>
-                      <AnimatedBadge variant="danger">Gesperrt</AnimatedBadge>
+                      <AnimatedBadge variant="danger">{formatMessage({ id: getTrad('ipban.status.banned') })}</AnimatedBadge>
                     </Td>
                     <Td>
                       <Flex gap={1} justifyContent="flex-end">
                         <IconButton
-                          label="IP entsperren"
+                          label={formatMessage({ id: getTrad('ipban.actions.unban') })}
                           variant="success-ghost"
                           onClick={() => handleUnbanIP(ip)}
                           withTooltip={false}
@@ -593,7 +596,7 @@ const IPBans = () => {
                 <Flex justifyContent="center">
                   <Pagination activePage={currentPage} pageCount={totalPages}>
                     <PreviousLink onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
-                      Zurück
+                      {formatMessage({ id: getTrad('common.previous') })}
                     </PreviousLink>
                     {[...Array(totalPages)].map((_, i) => (
                       <PageLink
@@ -605,7 +608,7 @@ const IPBans = () => {
                       </PageLink>
                     ))}
                     <NextLink onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
-                      Weiter
+                      {formatMessage({ id: getTrad('common.next') })}
                     </NextLink>
                   </Pagination>
                 </Flex>
@@ -659,15 +662,15 @@ const IPBans = () => {
             >
               <Flex direction="column" gap={1} alignItems="flex-start">
                 <Typography variant="beta" style={{ fontSize: '16px', fontWeight: '600' }}>
-                  IP-Adresse sperren
+                  {formatMessage({ id: getTrad('ipban.modal.title') })}
                 </Typography>
                 <Typography variant="pi" textColor="neutral600" style={{ fontSize: '13px' }}>
-                  Fügen Sie eine IP-Adresse zur Sperrliste hinzu
+                  {formatMessage({ id: getTrad('ipban.modal.subtitle') })}
                 </Typography>
               </Flex>
               <IconButton
                 onClick={() => setShowAddModal(false)}
-                label="Schließen"
+                label={formatMessage({ id: getTrad('common.close') })}
                 withTooltip={false}
               >
                 <Cross />
@@ -695,8 +698,8 @@ const IPBans = () => {
                 
                 <Box>
                   <TextInput
-                    label="IP-Adresse"
-                    placeholder="z.B. 192.168.1.1"
+                    label={formatMessage({ id: getTrad('ipban.modal.label') })}
+                    placeholder={formatMessage({ id: getTrad('ipban.modal.placeholder') })}
                     value={newIP}
                     onChange={(e) => setNewIP(e.target.value)}
                     style={{ fontSize: '14px', fontFamily: 'monospace' }}
@@ -706,7 +709,7 @@ const IPBans = () => {
                     textColor="neutral600" 
                     style={{ marginTop: '6px', fontSize: '12px' }}
                   >
-                    Geben Sie eine IPv4 oder IPv6 Adresse ein
+                    {formatMessage({ id: getTrad('ipban.modal.hint') })}
                   </Typography>
                 </Box>
               </Flex>
@@ -734,7 +737,7 @@ const IPBans = () => {
                   size="M"
                   variant="tertiary"
                 >
-                  Abbrechen
+                  {formatMessage({ id: getTrad('ipban.modal.cancel') })}
                 </Button>
                 <Button 
                   onClick={handleBanIP}
@@ -743,7 +746,7 @@ const IPBans = () => {
                   startIcon={<Lock />}
                   disabled={!newIP}
                 >
-                  IP sperren
+                  {formatMessage({ id: getTrad('ipban.modal.submit') })}
                 </Button>
               </Flex>
             </Box>

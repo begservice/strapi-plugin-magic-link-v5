@@ -341,7 +341,32 @@
   "magic-link.ipban.empty.title": "No hay IPs bloqueadas",
   "magic-link.ipban.empty.description": "No hay direcciones IP bloqueadas actualmente. Agregue una IP para bloquearla.",
   "magic-link.ipban.empty.action": "Bloquear primera IP",
+  "magic-link.ipban.notifications.banSuccess": "IP {ip} ha sido bloqueada",
+  "magic-link.ipban.notifications.unbanSuccess": "IP {ip} ha sido desbloqueada",
   "magic-link.ipban.notifications.banError": "Error al bloquear IP",
-  "magic-link.ipban.notifications.unbanError": "Error al desbloquear IP"
+  "magic-link.ipban.notifications.unbanError": "Error al desbloquear IP",
+  "magic-link.ipban.notifications.refreshSuccess": "Lista de IP actualizada",
+  
+  "magic-link.common.loading": "Cargando...",
+  "magic-link.common.loadingSessions": "Cargando sesiones JWT...",
+  "magic-link.common.loadingBannedIPs": "Cargando direcciones IP bloqueadas...",
+  "magic-link.common.search": "Buscar",
+  "magic-link.common.clear": "Borrar",
+  "magic-link.common.previous": "Anterior",
+  "magic-link.common.next": "Siguiente",
+  "magic-link.common.user": "Usuario",
+  "magic-link.common.ipAddress": "Dirección IP",
+  "magic-link.common.userAgent": "User Agent",
+  "magic-link.common.status": "Estado",
+  "magic-link.common.created": "Creado",
+  "magic-link.common.expiresAt": "Expira",
+  "magic-link.common.actions": "Acciones",
+  "magic-link.common.tokens": "Tokens",
+  "magic-link.common.close": "Cerrar",
+  "magic-link.common.cancel": "Cancelar",
+  "magic-link.common.submit": "Enviar",
+  "magic-link.common.entriesPerPage": "Entradas por página",
+  "magic-link.common.entries": "{count} entradas",
+  "magic-link.common.selectedCount": "{count} seleccionado(s)"
 }
 
