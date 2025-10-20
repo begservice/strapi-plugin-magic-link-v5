@@ -37,7 +37,7 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 
 **Important:** The license validation system must remain intact and functional. This ensures quality, support, and continued development. Users must activate the plugin (free) through the admin interface.
 
-📄 See [LICENSE](./LICENSE) for full terms
+📄 See [LICENSE](./LICENSE) for full terms  
 
 ---
 
@@ -54,6 +54,7 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 - 🛡️ **IP Banning** - Block suspicious IP addresses
 - 🔒 **Session Revocation** - Instantly revoke any active JWT session
 - ⏰ **Token Expiration** - Configurable expiration periods
+- 🚦 **Rate Limiting** - Prevent abuse with configurable request limits (5 per 15 min default)
 - 🎯 **Login Attempt Limiting** - Prevent brute force attacks
 - 📊 **Security Score** - Real-time security configuration assessment
 - 📝 **Login Info Tracking** - Store IP addresses and user agents for audit
@@ -314,6 +315,27 @@ if (loginToken) {
 - `user_creation_strategy` - `email` | `emailUsername` | `manual`
 - `verify_email` - Require email verification
 - `callback_url` - Post-login redirect URL
+
+### Security & Rate Limiting
+- `rate_limit_enabled` - Enable/disable rate limiting (default: `true`)
+- `rate_limit_max_attempts` - Maximum requests allowed (default: `5`)
+- `rate_limit_window_minutes` - Time window in minutes (default: `15`)
+
+**How it works:**
+- Limits token creation requests per IP address
+- Limits token creation requests per email address
+- Returns `429 Too Many Requests` when limit exceeded
+- Automatic cleanup of expired entries every 30 minutes
+
+**Example:** With default settings (5 attempts per 15 minutes):
+- User can request max 5 magic links in 15 minutes
+- After 5 attempts, they must wait up to 15 minutes
+- Protects against brute-force and spam attacks
+
+**Management:**
+- View statistics in Settings → Security & Rate Limiting
+- Manually cleanup expired entries
+- Reset all limits if needed
 
 ---
 
