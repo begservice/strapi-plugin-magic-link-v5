@@ -236,13 +236,13 @@ const float = keyframes`
 const Container = styled(Box)`
   animation: ${fadeIn} ${theme.transitions.slow};
   min-height: 100vh;
-  background: linear-gradient(180deg, 
-    ${theme.colors.neutral[50]} 0%, 
-    ${theme.colors.neutral[100]} 100%
-  );
   max-width: 1440px;
   margin: 0 auto;
   padding: ${theme.spacing.xl} ${theme.spacing.lg} 0;
+  
+  @media (prefers-color-scheme: dark) {
+    background: transparent;
+  }
 `;
 
 const Header = styled(Box)`
@@ -449,6 +449,16 @@ const StatCard = styled(Box)`
     );
     transform: translate(40%, -40%);
   }
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      background: rgba(40, 40, 50, 0.8);
+      border-color: ${props => props.$color || theme.colors.primary[500]};
+    }
+  }
 `;
 
 const StatIcon = styled(Box)`
@@ -490,6 +500,11 @@ const DataTable = styled(Box)`
   overflow: hidden;
   box-shadow: ${theme.shadows.sm};
   border: 1px solid ${theme.colors.neutral[200]};
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const StyledTable = styled(Table)`
@@ -505,6 +520,15 @@ const StyledTable = styled(Table)`
       text-transform: uppercase;
       letter-spacing: 0.05em;
       padding: ${theme.spacing.md};
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      background: rgba(40, 40, 50, 0.4);
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      
+      th {
+        color: rgba(255, 255, 255, 0.9);
+      }
     }
   }
   
@@ -527,6 +551,18 @@ const StyledTable = styled(Table)`
     td {
       padding: ${theme.spacing.md};
       color: ${theme.colors.neutral[700]};
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      
+      &:hover {
+        background: rgba(2, 132, 199, 0.15);
+      }
+      
+      td {
+        color: rgba(255, 255, 255, 0.85);
+      }
     }
   }
 `;

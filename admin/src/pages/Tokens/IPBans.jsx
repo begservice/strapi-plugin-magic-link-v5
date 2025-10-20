@@ -97,6 +97,10 @@ const float = keyframes`
 const Container = styled(Box)`
   animation: ${fadeIn} 0.5s;
   min-height: calc(100vh - 200px);
+  
+  @media (prefers-color-scheme: dark) {
+    background: transparent;
+  }
 `;
 
 const StatsGrid = styled(Box)`
@@ -130,6 +134,16 @@ const StatCard = styled(Box)`
     
     .stat-icon {
       transform: rotate(10deg) scale(1.1);
+    }
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      background: rgba(40, 40, 50, 0.8);
+      border-color: ${props => props.$color || theme.colors.primary[500]};
     }
   }
 `;
@@ -170,6 +184,11 @@ const DataTable = styled(Box)`
   overflow: hidden;
   box-shadow: ${theme.shadows.sm};
   border: 1px solid ${theme.colors.neutral[200]};
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const StyledTable = styled(Table)`
@@ -185,6 +204,15 @@ const StyledTable = styled(Table)`
       letter-spacing: 0.05em;
       padding: ${theme.spacing.md};
     }
+    
+    @media (prefers-color-scheme: dark) {
+      background: rgba(40, 40, 50, 0.4);
+      border-bottom-color: rgba(255, 255, 255, 0.1);
+      
+      th {
+        color: rgba(255, 255, 255, 0.9);
+      }
+    }
   }
   
   tbody tr {
@@ -198,6 +226,18 @@ const StyledTable = styled(Table)`
     td {
       padding: ${theme.spacing.md};
       color: ${theme.colors.neutral[700]};
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      border-bottom-color: rgba(255, 255, 255, 0.05);
+      
+      &:hover {
+        background: rgba(220, 38, 38, 0.15);
+      }
+      
+      td {
+        color: rgba(255, 255, 255, 0.85);
+      }
     }
   }
 `;
@@ -241,6 +281,11 @@ const FilterBar = styled(Flex)`
   margin-bottom: ${theme.spacing.lg};
   box-shadow: ${theme.shadows.sm};
   border: 1px solid ${theme.colors.neutral[200]};
+  
+  @media (prefers-color-scheme: dark) {
+    background: rgba(30, 30, 40, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 `;
 
 const LoadingOverlay = styled(Flex)`
