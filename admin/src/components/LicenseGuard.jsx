@@ -168,10 +168,8 @@ const LicenseGuard = ({ children }) => {
   const fetchAdminUser = async () => {
     try {
       const response = await get('/admin/users/me');
-      console.log('Admin user response:', response);
       // The API returns { data: { data: {...} } } structure
       const userData = response.data?.data || response.data;
-      console.log('User data extracted:', userData);
       if (userData) {
         setAdminUser(userData);
         // Pre-fill form with admin user data
@@ -180,14 +178,9 @@ const LicenseGuard = ({ children }) => {
           firstName: userData.firstname || '',
           lastName: userData.lastname || '',
         });
-        console.log('Admin user set:', {
-          email: userData.email,
-          firstname: userData.firstname,
-          lastname: userData.lastname
-        });
       }
     } catch (error) {
-      console.error('Error fetching admin user:', error);
+      // Silent fail - auto-create will still work
     }
   };
 
@@ -214,9 +207,7 @@ const LicenseGuard = ({ children }) => {
     setIsCreating(true);
     
     try {
-      console.log('Auto-creating license with admin user data...');
       const response = await post('/magic-link/license/auto-create', {});
-      console.log('Auto-create response:', response);
       
       if (response.data && response.data.success) {
         toggleNotification({
@@ -257,9 +248,7 @@ const LicenseGuard = ({ children }) => {
     setIsCreating(true);
     
     try {
-      console.log('Creating license with data:', formData);
       const response = await post('/magic-link/license/create', formData);
-      console.log('License creation response:', response);
       
       if (response.data && response.data.success) {
         toggleNotification({
@@ -300,7 +289,6 @@ const LicenseGuard = ({ children }) => {
     setIsCreating(true);
     
     try {
-      console.log('Validating existing license key...');
       // Store the license key with email validation
       const pluginStore = await post('/magic-link/license/store-key', {
         licenseKey: existingLicenseKey.trim(),
