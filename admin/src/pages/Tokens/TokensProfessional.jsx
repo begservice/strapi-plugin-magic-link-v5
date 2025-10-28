@@ -416,6 +416,14 @@ const StatsGrid = styled(Box)`
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: ${theme.spacing.sm};
+    max-width: 100%;
+    margin-bottom: ${theme.spacing.md};
+  }
 `;
 
 const StatCard = styled(Box)`
