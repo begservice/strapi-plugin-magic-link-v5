@@ -115,7 +115,7 @@ module.exports = {
         name: 'magic-link',
       });
       
-      const settings = await pluginStore.get({ key: 'settings' });
+      let settings = await pluginStore.get({ key: 'settings' });
       
       // --- DEBUG LOGGING START ---
       strapi.log.info('[MagicLink Controller - create function] Loaded settings from store:', settings);
