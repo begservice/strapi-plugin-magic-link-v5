@@ -206,6 +206,57 @@ const StyledTable = styled(Table)`
       color: ${props => props.theme.colors.neutral800};
     }
   }
+
+  /* Mobile Card Layout */
+  @media screen and (max-width: 768px) {
+    display: block !important;
+    
+    thead {
+      display: none !important;
+    }
+    
+    tbody {
+      display: block !important;
+    }
+    
+    tr {
+      display: block !important;
+      margin-bottom: 16px !important;
+      border: 2px solid #E5E7EB !important;
+      border-radius: 12px !important;
+      padding: 16px !important;
+      background: white !important;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+    }
+    
+    td {
+      display: flex !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      padding: 8px 0 !important;
+      border: none !important;
+      
+      &:not(:last-child) {
+        border-bottom: 1px solid #E5E7EB !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 8px !important;
+      }
+      
+      &::before {
+        content: attr(data-label) !important;
+        font-weight: 600 !important;
+        color: #6B7280 !important;
+        font-size: 11px !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        flex-shrink: 0 !important;
+      }
+      
+      &[data-label=""]::before {
+        display: none !important;
+      }
+    }
+  }
 `;
 
 const AnimatedBadge = styled(Badge)`
@@ -768,7 +819,7 @@ const JWTSessions = () => {
                     <Td>
                       {getStatusBadge(session)}
                     </Td>
-                    <Td>
+                    <Td data-label="Created">
                       <Flex alignItems="center" gap={1}>
                         <Calendar style={{ width: '14px', height: '14px', color: theme.colors.neutral[500] }} />
                         <Typography variant="pi">
@@ -776,7 +827,7 @@ const JWTSessions = () => {
                         </Typography>
                       </Flex>
                     </Td>
-                    <Td>
+                    <Td data-label="Expires">
                       <Flex alignItems="center" gap={1}>
                         <Clock style={{ width: '14px', height: '14px', color: theme.colors.warning[500] }} />
                         <Typography 
