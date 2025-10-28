@@ -176,6 +176,14 @@ module.exports = {
     },
     {
       method: 'POST',
+      path: '/license/auto-create',
+      handler: 'license.autoCreate',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
       path: '/license/create',
       handler: 'license.createAndActivate',
       config: {

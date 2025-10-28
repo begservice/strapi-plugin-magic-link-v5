@@ -64,6 +64,55 @@ module.exports = {
   },
 
   /**
+   * Auto-create license with logged-in admin user data
+   */
+  async autoCreate(ctx) {
+    try {
+      // Get the logged-in admin user
+      const adminUser = ctx.state.user;
+      
+      if (!adminUser) {
+        return ctx.unauthorized('No admin user logged in');
+      }
+
+      const licenseGuard = strapi.plugin('magic-link').service('license-guard');
+      
+      // Use admin user data for license creation
+      const license = await licenseGuard.createLicense({ 
+        email: adminUser.email,
+        firstName: adminUser.firstname || 'Admin',
+        lastName: adminUser.lastname || 'User',
+      });
+
+      if (!license) {
+        return ctx.badRequest('Failed to create license');
+      }
+
+      // Store the license key
+      await licenseGuard.storeLicenseKey(license.licenseKey);
+
+      // Start pinging
+      const pingInterval = licenseGuard.startPinging(license.licenseKey, 15);
+
+      // Update global license guard
+      strapi.licenseGuard = {
+        licenseKey: license.licenseKey,
+        pingInterval,
+        data: license,
+      };
+
+      return ctx.send({
+        success: true,
+        message: 'License automatically created and activated',
+        data: license,
+      });
+    } catch (error) {
+      strapi.log.error('Error auto-creating license:', error);
+      return ctx.badRequest('Error creating license');
+    }
+  },
+
+  /**
    * Create and activate a new license
    */
   async createAndActivate(ctx) {

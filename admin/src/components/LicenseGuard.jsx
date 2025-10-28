@@ -149,8 +149,10 @@ const LicenseGuard = ({ children }) => {
   const [needsLicense, setNeedsLicense] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [useExistingKey, setUseExistingKey] = useState(false);
+  const [useAutoCreate, setUseAutoCreate] = useState(true);
   const [existingLicenseKey, setExistingLicenseKey] = useState('');
   const [existingEmail, setExistingEmail] = useState('');
+  const [adminUser, setAdminUser] = useState(null);
   
   const [formData, setFormData] = useState({
     email: '',
@@ -160,7 +162,25 @@ const LicenseGuard = ({ children }) => {
 
   useEffect(() => {
     checkLicenseStatus();
+    fetchAdminUser();
   }, []);
+
+  const fetchAdminUser = async () => {
+    try {
+      const response = await get('/admin/users/me');
+      if (response.data) {
+        setAdminUser(response.data);
+        // Pre-fill form with admin user data
+        setFormData({
+          email: response.data.email || '',
+          firstName: response.data.firstname || '',
+          lastName: response.data.lastname || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching admin user:', error);
+    }
+  };
 
   const checkLicenseStatus = async () => {
     setIsChecking(true);
@@ -180,6 +200,40 @@ const LicenseGuard = ({ children }) => {
     }
   };
 
+  const handleAutoCreateLicense = async (e) => {
+    e.preventDefault();
+    setIsCreating(true);
+    
+    try {
+      console.log('Auto-creating license with admin user data...');
+      const response = await post('/magic-link/license/auto-create', {});
+      console.log('Auto-create response:', response);
+      
+      if (response.data && response.data.success) {
+        toggleNotification({
+          type: 'success',
+          message: `License automatically created! Reloading...`,
+        });
+        
+        setNeedsLicense(false);
+        
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        throw new Error('Failed to auto-create license');
+      }
+    } catch (error) {
+      console.error('Error auto-creating license:', error);
+      toggleNotification({
+        type: 'danger',
+        message: error?.response?.data?.error?.message || 'Failed to auto-create license. Try manual creation.',
+      });
+      setIsCreating(false);
+      setUseAutoCreate(false);
+    }
+  };
+
   const handleCreateLicense = async (e) => {
     e.preventDefault();
     
@@ -187,7 +241,6 @@ const LicenseGuard = ({ children }) => {
       toggleNotification({
         type: 'warning',
         message: 'Please fill in all fields',
-        title: 'Validation Error',
       });
       return;
     }
@@ -203,13 +256,10 @@ const LicenseGuard = ({ children }) => {
         toggleNotification({
           type: 'success',
           message: `License created successfully! Reloading...`,
-          title: '✅ License Activated',
         });
         
-        // Set state first
         setNeedsLicense(false);
         
-        // Reload page immediately to initialize plugin properly
         setTimeout(() => {
           window.location.reload();
         }, 500);
@@ -221,7 +271,6 @@ const LicenseGuard = ({ children }) => {
       toggleNotification({
         type: 'danger',
         message: error?.response?.data?.error?.message || 'Failed to create license. Please try again.',
-        title: 'Error',
       });
       setIsCreating(false);
     }
@@ -330,20 +379,33 @@ const LicenseGuard = ({ children }) => {
           {/* Form */}
           <Box
             as="form"
-            onSubmit={useExistingKey ? handleValidateExistingKey : handleCreateLicense}
+            onSubmit={useExistingKey ? handleValidateExistingKey : (useAutoCreate ? handleAutoCreateLicense : handleCreateLicense)}
             padding={6}
             paddingLeft={8}
             paddingRight={8}
           >
             <Flex direction="column" gap={5} style={{ width: '100%' }}>
-              {/* Toggle Button */}
+              {/* Toggle Buttons */}
               <Box style={{ textAlign: 'center', width: '100%' }}>
+                {!useExistingKey && (
+                  <ToggleButton 
+                    type="button"
+                    onClick={() => setUseAutoCreate(!useAutoCreate)}
+                    disabled={isCreating}
+                    style={{ marginBottom: '8px', display: 'block', margin: '0 auto' }}
+                  >
+                    {useAutoCreate ? '→ Manual entry' : '← Auto-create with my account'}
+                  </ToggleButton>
+                )}
                 <ToggleButton 
                   type="button"
-                  onClick={() => setUseExistingKey(!useExistingKey)}
+                  onClick={() => {
+                    setUseExistingKey(!useExistingKey);
+                    if (!useExistingKey) setUseAutoCreate(false);
+                  }}
                   disabled={isCreating}
                 >
-                  {useExistingKey ? '← Create new license instead' : 'Already have a license key? →'}
+                  {useExistingKey ? '← Create new license' : 'Have a license key? →'}
                 </ToggleButton>
               </Box>
 
@@ -359,8 +421,10 @@ const LicenseGuard = ({ children }) => {
               >
                 <Typography variant="omega" style={{ fontSize: '13px', lineHeight: '1.6' }}>
                   {useExistingKey 
-                    ? '🔑 Enter your email address and license key below to activate the plugin. The email must match the one used when the license was created.'
-                    : '💡 A license will be created automatically for this server. Enter your details below to activate the plugin.'
+                    ? '🔑 Enter your email and license key to activate.'
+                    : useAutoCreate && adminUser
+                    ? `✨ Click "Activate" to auto-create a license with your account (${adminUser.email})`
+                    : '💡 A license will be created with the details below.'
                   }
                 </Typography>
               </Box>
@@ -412,8 +476,29 @@ const LicenseGuard = ({ children }) => {
                     </Typography>
                   </Box>
                 </>
+              ) : useAutoCreate && adminUser ? (
+                // Auto-create mode - Show user info
+                <Box
+                  background="success100"
+                  padding={5}
+                  style={{
+                    borderRadius: '8px',
+                    border: '2px solid #DCFCE7',
+                    textAlign: 'center',
+                  }}
+                >
+                  <Typography variant="omega" fontWeight="bold" style={{ marginBottom: '12px', display: 'block' }}>
+                    Ready to activate with your account:
+                  </Typography>
+                  <Typography variant="pi" style={{ marginBottom: '4px', display: 'block' }}>
+                    👤 {adminUser.firstname} {adminUser.lastname}
+                  </Typography>
+                  <Typography variant="pi" textColor="neutral600">
+                    📧 {adminUser.email}
+                  </Typography>
+                </Box>
               ) : (
-                // Create New License Fields
+                // Manual Create License Fields
                 <>
 
               {/* Email */}
@@ -498,13 +583,13 @@ const LicenseGuard = ({ children }) => {
                     Validate License
                   </Button>
                 ) : (
-                  // Create License Button
+                  // Create/Auto-Create License Button
                   <Button
                     type="submit"
                     size="L"
                     startIcon={<Check />}
                     loading={isCreating}
-                    disabled={isCreating || !formData.email || !formData.firstName || !formData.lastName}
+                    disabled={isCreating || (!useAutoCreate && (!formData.email || !formData.firstName || !formData.lastName))}
                     style={{
                       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       color: 'white',
@@ -513,7 +598,7 @@ const LicenseGuard = ({ children }) => {
                       boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
                     }}
                   >
-                    Create License
+                    {useAutoCreate ? 'Activate License' : 'Create License'}
                   </Button>
                 )}
               </Flex>
