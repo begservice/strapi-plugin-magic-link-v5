@@ -111,8 +111,9 @@ const StatsGrid = styled(Box)`
   margin-right: auto;
 
   @media screen and (max-width: 768px) {
-    display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
     gap: 12px !important;
     max-width: 100% !important;
     margin-bottom: 24px !important;
@@ -143,10 +144,10 @@ const StatCard = styled(Box)`
   }
 
   @media screen and (max-width: 768px) {
-    min-width: unset !important;
-    max-width: unset !important;
-    width: 100% !important;
-    padding: 16px !important;
+    min-width: 250px !important;
+    max-width: 300px !important;
+    width: auto !important;
+    padding: 20px !important;
     
     &:hover {
       transform: none !important;

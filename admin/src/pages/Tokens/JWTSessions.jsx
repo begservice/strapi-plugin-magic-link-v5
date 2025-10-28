@@ -121,6 +121,7 @@ const StatsGrid = styled(Box)`
     gap: 12px !important;
     max-width: 100% !important;
     margin-bottom: 24px !important;
+    padding: 0 12px !important;
   }
 `;
 
