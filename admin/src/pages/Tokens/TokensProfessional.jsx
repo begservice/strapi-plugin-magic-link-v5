@@ -411,6 +411,29 @@ const TabButton = styled(Button)`
       border-color: ${props.theme.colors.neutral400};
     }
   `}
+
+  @media screen and (max-width: 768px) {
+    flex: 1 !important;
+    border-radius: 8px !important;
+    padding: 12px 8px !important;
+    font-size: 13px !important;
+    border: none !important;
+    background: ${props => props.$active ? 'white' : 'transparent'} !important;
+    color: ${props => props.$active ? theme.colors.primary[600] : theme.colors.neutral[600]} !important;
+    box-shadow: ${props => props.$active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'} !important;
+    font-weight: ${props => props.$active ? '700' : '600'} !important;
+    
+    &:hover {
+      background: ${props => props.$active ? 'white' : 'rgba(255,255,255,0.5)'} !important;
+      transform: none !important;
+    }
+    
+    svg {
+      width: 16px !important;
+      height: 16px !important;
+      margin-right: 4px !important;
+    }
+  }
 `;
 
 const StatsGrid = styled(Box)`
