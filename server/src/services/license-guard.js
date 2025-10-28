@@ -6,15 +6,18 @@
 const crypto = require('crypto');
 const os = require('os');
 
-// Fixed License Server URL - DO NOT MODIFY IN PRODUCTION
-// For development/testing, you can override with LICENSE_SERVER_URL environment variable
-const LICENSE_SERVER_URL = process.env.LICENSE_SERVER_URL || 'https://magicapi.fitlex.me';
+// FIXED LICENSE SERVER URL - DO NOT MODIFY!
+// This URL is hardcoded and cannot be overridden for security reasons.
+// Any attempt to modify this will break license validation.
+const LICENSE_SERVER_URL = 'https://magicapi.fitlex.me';
 
 module.exports = ({ strapi }) => ({
   /**
-   * Get license server URL (hardcoded for security)
+   * Get license server URL (hardcoded and immutable for security)
+   * @returns {string} The fixed license server URL
    */
   getLicenseServerUrl() {
+    // Always return the hardcoded URL - no environment variable override allowed
     return LICENSE_SERVER_URL;
   },
 
