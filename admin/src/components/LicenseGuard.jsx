@@ -422,8 +422,10 @@ const LicenseGuard = ({ children }) => {
                 <Typography variant="omega" style={{ fontSize: '13px', lineHeight: '1.6' }}>
                   {useExistingKey 
                     ? '🔑 Enter your email and license key to activate.'
-                    : useAutoCreate && adminUser
+                    : useAutoCreate && adminUser && adminUser.email
                     ? `✨ Click "Activate" to auto-create a license with your account (${adminUser.email})`
+                    : useAutoCreate
+                    ? '✨ Click "Activate" to auto-create a license with your admin account'
                     : '💡 A license will be created with the details below.'
                   }
                 </Typography>
