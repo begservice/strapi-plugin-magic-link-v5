@@ -1277,13 +1277,13 @@ const TokensProfessional = () => {
                   <Tbody>
                     {paginatedTokens.map((token) => (
                       <Tr key={token.id}>
-                        <Td>
+                        <Td data-label="">
                           <Checkbox
                             checked={selectedTokens.includes(token.id)}
                             onCheckedChange={(checked) => handleSelectToken(token.id, checked)}
                           />
                         </Td>
-                        <Td>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.email') })}>
                           <Flex alignItems="center" gap={2}>
                             <Box
                               style={{
@@ -1309,7 +1309,7 @@ const TokensProfessional = () => {
                             </Flex>
                           </Flex>
                         </Td>
-                        <Td>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.token') })}>
                           <Box style={{ maxWidth: '200px' }}>
                             <Typography 
                               variant="pi" 
@@ -1334,10 +1334,10 @@ const TokensProfessional = () => {
                             </Typography>
                           </Box>
                         </Td>
-                        <Td>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.status') })}>
                           {getStatusBadge(token)}
                         </Td>
-                        <Td>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.created') })}>
                           <Flex alignItems="center" gap={1}>
                             <Calendar style={{ width: '14px', height: '14px', color: theme.colors.neutral[500] }} />
                   <Typography variant="pi">
@@ -1345,7 +1345,7 @@ const TokensProfessional = () => {
                   </Typography>
                           </Flex>
                         </Td>
-                        <Td>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.expiresAt') })}>
                           <Flex alignItems="center" gap={1}>
                             <Clock style={{ width: '14px', height: '14px', color: theme.colors.warning[500] }} />
                             {(() => {
@@ -1371,7 +1371,7 @@ const TokensProfessional = () => {
                             })()}
                           </Flex>
                         </Td>
-                        <Td>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.actions') })}>
                           <Flex gap={1} justifyContent="flex-end">
                             <IconButton
                               label="Details anzeigen"
