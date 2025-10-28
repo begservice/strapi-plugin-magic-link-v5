@@ -244,8 +244,9 @@ module.exports = {
       const data = await response.json();
 
       if (data.success) {
-        // Clear stored license
+        // Clear ALL stored license data
         await pluginStore.delete({ key: 'licenseKey' });
+        await pluginStore.delete({ key: 'lastValidated' });
 
         // Stop pinging
         if (strapi.licenseGuard && strapi.licenseGuard.pingInterval) {
@@ -253,7 +254,7 @@ module.exports = {
           delete strapi.licenseGuard;
         }
 
-        strapi.log.info('✅ License deactivated');
+        strapi.log.info('✅ License deactivated and all data cleared');
 
         return ctx.send({
           success: true,
