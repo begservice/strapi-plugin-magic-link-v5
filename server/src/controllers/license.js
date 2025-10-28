@@ -188,28 +188,6 @@ module.exports = {
   },
 
   /**
-   * Get online statistics
-   */
-  async getStats(ctx) {
-    try {
-      const licenseGuard = strapi.plugin('magic-link').service('license-guard');
-      const stats = await licenseGuard.getOnlineStats();
-
-      if (!stats) {
-        return ctx.badRequest('Failed to get statistics');
-      }
-
-      return ctx.send({
-        success: true,
-        data: stats,
-      });
-    } catch (error) {
-      strapi.log.error('Error getting stats:', error);
-      return ctx.badRequest('Error getting statistics');
-    }
-  },
-
-  /**
    * Store and validate an existing license key
    */
   async storeKey(ctx) {

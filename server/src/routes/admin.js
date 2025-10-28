@@ -199,14 +199,6 @@ module.exports = {
       },
     },
     {
-      method: 'GET',
-      path: '/license/stats',
-      handler: 'license.getStats',
-      config: {
-        policies: [],
-      },
-    },
-    {
       method: 'POST',
       path: '/license/store-key',
       handler: 'license.storeKey',
