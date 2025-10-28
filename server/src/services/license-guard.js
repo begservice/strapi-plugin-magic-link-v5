@@ -107,6 +107,8 @@ module.exports = ({ strapi }) => ({
           deviceId,
           ipAddress,
           userAgent,
+          pluginName: 'magic-link',
+          productName: 'Magic Link - Passwordless Authentication',
         }),
       });
 
@@ -140,7 +142,11 @@ module.exports = ({ strapi }) => ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ licenseKey }),
+        body: JSON.stringify({ 
+          licenseKey,
+          pluginName: 'magic-link',
+          productName: 'Magic Link - Passwordless Authentication',
+        }),
         signal: controller.signal,
       });
       
@@ -194,7 +200,11 @@ module.exports = ({ strapi }) => ({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ licenseKey }),
+        body: JSON.stringify({ 
+          licenseKey,
+          pluginName: 'magic-link',
+          productName: 'Magic Link - Passwordless Authentication',
+        }),
       });
 
       const data = await response.json();
