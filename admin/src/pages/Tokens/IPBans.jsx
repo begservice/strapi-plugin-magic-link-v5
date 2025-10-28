@@ -109,6 +109,14 @@ const StatsGrid = styled(Box)`
   max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
+
+  @media screen and (max-width: 768px) {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    max-width: 100% !important;
+    margin-bottom: 24px !important;
+  }
 `;
 
 const StatCard = styled(Box)`
@@ -131,6 +139,17 @@ const StatCard = styled(Box)`
     
     .stat-icon {
       transform: rotate(10deg) scale(1.1);
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    min-width: unset !important;
+    max-width: unset !important;
+    width: 100% !important;
+    padding: 16px !important;
+    
+    &:hover {
+      transform: none !important;
     }
   }
 `;
