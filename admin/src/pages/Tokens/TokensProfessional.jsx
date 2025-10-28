@@ -301,6 +301,12 @@ const Header = styled(Box)`
 const HeaderContent = styled(Flex)`
   position: relative;
   z-index: 1;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    flex-direction: column;
+    gap: ${theme.spacing.md};
+    align-items: stretch !important;
+  }
 `;
 
 const Title = styled(Typography)`
