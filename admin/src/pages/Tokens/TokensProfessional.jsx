@@ -440,6 +440,13 @@ const StatCard = styled(Box)`
   min-width: 220px;
   max-width: 260px;
   flex: 1;
+
+  @media (max-width: ${breakpoints.mobile}) {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    padding: ${theme.spacing.md};
+  }
   
   &:hover {
     transform: translateY(-4px);
