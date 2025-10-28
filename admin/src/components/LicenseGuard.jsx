@@ -168,13 +168,22 @@ const LicenseGuard = ({ children }) => {
   const fetchAdminUser = async () => {
     try {
       const response = await get('/admin/users/me');
-      if (response.data) {
-        setAdminUser(response.data);
+      console.log('Admin user response:', response);
+      // The API returns { data: { data: {...} } } structure
+      const userData = response.data?.data || response.data;
+      console.log('User data extracted:', userData);
+      if (userData) {
+        setAdminUser(userData);
         // Pre-fill form with admin user data
         setFormData({
-          email: response.data.email || '',
-          firstName: response.data.firstname || '',
-          lastName: response.data.lastname || '',
+          email: userData.email || '',
+          firstName: userData.firstname || '',
+          lastName: userData.lastname || '',
+        });
+        console.log('Admin user set:', {
+          email: userData.email,
+          firstname: userData.firstname,
+          lastname: userData.lastname
         });
       }
     } catch (error) {
@@ -493,10 +502,10 @@ const LicenseGuard = ({ children }) => {
                     Ready to activate with your account:
                   </Typography>
                   <Typography variant="pi" style={{ marginBottom: '4px', display: 'block' }}>
-                    👤 {adminUser.firstname} {adminUser.lastname}
+                    👤 {adminUser.firstname || 'Admin'} {adminUser.lastname || 'User'}
                   </Typography>
                   <Typography variant="pi" textColor="neutral600">
-                    📧 {adminUser.email}
+                    📧 {adminUser.email || 'Loading...'}
                   </Typography>
                 </Box>
               ) : (
