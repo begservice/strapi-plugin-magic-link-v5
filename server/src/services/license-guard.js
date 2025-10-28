@@ -216,11 +216,11 @@ module.exports = ({ strapi }) => ({
         strapi.log.debug(`📡 License ping successful: ${data.data?.isActive ? 'ACTIVE' : 'INACTIVE'} (Key: ${licenseKey?.substring(0, 8)}...)`);
         return data.data;
       } else {
-        strapi.log.warn(`⚠️ License ping failed: ${data.message || 'Unknown error'} (Key: ${licenseKey?.substring(0, 8)}...)`);
+        strapi.log.debug(`⚠️ License ping failed: ${data.message || 'Unknown error'} (Key: ${licenseKey?.substring(0, 8)}...)`);
         return null;
       }
     } catch (error) {
-      strapi.log.error(`❌ Error pinging license: ${error.message} (Key: ${licenseKey?.substring(0, 8)}...)`);
+      strapi.log.debug(`License ping error: ${error.message} (Key: ${licenseKey?.substring(0, 8)}...)`);
       return null;
     }
   },

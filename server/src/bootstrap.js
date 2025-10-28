@@ -126,14 +126,23 @@ Thanks.`,
   // Initialize Rate Limiter Cleanup Job
   const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
   
-  // Initial cleanup
+  // Initial cleanup - wait longer for DB to be ready
   setTimeout(() => {
-    rateLimiter.cleanupExpired();
-  }, 5000);
+    try {
+      rateLimiter.cleanupExpired();
+    } catch (error) {
+      // Silently ignore on first cleanup if DB not ready yet
+      strapi.log.debug('Rate limit cleanup skipped - DB not ready');
+    }
+  }, 10000);
   
   // Cleanup every 30 minutes
   setInterval(() => {
-    rateLimiter.cleanupExpired();
+    try {
+      rateLimiter.cleanupExpired();
+    } catch (error) {
+      strapi.log.debug('Rate limit cleanup failed:', error.message);
+    }
   }, 30 * 60 * 1000);
 
   // Initialize License Guard
