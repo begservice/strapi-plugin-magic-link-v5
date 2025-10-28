@@ -210,66 +210,6 @@ module.exports = {
   },
 
   /**
-   * Deactivate current license
-   */
-  async deactivate(ctx) {
-    try {
-      const pluginStore = strapi.store({ 
-        type: 'plugin', 
-        name: 'magic-link' 
-      });
-      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
-
-      if (!licenseKey) {
-        return ctx.badRequest('No license key found');
-      }
-
-      // Get license details first
-      const licenseGuard = strapi.plugin('magic-link').service('license-guard');
-      const license = await licenseGuard.getLicenseByKey(licenseKey);
-
-      if (!license) {
-        return ctx.badRequest('License not found');
-      }
-
-      // Deactivate via API
-      const licenseServerUrl = licenseGuard.getLicenseServerUrl();
-      const response = await fetch(`${licenseServerUrl}/api/licenses/${license.id}/deactivate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Clear ALL stored license data
-        await pluginStore.delete({ key: 'licenseKey' });
-        await pluginStore.delete({ key: 'lastValidated' });
-
-        // Stop pinging
-        if (strapi.licenseGuard && strapi.licenseGuard.pingInterval) {
-          clearInterval(strapi.licenseGuard.pingInterval);
-          delete strapi.licenseGuard;
-        }
-
-        strapi.log.info('✅ License deactivated and all data cleared');
-
-        return ctx.send({
-          success: true,
-          message: 'License deactivated successfully',
-        });
-      } else {
-        return ctx.badRequest('Failed to deactivate license');
-      }
-    } catch (error) {
-      strapi.log.error('Error deactivating license:', error);
-      return ctx.badRequest('Error deactivating license');
-    }
-  },
-
-  /**
    * Store and validate an existing license key
    */
   async storeKey(ctx) {

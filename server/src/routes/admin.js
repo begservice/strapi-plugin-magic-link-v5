@@ -208,14 +208,6 @@ module.exports = {
     },
     {
       method: 'POST',
-      path: '/license/deactivate',
-      handler: 'license.deactivate',
-      config: {
-        policies: [],
-      },
-    },
-    {
-      method: 'POST',
       path: '/license/store-key',
       handler: 'license.storeKey',
       config: {
