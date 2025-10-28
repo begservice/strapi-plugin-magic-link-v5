@@ -202,6 +202,28 @@ const slideIn = keyframes`
   }
 `;
 
+const slideInFromRight = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const slideInFromLeft = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
 const pulse = keyframes`
   0%, 100% { 
     transform: scale(1);
@@ -382,6 +404,15 @@ const TabsWrapper = styled(Box)`
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
+
+  @media screen and (max-width: 768px) {
+    background: ${theme.colors.neutral[200]} !important;
+    border-radius: 12px !important;
+    padding: 6px !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
+    margin: 0 12px 20px 12px !important;
+    max-width: none !important;
+  }
 `;
 
 const TabButton = styled(Button)`
@@ -414,18 +445,24 @@ const TabButton = styled(Button)`
 
   @media screen and (max-width: 768px) {
     flex: 1 !important;
-    border-radius: 8px !important;
-    padding: 12px 8px !important;
+    border-radius: 10px !important;
+    padding: 11px 8px !important;
     font-size: 13px !important;
     border: none !important;
     background: ${props => props.$active ? 'white' : 'transparent'} !important;
-    color: ${props => props.$active ? theme.colors.primary[600] : theme.colors.neutral[600]} !important;
-    box-shadow: ${props => props.$active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'} !important;
-    font-weight: ${props => props.$active ? '700' : '600'} !important;
+    color: ${props => props.$active ? theme.colors.neutral[900] : theme.colors.neutral[600]} !important;
+    box-shadow: ${props => props.$active ? '0 2px 6px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)' : 'none'} !important;
+    font-weight: ${props => props.$active ? '700' : '500'} !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transform: ${props => props.$active ? 'scale(1)' : 'scale(0.96)'} !important;
     
     &:hover {
-      background: ${props => props.$active ? 'white' : 'rgba(255,255,255,0.5)'} !important;
-      transform: none !important;
+      background: ${props => props.$active ? 'white' : 'rgba(255,255,255,0.3)'} !important;
+      transform: ${props => props.$active ? 'scale(1)' : 'scale(0.98)'} !important;
+    }
+    
+    &:active {
+      transform: scale(0.94) !important;
     }
     
     svg {
