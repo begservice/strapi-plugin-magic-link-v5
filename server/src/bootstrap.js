@@ -34,7 +34,7 @@ module.exports = async ({ strapi }) => {
     type: 'plugin',
     name: 'magic-link',
   });
-  const settings = await pluginStore.get({ key: 'settings' });
+  let settings = await pluginStore.get({ key: 'settings' });
 
   if (!settings) {
     // Get server URL in Strapi v5 way
