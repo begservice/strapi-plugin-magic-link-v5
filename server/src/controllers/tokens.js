@@ -172,7 +172,7 @@ module.exports = {
           username,
           email,
           password,
-          provider: 'magic-link',
+          provider: 'local', // Use 'local' so users can login with email/password AND magic-link
           confirmed: true, // Auto-confirm the user
           blocked: false,
           role: defaultRole.id,

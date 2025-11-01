@@ -191,4 +191,32 @@ Thanks.`,
   } catch (error) {
     strapi.log.error('❌ Error initializing License Guard:', error);
   }
+
+  // 🔄 Auto-Migration: Update old 'magic-link' provider to 'local'
+  // This ensures users can login with both Magic-Link AND Email/Password
+  try {
+    setTimeout(async () => {
+      const usersToUpdate = await strapi.db.query('plugin::users-permissions.user').findMany({
+        where: { provider: 'magic-link' },
+        select: ['id', 'email'],
+      });
+
+      if (usersToUpdate && usersToUpdate.length > 0) {
+        strapi.log.info('🔄 [Magic-Link Migration] Found %d user(s) with old provider "magic-link"', usersToUpdate.length);
+        
+        // Update all users in bulk
+        await strapi.db.query('plugin::users-permissions.user').updateMany({
+          where: { provider: 'magic-link' },
+          data: { provider: 'local' },
+        });
+
+        strapi.log.info('✅ [Magic-Link Migration] Updated %d user(s) to provider "local"', usersToUpdate.length);
+        strapi.log.info('   Users can now login with both Magic-Link AND Email/Password! 🎉');
+      } else {
+        strapi.log.info('✅ [Magic-Link Migration] All users already using provider "local" - no migration needed');
+      }
+    }, 5000); // Wait 5 seconds to ensure DB is ready
+  } catch (error) {
+    strapi.log.error('❌ [Magic-Link Migration] Error updating providers:', error);
+  }
 };

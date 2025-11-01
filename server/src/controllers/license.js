@@ -186,8 +186,7 @@ module.exports = {
       return ctx.badRequest('Error pinging license');
     }
   },
-
-  /**
+   /**
    * Store and validate an existing license key
    */
   async storeKey(ctx) {
