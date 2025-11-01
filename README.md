@@ -1,6 +1,6 @@
 # Magic Link - Passwordless Authentication for Strapi v5
 
-Secure passwordless authentication for Strapi using email-based magic links. No passwords required.
+Secure passwordless authentication for Strapi v5 using email-based magic links. Simple, secure, and user-friendly - no passwords required.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm version](https://badge.fury.io/js/strapi-plugin-magic-link-v5.svg)](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
