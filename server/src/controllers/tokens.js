@@ -1,5 +1,8 @@
 'use strict';
 
+const { nanoid } = require('nanoid');
+const crypto = require('crypto');
+
 /**
  * Hilfsfunktion zum Senden einer Standard-E-Mail ohne Email Designer
  * @param {Object} user - Der Benutzer, an den die E-Mail gesendet wird
@@ -151,12 +154,11 @@ module.exports = {
         // --- DEBUG LOGGING START ---
         strapi.log.info(`[MagicLink Controller - create function] User does not exist BUT canCreateUser is true. Attempting to create user...`);
         // --- DEBUG LOGGING END ---
-        // Generate a random username based on the email
-        const username = email.split('@')[0] + Math.floor(Math.random() * 10000);
+        // Generate a unique username based on the email
+        const username = email.split('@')[0] + '_' + nanoid(8);
         
-        // Create a random password
-        const password = Math.random().toString(36).substring(2, 15) + 
-                         Math.random().toString(36).substring(2, 15);
+        // Create a cryptographically secure random password
+        const password = crypto.randomBytes(32).toString('hex');
         
         // Get the default role (authenticated)
         const defaultRole = await strapi
@@ -181,9 +183,8 @@ module.exports = {
         strapi.log.info(`Created new user with email: ${email}`);
       }
 
-      // Generate random token (16 characters)
-      const tokenValue = Math.random().toString(36).substring(2, 10) + 
-                         Math.random().toString(36).substring(2, 10);
+      // Generate cryptographically secure random token (32 characters)
+      const tokenValue = nanoid(32);
       
       // Set expiration (TTL from context, settings, or default 24 hours)
       const ttl = context.ttl || settings.token_lifetime || 24;

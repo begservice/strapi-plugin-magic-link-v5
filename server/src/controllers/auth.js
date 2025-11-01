@@ -7,9 +7,10 @@
 
 const { sanitize } = require('@strapi/utils');
 const _ = require('lodash');
+const { nanoid } = require('nanoid');
 
-// Email regex pattern
-const emailRegExp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+// Email regex pattern - simplified to avoid ReDoS attacks
+const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 module.exports = {
   async login(ctx) {
@@ -79,10 +80,33 @@ module.exports = {
       context = {};
     }
     
-    // Generiere JWT-Token mit dem originalen Context
+    // Sanitize context to prevent injection attacks
+    // Whitelist allowed fields and limit their size
+    const allowedContextFields = ['redirectUrl', 'locale', 'source', 'ttl', 'metadata'];
+    const sanitizedContext = {};
+    for (const field of allowedContextFields) {
+      if (context[field] !== undefined) {
+        // Limit string length to prevent payload bloat
+        if (typeof context[field] === 'string') {
+          sanitizedContext[field] = String(context[field]).substring(0, 500);
+        } else if (typeof context[field] === 'number' && !isNaN(context[field])) {
+          sanitizedContext[field] = context[field];
+        } else if (typeof context[field] === 'object' && context[field] !== null) {
+          // For nested objects like metadata, stringify and limit size
+          try {
+            const jsonStr = JSON.stringify(context[field]).substring(0, 1000);
+            sanitizedContext[field] = JSON.parse(jsonStr);
+          } catch {
+            // Skip invalid objects
+          }
+        }
+      }
+    }
+    
+    // Generiere JWT-Token mit dem sanitierten Context
     const jwtToken = jwtService.issue({ 
       id: user.id,
-      context: context
+      context: sanitizedContext
     });
     
     // Hole JWT-Konfiguration, um Ablaufzeit zu berechnen
@@ -115,8 +139,8 @@ module.exports = {
       // Hole aktuelle JWT-Sessions oder initialisiere leere Liste
       const jwtSessions = (await pluginStore.get({ key: 'jwt_sessions' })) || { sessions: [] };
       
-      // Erstelle eine neue Session mit einer eindeutigen ID
-      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      // Erstelle eine neue Session mit einer eindeutigen ID (cryptographically secure)
+      const sessionId = `session_${Date.now()}_${nanoid(12)}`;
       
       // Füge neue Session zur Liste hinzu
       jwtSessions.sessions.push({
@@ -132,7 +156,7 @@ module.exports = {
         userAgent: requestInfo.userAgent,
         source: 'Magic Link Login',
         lastUsedAt: new Date().toISOString(),
-        context: context  // Speichere den Context auch in der Session
+        context: sanitizedContext  // Speichere den sanitierten Context auch in der Session
       });
       
       // Speichere aktualisierte Liste
@@ -145,7 +169,7 @@ module.exports = {
     ctx.send({
       jwt: jwtToken,
       user: sanitizedUser,
-      context,
+      context: sanitizedContext,
       expires_at: expiresAt.toISOString(),
       expiry_formatted: new Intl.DateTimeFormat('de-DE', {
         year: 'numeric', 
