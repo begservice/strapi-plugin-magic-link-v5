@@ -44,7 +44,7 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 ## ✨ Features
 
 ### Core Authentication
-- 🔐 **Passwordless Login** - Users log in via secure email links
+- 🔐 **Passwordless Login** - Users log in via secure email magic links
 - 🎫 **Magic Link Tokens** - Cryptographically secure, time-limited tokens
 - 🔑 **JWT Session Management** - Monitor and manage active user sessions
 - 👤 **Auto User Creation** - Optionally create users automatically on first login
