@@ -98,6 +98,41 @@ const ToggleCard = styled(Box)`
   `}
 `;
 
+const GreenToggle = styled.div`
+  ${props => props.$isActive && `
+    button[role="switch"] {
+      background-color: #16A34A !important;
+      border-color: #16A34A !important;
+      
+      &:hover {
+        background-color: #15803D !important;
+        border-color: #15803D !important;
+      }
+      
+      &:focus {
+        background-color: #16A34A !important;
+        border-color: #16A34A !important;
+        box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2) !important;
+      }
+    }
+    
+    /* Toggle handle */
+    button[role="switch"] > span {
+      background-color: white !important;
+    }
+  `}
+  
+  ${props => !props.$isActive && `
+    button[role="switch"] {
+      background-color: #E5E7EB;
+      
+      &:hover {
+        background-color: #D1D5DB;
+      }
+    }
+  `}
+`;
+
 const StickySaveBar = styled(Box)`
   position: sticky;
   top: 0;
@@ -884,10 +919,12 @@ const SettingsModern = () => {
                             <Typography variant="pi" fontWeight="bold">
                               {formatMessage({ id: getTrad('settings.email.designer.useTemplate') })}
                             </Typography>
-                            <Toggle
-                              checked={settings.use_email_designer || false}
-                              onChange={() => updateSetting('use_email_designer', !settings.use_email_designer)}
-                            />
+                            <GreenToggle $isActive={settings.use_email_designer || false}>
+                              <Toggle
+                                checked={settings.use_email_designer || false}
+                                onChange={() => updateSetting('use_email_designer', !settings.use_email_designer)}
+                              />
+                            </GreenToggle>
                           </Flex>
                           <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px' }}>
                             {formatMessage({ id: getTrad('settings.email.designer.useTemplateHint') })}
