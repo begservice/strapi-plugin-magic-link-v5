@@ -133,6 +133,19 @@
   "magic-link.settings.email.subject.placeholder": "Votre Magic Link pour vous connecter",
   "magic-link.settings.email.subject.note": "Formulez clairement pour que les utilisateurs ne marquent pas l'email comme spam",
   
+  "magic-link.settings.email.designer.title": "📧 Intégration Email Designer",
+  "magic-link.settings.email.designer.subtitle": "Utilisez des modèles d'email professionnels de Strapi Email Designer v5",
+  "magic-link.settings.email.designer.installed": "Email Designer v5 est installé et prêt à l'emploi !",
+  "magic-link.settings.email.designer.useTemplate": "Utiliser un modèle Email Designer",
+  "magic-link.settings.email.designer.useTemplateHint": "Lorsqu'activé, les emails magic link utiliseront le modèle Email Designer sélectionné au lieu des modèles HTML/Texte ci-dessous",
+  "magic-link.settings.email.designer.selectTemplate": "Sélectionner un modèle d'email",
+  "magic-link.settings.email.designer.placeholder": "Choisir un modèle...",
+  "magic-link.settings.email.designer.templatesAvailable": "{count} modèle(s) disponible(s)",
+  "magic-link.settings.email.designer.noTemplates": "Aucun modèle trouvé. Créez-en un dans Email Designer d'abord.",
+  "magic-link.settings.email.designer.variables": "Variables de modèle : Utilisez {{user.email}}, {{user.username}}, {{magicLink}} et {{token}} dans votre modèle Email Designer",
+  "magic-link.settings.email.designer.fallbackBadge": "Secours uniquement",
+  "magic-link.settings.email.designer.fallbackDescription": "Ces modèles sont utilisés comme secours si Email Designer échoue",
+
   "magic-link.settings.email.templates.title": "📝 MODÈLES D'EMAIL",
   "magic-link.settings.email.templates.subtitle": "Concevez les emails envoyés aux utilisateurs. Utilisez des espaces réservés pour le contenu dynamique.",
   

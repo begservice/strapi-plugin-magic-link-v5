@@ -858,10 +858,10 @@ const SettingsModern = () => {
                   <>
                     <Divider style={{ marginBottom: '24px' }} />
                     <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '8px', display: 'block', color: theme.colors.neutral[700] }}>
-                      📧 Email Designer Integration
+                      {formatMessage({ id: getTrad('settings.email.designer.title') })}
                     </Typography>
                     <Typography variant="pi" textColor="neutral600" style={{ marginBottom: '20px', display: 'block', fontSize: '12px' }}>
-                      Use professional email templates from Strapi Email Designer v5
+                      {formatMessage({ id: getTrad('settings.email.designer.subtitle') })}
                     </Typography>
                     
                     <Box 
@@ -872,7 +872,7 @@ const SettingsModern = () => {
                       <Flex alignItems="center" gap={2}>
                         <Check style={{ color: theme.colors.success[600] }} />
                         <Typography variant="pi" fontWeight="semiBold" style={{ color: theme.colors.success[700] }}>
-                          Email Designer v5 is installed and ready to use!
+                          {formatMessage({ id: getTrad('settings.email.designer.installed') })}
                         </Typography>
                       </Flex>
                     </Box>
@@ -882,7 +882,7 @@ const SettingsModern = () => {
                         <Box>
                           <Flex alignItems="center" gap={2} style={{ marginBottom: '12px' }}>
                             <Typography variant="pi" fontWeight="bold">
-                              Use Email Designer Template
+                              {formatMessage({ id: getTrad('settings.email.designer.useTemplate') })}
                             </Typography>
                             <Toggle
                               checked={settings.use_email_designer || false}
@@ -890,7 +890,7 @@ const SettingsModern = () => {
                             />
                           </Flex>
                           <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px' }}>
-                            When enabled, magic link emails will use the selected Email Designer template instead of the HTML/Text templates below
+                            {formatMessage({ id: getTrad('settings.email.designer.useTemplateHint') })}
                           </Typography>
                         </Box>
                       </Grid.Item>
@@ -899,12 +899,12 @@ const SettingsModern = () => {
                         <Grid.Item col={6} s={12}>
                           <Box>
                             <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
-                              Select Email Template
+                              {formatMessage({ id: getTrad('settings.email.designer.selectTemplate') })}
                             </Typography>
                             <SingleSelect
                               value={settings.email_designer_template_id}
                               onChange={(value) => updateSetting('email_designer_template_id', value)}
-                              placeholder="Choose a template..."
+                              placeholder={formatMessage({ id: getTrad('settings.email.designer.placeholder') })}
                             >
                               {emailTemplates.map((template) => (
                                 <SingleSelectOption key={template.id} value={template.id.toString()}>
@@ -914,8 +914,8 @@ const SettingsModern = () => {
                             </SingleSelect>
                             <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '6px' }}>
                               {emailTemplates.length > 0 
-                                ? `${emailTemplates.length} template(s) available` 
-                                : 'No templates found. Create one in Email Designer first.'}
+                                ? formatMessage({ id: getTrad('settings.email.designer.templatesAvailable') }, { count: emailTemplates.length })
+                                : formatMessage({ id: getTrad('settings.email.designer.noTemplates') })}
                             </Typography>
                           </Box>
                         </Grid.Item>
@@ -928,7 +928,7 @@ const SettingsModern = () => {
                       style={{ borderRadius: theme.borderRadius.md, marginBottom: '24px', border: '1px solid #fcd34d' }}
                     >
                       <Typography variant="pi" style={{ fontSize: '12px', color: theme.colors.warning[700] }}>
-                        <strong>Template Variables:</strong> Use <code>{'{{user.email}}'}</code>, <code>{'{{user.username}}'}</code>, <code>{'{{magicLink}}'}</code>, and <code>{'{{token}}'}</code> in your Email Designer template
+                        {formatMessage({ id: getTrad('settings.email.designer.variables') })}
                       </Typography>
                     </Box>
                   </>
@@ -940,13 +940,13 @@ const SettingsModern = () => {
                   {formatMessage({ id: getTrad('settings.email.templates.title') })}
                   {emailDesignerInstalled && settings.use_email_designer && (
                     <Badge style={{ marginLeft: '8px', backgroundColor: theme.colors.neutral[400] }}>
-                      Fallback only
+                      {formatMessage({ id: getTrad('settings.email.designer.fallbackBadge') })}
                     </Badge>
                   )}
                 </Typography>
                 <Typography variant="pi" textColor="neutral600" style={{ marginBottom: '20px', display: 'block', fontSize: '12px' }}>
                   {emailDesignerInstalled && settings.use_email_designer 
-                    ? 'These templates are used as fallback if Email Designer fails'
+                    ? formatMessage({ id: getTrad('settings.email.designer.fallbackDescription') })
                     : formatMessage({ id: getTrad('settings.email.templates.subtitle') })}
                 </Typography>
                 

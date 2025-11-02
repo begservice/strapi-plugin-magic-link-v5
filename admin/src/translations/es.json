@@ -133,6 +133,19 @@
   "magic-link.settings.email.subject.placeholder": "Su Magic Link para iniciar sesión",
   "magic-link.settings.email.subject.note": "Formule claramente para que los usuarios no marquen el correo como spam",
   
+  "magic-link.settings.email.designer.title": "📧 Integración de Email Designer",
+  "magic-link.settings.email.designer.subtitle": "Use plantillas de correo profesionales de Strapi Email Designer v5",
+  "magic-link.settings.email.designer.installed": "¡Email Designer v5 está instalado y listo para usar!",
+  "magic-link.settings.email.designer.useTemplate": "Usar plantilla de Email Designer",
+  "magic-link.settings.email.designer.useTemplateHint": "Cuando está habilitado, los correos de magic link usarán la plantilla seleccionada de Email Designer en lugar de las plantillas HTML/Texto a continuación",
+  "magic-link.settings.email.designer.selectTemplate": "Seleccionar plantilla de correo",
+  "magic-link.settings.email.designer.placeholder": "Elija una plantilla...",
+  "magic-link.settings.email.designer.templatesAvailable": "{count} plantilla(s) disponible(s)",
+  "magic-link.settings.email.designer.noTemplates": "No se encontraron plantillas. Crea una en Email Designer primero.",
+  "magic-link.settings.email.designer.variables": "Variables de plantilla: Use {{user.email}}, {{user.username}}, {{magicLink}} y {{token}} en su plantilla de Email Designer",
+  "magic-link.settings.email.designer.fallbackBadge": "Solo respaldo",
+  "magic-link.settings.email.designer.fallbackDescription": "Estas plantillas se usan como respaldo si Email Designer falla",
+
   "magic-link.settings.email.templates.title": "📝 PLANTILLAS DE CORREO",
   "magic-link.settings.email.templates.subtitle": "Diseñe los correos enviados a los usuarios. Use marcadores de posición para contenido dinámico.",
   

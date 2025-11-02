@@ -135,6 +135,19 @@
   "magic-link.settings.email.subject.placeholder": "Your Magic Link to Sign In",
   "magic-link.settings.email.subject.note": "Formulate clearly so users don't mark the email as spam",
   
+  "magic-link.settings.email.designer.title": "📧 Email Designer Integration",
+  "magic-link.settings.email.designer.subtitle": "Use professional email templates from Strapi Email Designer v5",
+  "magic-link.settings.email.designer.installed": "Email Designer v5 is installed and ready to use!",
+  "magic-link.settings.email.designer.useTemplate": "Use Email Designer Template",
+  "magic-link.settings.email.designer.useTemplateHint": "When enabled, magic link emails will use the selected Email Designer template instead of the HTML/Text templates below",
+  "magic-link.settings.email.designer.selectTemplate": "Select Email Template",
+  "magic-link.settings.email.designer.placeholder": "Choose a template...",
+  "magic-link.settings.email.designer.templatesAvailable": "{count} template(s) available",
+  "magic-link.settings.email.designer.noTemplates": "No templates found. Create one in Email Designer first.",
+  "magic-link.settings.email.designer.variables": "Template Variables: Use {{user.email}}, {{user.username}}, {{magicLink}}, and {{token}} in your Email Designer template",
+  "magic-link.settings.email.designer.fallbackBadge": "Fallback only",
+  "magic-link.settings.email.designer.fallbackDescription": "These templates are used as fallback if Email Designer fails",
+
   "magic-link.settings.email.templates.title": "📝 EMAIL TEMPLATES",
   "magic-link.settings.email.templates.subtitle": "Design the emails sent to users. Use placeholders for dynamic content.",
   
