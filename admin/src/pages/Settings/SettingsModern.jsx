@@ -142,10 +142,14 @@ const SettingsModern = () => {
     ui_language: 'en',
     rate_limit_enabled: true,
     rate_limit_max_attempts: 5,
-    rate_limit_window_minutes: 15
+    rate_limit_window_minutes: 15,
+    use_email_designer: false,
+    email_designer_template_id: ''
   });
   
   const [rateLimitStats, setRateLimitStats] = useState(null);
+  const [emailDesignerInstalled, setEmailDesignerInstalled] = useState(false);
+  const [emailTemplates, setEmailTemplates] = useState([]);
 
   const loadSettings = useCallback(async () => {
     setIsLoading(true);
@@ -153,6 +157,11 @@ const SettingsModern = () => {
       const res = await get('/magic-link/settings');
       const settingsData = res.data.settings || res.data.data || res.data;
       setSettings(prev => ({ ...prev, ...settingsData }));
+      
+      // Check if Email Designer is installed
+      if (res.data.emailDesignerInstalled !== undefined) {
+        setEmailDesignerInstalled(res.data.emailDesignerInstalled);
+      }
       
       // Load rate limit stats
       try {
@@ -175,6 +184,24 @@ const SettingsModern = () => {
       setIsLoading(false);
     }
   }, [get, toggleNotification, formatMessage]);
+  
+  // Load email templates when Email Designer is installed
+  useEffect(() => {
+    const fetchEmailTemplates = async () => {
+      if (emailDesignerInstalled) {
+        try {
+          const response = await get('/email-designer-5/templates');
+          if (response && response.data) {
+            setEmailTemplates(response.data);
+          }
+        } catch (error) {
+          console.error('Error fetching email templates:', error);
+        }
+      }
+    };
+    
+    fetchEmailTemplates();
+  }, [emailDesignerInstalled, get]);
 
   useEffect(() => {
     loadSettings();
@@ -826,13 +853,101 @@ const SettingsModern = () => {
                   </Grid.Item>
                 </Grid.Root>
 
+                {/* Email Designer Integration (Optional) */}
+                {emailDesignerInstalled && (
+                  <>
+                    <Divider style={{ marginBottom: '24px' }} />
+                    <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '8px', display: 'block', color: theme.colors.neutral[700] }}>
+                      📧 Email Designer Integration
+                    </Typography>
+                    <Typography variant="pi" textColor="neutral600" style={{ marginBottom: '20px', display: 'block', fontSize: '12px' }}>
+                      Use professional email templates from Strapi Email Designer v5
+                    </Typography>
+                    
+                    <Box 
+                      background="success100" 
+                      padding={4} 
+                      style={{ borderRadius: theme.borderRadius.md, marginBottom: '20px', border: '2px solid #86efac' }}
+                    >
+                      <Flex alignItems="center" gap={2}>
+                        <Check style={{ color: theme.colors.success[600] }} />
+                        <Typography variant="pi" fontWeight="semiBold" style={{ color: theme.colors.success[700] }}>
+                          Email Designer v5 is installed and ready to use!
+                        </Typography>
+                      </Flex>
+                    </Box>
+                    
+                    <Grid.Root gap={6} style={{ marginBottom: '32px' }}>
+                      <Grid.Item col={6} s={12}>
+                        <Box>
+                          <Flex alignItems="center" gap={2} style={{ marginBottom: '12px' }}>
+                            <Typography variant="pi" fontWeight="bold">
+                              Use Email Designer Template
+                            </Typography>
+                            <Toggle
+                              checked={settings.use_email_designer || false}
+                              onChange={() => updateSetting('use_email_designer', !settings.use_email_designer)}
+                            />
+                          </Flex>
+                          <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px' }}>
+                            When enabled, magic link emails will use the selected Email Designer template instead of the HTML/Text templates below
+                          </Typography>
+                        </Box>
+                      </Grid.Item>
+                      
+                      {settings.use_email_designer && (
+                        <Grid.Item col={6} s={12}>
+                          <Box>
+                            <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                              Select Email Template
+                            </Typography>
+                            <SingleSelect
+                              value={settings.email_designer_template_id}
+                              onChange={(value) => updateSetting('email_designer_template_id', value)}
+                              placeholder="Choose a template..."
+                            >
+                              {emailTemplates.map((template) => (
+                                <SingleSelectOption key={template.id} value={template.id.toString()}>
+                                  {template.name || template.subject || `Template #${template.id}`}
+                                </SingleSelectOption>
+                              ))}
+                            </SingleSelect>
+                            <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '6px' }}>
+                              {emailTemplates.length > 0 
+                                ? `${emailTemplates.length} template(s) available` 
+                                : 'No templates found. Create one in Email Designer first.'}
+                            </Typography>
+                          </Box>
+                        </Grid.Item>
+                      )}
+                    </Grid.Root>
+                    
+                    <Box 
+                      background="warning100" 
+                      padding={3} 
+                      style={{ borderRadius: theme.borderRadius.md, marginBottom: '24px', border: '1px solid #fcd34d' }}
+                    >
+                      <Typography variant="pi" style={{ fontSize: '12px', color: theme.colors.warning[700] }}>
+                        <strong>Template Variables:</strong> Use <code>{'{{user.email}}'}</code>, <code>{'{{user.username}}'}</code>, <code>{'{{magicLink}}'}</code>, and <code>{'{{token}}'}</code> in your Email Designer template
+                      </Typography>
+                    </Box>
+                  </>
+                )}
+
                 {/* Email Templates */}
                 <Divider style={{ marginBottom: '24px' }} />
                 <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '8px', display: 'block', color: theme.colors.neutral[700] }}>
                   {formatMessage({ id: getTrad('settings.email.templates.title') })}
+                  {emailDesignerInstalled && settings.use_email_designer && (
+                    <Badge style={{ marginLeft: '8px', backgroundColor: theme.colors.neutral[400] }}>
+                      Fallback only
+                    </Badge>
+                  )}
                 </Typography>
                 <Typography variant="pi" textColor="neutral600" style={{ marginBottom: '20px', display: 'block', fontSize: '12px' }}>
-                  {formatMessage({ id: getTrad('settings.email.templates.subtitle') })}
+                  {emailDesignerInstalled && settings.use_email_designer 
+                    ? 'These templates are used as fallback if Email Designer fails'
+                    : formatMessage({ id: getTrad('settings.email.templates.subtitle') })}
                 </Typography>
                 
                 {/* Platzhalter Info Box - Kompakt */}
