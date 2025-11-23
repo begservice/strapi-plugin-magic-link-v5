@@ -2,6 +2,8 @@
   "magic-link.plugin.name": "Magic Link",
   "magic-link.Header.Settings": "Magic Link",
   "magic-link.Form.title.Settings": "Configurações",
+  "magic-link.Form.title.License": "Licença",
+  "magic-link.Form.title.Upgrade": "Atualizar",
   
   "magic-link.status.active": "ATIVO",
   "magic-link.status.inactive": "INATIVO",

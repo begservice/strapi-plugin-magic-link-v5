@@ -1,0 +1,58 @@
+{
+  "kind": "collectionType",
+  "collectionName": "magic_link_otp_codes",
+  "info": {
+    "singularName": "otp-code",
+    "pluralName": "otp-codes",
+    "displayName": "OTP Code",
+    "description": "One-Time Password codes for Magic Link 2FA"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
+  },
+  "attributes": {
+    "code": {
+      "type": "string",
+      "required": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["email", "sms", "totp"],
+      "default": "email",
+      "required": true
+    },
+    "used": {
+      "type": "boolean",
+      "default": false
+    },
+    "attempts": {
+      "type": "integer",
+      "default": 0
+    },
+    "expiresAt": {
+      "type": "datetime",
+      "required": true
+    },
+    "magicLinkToken": {
+      "type": "string"
+    },
+    "phoneNumber": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "json"
+    }
+  }
+}

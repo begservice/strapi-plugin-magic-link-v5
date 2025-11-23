@@ -258,8 +258,8 @@ const CreateTokenModal = ({ isOpen, onClose, onSubmit, formData, setFormData }) 
                 style={{ borderRadius: '6px' }}
               >
                 <Checkbox
-                  value={formData.sendEmail}
-                  onCheckedChange={(checked) => updateFormData('sendEmail', checked)}
+                  checked={!!formData.sendEmail}
+                  onCheckedChange={(checked) => updateFormData('sendEmail', !!checked)}
                 >
                   <Typography variant="pi" fontWeight="medium">
                     {formatMessage({ id: getTrad('tokens.create.sendEmail.label') })}

@@ -225,9 +225,85 @@ module.exports = {
       },
     },
     {
+      method: 'GET',
+      path: '/rate-limit/cleanup',
+      handler: 'rateLimit.cleanup',
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: 'POST',
       path: '/rate-limit/reset',
       handler: 'rateLimit.reset',
+      config: {
+        policies: [],
+      },
+    },
+    
+    // OTP Management (Admin)
+    {
+      method: 'GET',
+      path: '/otp/codes',
+      handler: 'otp.listCodes',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'DELETE',
+      path: '/otp/codes/:id',
+      handler: 'otp.deleteCode',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/otp/cleanup',
+      handler: 'otp.cleanup',
+      config: {
+        policies: [],
+      },
+    },
+    
+    // TOTP Management (Admin - Advanced Feature)
+    {
+      method: 'POST',
+      path: '/otp/totp/setup',
+      handler: 'otp.setupTOTP',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/otp/totp/verify',
+      handler: 'otp.verifyTOTP',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/otp/totp/disable',
+      handler: 'otp.disableTOTP',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/otp/totp/status',
+      handler: 'otp.getTOTPStatus',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/otp/totp/backup-codes',
+      handler: 'otp.generateBackupCodes',
       config: {
         policies: [],
       },

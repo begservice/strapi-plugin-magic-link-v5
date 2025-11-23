@@ -9,6 +9,7 @@
 const _ = require('lodash');
 const { nanoid } = require('nanoid');
 const { sanitize } = require('@strapi/utils');
+const emailHelpers = require('../utils/email-helpers');
 
 module.exports = ({ strapi }) => ({
   async initialize() {
@@ -198,17 +199,150 @@ module.exports = ({ strapi }) => ({
     const code = token.token;
 
     // Replace variables in the email template
-    const html = _.template(emailTemplate.html)({
+    let html = _.template(emailTemplate.html)({
       URL: url,
       CODE: code,
     });
 
-    const text = _.template(emailTemplate.text)({
+    let text = _.template(emailTemplate.text)({
       URL: url,
       CODE: code,
     });
 
-    // Send the email
+    // Wrap HTML in email-client compatible template if not already wrapped
+    if (!html.includes('<!DOCTYPE') && !html.includes('<html')) {
+      html = emailHelpers.wrapEmailTemplate(html, {
+        title: emailConfig.object,
+        preheader: 'Your secure login link is ready'
+      });
+    }
+
+    // Ensure plain text version exists
+    if (!text || text.trim().length === 0) {
+      text = emailHelpers.createPlainTextVersion(html);
+    }
+
+    // Get email headers for better deliverability
+    const headers = emailHelpers.getEmailHeaders({
+      replyTo: emailConfig.response_email
+    });
+
+    // Validate email configuration
+    const validation = emailHelpers.validateEmailConfig({
+      to: token.email,
+      from: emailConfig.from,
+      subject: emailConfig.object,
+      text,
+      html
+    });
+
+    if (!validation.valid) {
+      strapi.log.error('Email validation errors:', validation.errors);
+      throw new Error('Invalid email configuration: ' + validation.errors.join(', '));
+    }
+
+    if (validation.warnings.length > 0) {
+      strapi.log.warn('Email validation warnings:', validation.warnings);
+    }
+
+    // Build the full login URL for click tracking
+    const loginUrl = `${url}?loginToken=${code}`;
+    const templatePayload = {
+      URL: url,
+      Url: url,
+      url,
+      BASE_URL: url,
+      baseUrl: url,
+      loginUrl,
+      login_url: loginUrl,
+      LOGIN_URL: loginUrl,
+      magicLinkUrl: loginUrl,
+      magic_link_url: loginUrl,
+      MAGIC_LINK_URL: loginUrl,
+      CODE: code,
+      Code: code,
+      code,
+      token: code,
+      TOKEN: code,
+      email: token.email,
+      recipient: token.email,
+    };
+    
+    // Check if MagicMail should be used
+    if (settings.use_magic_mail && strapi.plugin('magic-mail')) {
+      try {
+        strapi.log.info(`Sending Magic Link via MagicMail with click tracking...`);
+        strapi.log.info(`[DEBUG] MagicMail settings - use_magic_mail: ${settings.use_magic_mail}, template_id: ${settings.magic_mail_template_id}`);
+        
+        // Warn if MagicMail is enabled but no template selected
+        if (!settings.magic_mail_template_id) {
+          strapi.log.warn('⚠️ MagicMail is enabled but no template ID is set. Using fallback HTML/text content.');
+        }
+
+        const numericTemplateId = settings.magic_mail_template_id
+          ? Number(settings.magic_mail_template_id)
+          : undefined;
+        let templateReferenceId = settings.magic_mail_template_reference_id || undefined;
+
+        if (numericTemplateId) {
+          try {
+            const templateRecord = await strapi
+              .plugin('magic-mail')
+              .service('email-designer')
+              .findOne(numericTemplateId);
+
+            if (templateRecord?.templateReferenceId) {
+              templateReferenceId = templateRecord.templateReferenceId;
+              strapi.log.info(
+                `[DEBUG] MagicMail template metadata resolved - id: ${numericTemplateId}, reference: ${templateReferenceId}, name: ${templateRecord.name}`
+              );
+            } else {
+              strapi.log.warn(
+                `[WARN] MagicMail template ${numericTemplateId} has no templateReferenceId. Rendering may fall back to raw HTML.`
+              );
+            }
+          } catch (lookupError) {
+            strapi.log.error(
+              `[ERROR] Failed to load MagicMail template metadata for ID ${numericTemplateId}: ${lookupError.message}`,
+              lookupError
+            );
+          }
+        }
+
+        const routerTemplateId = templateReferenceId || numericTemplateId;
+        
+        await strapi.plugin('magic-mail').service('email-router').send({
+          to: token.email,
+          from: emailConfig.from,
+          replyTo: emailConfig.response_email,
+          subject: emailConfig.object,
+          text,
+          html,
+          headers,
+          // IMPORTANT: Pass links array for click tracking
+          links: [
+            {
+              original: loginUrl,
+              label: 'Magic Link Login',
+              track: true
+            }
+          ],
+          // Optional: Use selected template
+          templateId: routerTemplateId,
+          templateReferenceId,
+          templateData: templatePayload,
+          data: templatePayload,
+        });
+        
+        strapi.log.info(`Magic Link email sent via MagicMail to ${token.email}`);
+        return token;
+      } catch (error) {
+        strapi.log.error('MagicMail send failed, falling back to default provider:', error);
+        // Continue to fallback below
+      }
+    }
+
+    // Send the email via default provider
     await strapi.plugin('email').service('email').send({
       to: token.email,
       from: emailConfig.from,
@@ -216,8 +350,10 @@ module.exports = ({ strapi }) => ({
       subject: emailConfig.object,
       text,
       html,
+      headers
     });
 
+    strapi.log.info(`Magic Link email sent to ${token.email}`);
     return token;
   },
 

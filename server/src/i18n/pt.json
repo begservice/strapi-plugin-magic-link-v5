@@ -1,0 +1,36 @@
+{
+  "errors": {
+    "plugin.disabled": "O plugin Magic Link está desativado",
+    "token.invalid": "Token inválido ou expirado",
+    "token.notFound": "Token não encontrado",
+    "wrong.email": "Endereço de e-mail inválido",
+    "wrong.user": "Usuário não encontrado",
+    "blocked.user": "Conta de usuário bloqueada",
+    "unconfirmed.user": "Por favor, confirme seu endereço de e-mail primeiro",
+    "rate.limit.exceeded": "Muitas solicitações. Por favor, tente novamente mais tarde",
+    "missing.parameters": "Parâmetros obrigatórios ausentes",
+    "invalid.json": "Formato JSON inválido",
+    "session.notFound": "Sessão não encontrada",
+    "session.expired": "A sessão expirou",
+    "invalid.ipAddress": "Endereço IP inválido",
+    "license.required": "Licença válida necessária",
+    "license.invalid": "Chave de licença inválida ou expirada",
+    "license.notFound": "Licença não encontrada",
+    "license.emailMismatch": "O endereço de e-mail não corresponde a esta chave de licença",
+    "settings.updateFailed": "Não foi possível atualizar as configurações",
+    "settings.getFailed": "Não foi possível obter as configurações",
+    "unauthorized": "Acesso não autorizado",
+    "generic.error": "Ocorreu um erro"
+  },
+  "success": {
+    "token.created": "Magic Link enviado com sucesso",
+    "token.extended": "Token estendido com sucesso",
+    "session.revoked": "Sessão revogada com sucesso",
+    "session.unrevoked": "Sessão restaurada com sucesso",
+    "ip.banned": "Endereço IP bloqueado com sucesso",
+    "ip.unbanned": "Endereço IP desbloqueado com sucesso",
+    "settings.updated": "Configurações atualizadas com sucesso",
+    "license.created": "Licença criada com sucesso",
+    "license.verified": "Licença verificada com sucesso"
+  }
+}

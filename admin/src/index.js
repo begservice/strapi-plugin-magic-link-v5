@@ -60,6 +60,16 @@ export default {
           Component: () => import(/* webpackChunkName: "magic-link-license" */ './pages/License'),
           permissions: [],
         },
+        {
+          intlLabel: {
+            id: getTrad('Form.title.Upgrade'),
+            defaultMessage: 'Upgrade',
+          },
+          id: 'magic-link-upgrade',
+          to: `${pluginId}/upgrade`,
+          Component: () => import(/* webpackChunkName: "magic-link-upgrade" */ './pages/LicensePage'),
+          permissions: [],
+        },
       ]
     );
   },

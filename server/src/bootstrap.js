@@ -46,7 +46,7 @@ module.exports = async ({ strapi }) => {
       expire_period: 3600,
       confirmationUrl: serverUrl,
       from_name: 'Administration Panel',
-      from_email: 'no-reply@strapi.io',
+      from_email: '', // Empty by default - will use Strapi email config
       response_email: '',
       token_length: 20,
       stays_valid: false,
@@ -74,6 +74,27 @@ Thanks.`,
       rate_limit_enabled: true,
       rate_limit_max_attempts: 5,
       rate_limit_window_minutes: 15,
+      // OTP Settings (Premium Feature)
+      otp_enabled: false,
+      otp_type: 'email',
+      otp_length: 6,
+      otp_expiry: 300,
+      otp_max_attempts: 3,
+      otp_resend_cooldown: 60,
+      // SMS Provider Settings (Advanced Feature)
+      sms_provider: null,
+      sms_api_key: '',
+      sms_api_secret: '',
+      sms_from_number: '',
+      // TOTP Settings (Advanced Feature)
+      totp_issuer: 'Magic Link',
+      totp_algorithm: 'SHA1',
+      totp_digits: 6,
+      totp_period: 30,
+      // MFA Settings (Premium/Advanced Feature)
+      mfa_mode: 'disabled', // 'disabled', 'optional', 'required'
+      mfa_require_totp: false, // Require TOTP after Magic Link (2FA)
+      totp_as_primary_auth: false, // Allow login with Email + TOTP only (Advanced)
     };
 
     await pluginStore.set({ key: 'settings', value });
@@ -145,6 +166,29 @@ Thanks.`,
     }
   }, 30 * 60 * 1000);
 
+  // Initialize OTP Cleanup Job
+  // Note: Get service reference dynamically to preserve strapi context
+  
+  // Initial cleanup for OTP codes
+  setTimeout(() => {
+    try {
+      const otpService = strapi.plugin('magic-link').service('otp');
+      otpService.cleanupExpiredCodes();
+    } catch (error) {
+      strapi.log.debug('OTP cleanup skipped - DB not ready');
+    }
+  }, 10000);
+  
+  // Cleanup expired OTP codes every 5 minutes
+  setInterval(() => {
+    try {
+      const otpService = strapi.plugin('magic-link').service('otp');
+      otpService.cleanupExpiredCodes();
+    } catch (error) {
+      strapi.log.error('OTP cleanup failed:', error.message);
+    }
+  }, 5 * 60 * 1000);
+
   // Initialize License Guard
   try {
     const licenseGuardService = strapi.plugin('magic-link').service('license-guard');
@@ -196,15 +240,15 @@ Thanks.`,
   // This ensures users can login with both Magic-Link AND Email/Password
   try {
     setTimeout(async () => {
-      const usersToUpdate = await strapi.db.query('plugin::users-permissions.user').findMany({
-        where: { provider: 'magic-link' },
-        select: ['id', 'email'],
+      const usersToUpdate = await strapi.entityService.findMany('plugin::users-permissions.user', {
+        filters: { provider: 'magic-link' },
+        fields: ['id', 'email'],
       });
 
       if (usersToUpdate && usersToUpdate.length > 0) {
         strapi.log.info('🔄 [Magic-Link Migration] Found %d user(s) with old provider "magic-link"', usersToUpdate.length);
         
-        // Update all users in bulk
+        // Update all users in bulk (using Query Engine for bulk operation)
         await strapi.db.query('plugin::users-permissions.user').updateMany({
           where: { provider: 'magic-link' },
           data: { provider: 'local' },

@@ -5,6 +5,7 @@ const magicLink = require('./magic-link');
 const store = require('../../services/store');
 const licenseGuard = require('./license-guard');
 const rateLimiter = require('./rate-limiter');
+const otp = require('./otp');
 
 module.exports = {
   service,
@@ -15,4 +16,5 @@ module.exports = {
   licenseGuard, // Alias für Kompatibilität
   'rate-limiter': rateLimiter,
   rateLimiter, // Alias für Kompatibilität
+  otp,
 };

@@ -54,9 +54,38 @@ module.exports = {
       // Check if Email Designer plugin is installed
       const isEmailDesignerInstalled = !!strapi.plugin('email-designer-5');
       
+      // Check if MagicMail plugin is installed
+      const isMagicMailInstalled = !!strapi.plugin('magic-mail');
+      
+      // Check if email provider is configured
+      let emailProviderConfigured = false;
+      let emailProviderName = null;
+      
+      try {
+        // Check if Strapi email plugin is available
+        if (strapi.plugin('email')) {
+          emailProviderConfigured = true;
+          const emailConfig = strapi.config.get('plugin::email');
+          emailProviderName = emailConfig?.provider || 'configured';
+        }
+      } catch (error) {
+        // Email plugin not available
+        emailProviderConfigured = false;
+      }
+      
+      strapi.log.info('📧 Email Provider Check:', {
+        emailProviderConfigured,
+        emailProviderName,
+        emailDesignerInstalled: isEmailDesignerInstalled,
+        magicMailInstalled: isMagicMailInstalled
+      });
+      
       ctx.send({ 
         settings: processedSettings,
-        emailDesignerInstalled: isEmailDesignerInstalled
+        emailDesignerInstalled: isEmailDesignerInstalled,
+        magicMailInstalled: isMagicMailInstalled,
+        emailProviderConfigured,
+        emailProviderName
       });
     } catch (error) {
       ctx.throw(500, error);
@@ -82,7 +111,7 @@ module.exports = {
       const booleanFields = [
         'enabled', 'createUserIfNotExists', 'stays_valid', 'verify_email', 
         'welcome_email', 'use_jwt_token', 'allow_magic_links_on_public_registration',
-        'store_login_info', 'use_email_designer'
+        'store_login_info', 'use_email_designer', 'use_magic_mail'
       ];
       
       booleanFields.forEach(field => {
@@ -101,6 +130,11 @@ module.exports = {
       // Ensure store_login_info is included in the stored settings
       if (processedBody.store_login_info === undefined) {
         processedBody.store_login_info = true;
+      }
+      
+      // Debug log for MagicMail settings
+      if (processedBody.use_magic_mail) {
+        strapi.log.info(`[DEBUG] Saving MagicMail settings - use_magic_mail: ${processedBody.use_magic_mail}, template_id: ${processedBody.magic_mail_template_id}`);
       }
       
       const pluginStore = strapi.store({
@@ -174,10 +208,20 @@ This link will expire in 1 hour.`,
       // Einstellungen zurücksetzen
       await pluginStore.set({ key: 'settings', value: defaultSettings });
 
-      // Alle Magic Link Tokens löschen
-      await strapi.db.query('plugin::magic-link.token').deleteMany({
-        where: {},
+      // Delete all Magic Link tokens
+      // Note: Using Query Engine for bulk delete as Entity Service doesn't support deleteMany
+      // This is acceptable for administrative bulk operations
+      const tokens = await strapi.entityService.findMany('plugin::magic-link.token', {
+        fields: ['id'],
       });
+      
+      if (tokens && tokens.length > 0) {
+        // Delete in batches to avoid memory issues
+        for (const token of tokens) {
+          await strapi.entityService.delete('plugin::magic-link.token', token.id);
+        }
+        strapi.log.info(`✅ Deleted ${tokens.length} Magic Link token(s)`);
+      }
 
       // JWT Sessions löschen
       try {

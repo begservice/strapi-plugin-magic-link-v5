@@ -1,9 +1,31 @@
-# Magic Link - Passwordless Authentication for Strapi v5
+# 🔐 Magic Link - Passwordless Authentication for Strapi v5
 
-Secure passwordless authentication for Strapi v5 using email-based magic links. Simple, secure, and user-friendly - no passwords required.
+**The most advanced passwordless authentication plugin for Strapi v5**
+
+Secure, modern, and user-friendly authentication using email-based magic links, OTP codes, and TOTP authenticators. Built for production with enterprise-grade security features.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![npm version](https://badge.fury.io/js/strapi-plugin-magic-link-v5.svg)](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
+[![Strapi v5](https://img.shields.io/badge/Strapi-v5-7C3AED.svg)](https://strapi.io)
+
+## 🚀 Why Magic Link?
+
+- ⚡ **Zero Setup Time** - Install, activate license (free), and start using
+- 🎯 **Production Ready** - Battle-tested with rate limiting, IP bans, and session management
+- 🛡️ **Multi-Factor Authentication** - Email OTP + TOTP Authenticator support
+- 🎨 **Beautiful UI** - Modern, responsive admin interface with German translations
+- 🔒 **Enterprise Security** - License-based feature unlocking with Free, Premium & Advanced tiers
+
+## 📚 Quick Links
+
+- [✨ Features](#-features) - Authentication modes, security, license tiers
+- [🚀 Installation](#-installation) - Get started in minutes
+- [🎯 Quick Start](#-quick-start) - License activation & configuration
+- [💻 Frontend Examples](#-frontend-implementation) - Magic Link, Email OTP, TOTP flows
+- [📡 API Endpoints](#-api-endpoints) - Complete API reference
+- [⚙️ Configuration](#-configuration) - All settings explained
+- [🐛 Troubleshooting](#-troubleshooting) - Common issues & solutions
+- [📝 Changelog](#-changelog) - Version history & updates
 
 ## 🌍 Supported Languages
 
@@ -43,36 +65,57 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 
 ## ✨ Features
 
-### Core Authentication
-- 🔐 **Passwordless Login** - Users log in via secure email magic links
-- 🎫 **Magic Link Tokens** - Cryptographically secure, time-limited tokens
-- 🔑 **JWT Session Management** - Monitor and manage active user sessions
-- 👤 **Auto User Creation** - Optionally create users automatically on first login
-- 🌍 **Multi-language Support** - English and German translations included
+### 🔐 Authentication Modes
 
-### Security & Control
-- 🛡️ **IP Banning** - Block suspicious IP addresses
-- 🔒 **Session Revocation** - Instantly revoke any active JWT session
-- ⏰ **Token Expiration** - Configurable expiration periods
-- 🚦 **Rate Limiting** - Prevent abuse with configurable request limits (5 per 15 min default)
-- 🎯 **Login Attempt Limiting** - Prevent brute force attacks
-- 📊 **Security Score** - Real-time security configuration assessment
-- 📝 **Login Info Tracking** - Store IP addresses and user agents for audit
+Choose the security level that fits your needs:
 
-### Admin Interface
-- 📱 **Modern Dashboard** - Beautiful statistics and monitoring interface
-- 🎨 **Professional Token Management** - Create, extend, and manage tokens
-- 🔍 **Search & Filter** - Find tokens and sessions quickly
-- 📄 **Pagination** - Handle large datasets efficiently
-- 🎭 **Bulk Operations** - Select and manage multiple tokens at once
-- 🌐 **License Management** - Built-in license activation interface
+| Mode | Description | License |
+|------|-------------|---------|
+| **Magic Link Only** | One-click email login - fast & user-friendly | ✅ Free |
+| **Magic Link + Email OTP** | 6-digit code after magic link click | 💎 Premium |
+| **Magic Link + TOTP (MFA)** | Authenticator app (Google Auth, Authy) | ⚡ Advanced |
+| **TOTP-Only Login** | Direct login with email + TOTP code | ⚡ Advanced |
 
-### Customization
-- ✉️ **Email Templates** - Customize HTML and plain text email templates
-- 🎨 **Template Variables** - Use `<%= URL %>` and `<%= CODE %>` placeholders
-- ⚙️ **Flexible Configuration** - Configure via admin panel
-- 🔄 **Token Reusability** - Choose between one-time or reusable tokens
-- 📧 **Email Designer Support** - Integrates with Email Designer 5 plugin
+### 🛡️ Security Features
+
+- **Rate Limiting** - 5 requests per 15 minutes (configurable)
+- **IP Banning** - Block suspicious addresses with one click
+- **Session Management** - Monitor and revoke active JWT sessions
+- **Login Tracking** - Store IP addresses and user agents
+- **Token Expiration** - Configurable validity periods
+- **Brute Force Protection** - Login attempt limiting
+- **Security Score** - Real-time configuration assessment
+
+### � License Tiers
+
+| Feature | Free | Premium | Advanced |
+|---------|------|---------|----------|
+| Magic Link Login | ✅ | ✅ | ✅ |
+| Token Management | ✅ | ✅ | ✅ |
+| IP Banning | ✅ | ✅ | ✅ |
+| Rate Limiting | ✅ | ✅ | ✅ |
+| Email OTP | ❌ | ✅ | ✅ |
+| TOTP Authenticator | ❌ | ❌ | ✅ |
+| TOTP-Only Login | ❌ | ❌ | ✅ |
+
+### 🎨 Admin Interface
+
+- **Modern Dashboard** - Beautiful token statistics and charts
+- **Mobile Optimized** - Perfect icon centering on all screen sizes
+- **German Translations** - Fully localized UI (5 languages total)
+- **License Management** - Visual tier display and feature unlocking
+- **Professional Token Management** - Create, extend, block, delete
+- **Search & Filter** - Find anything in seconds
+- **Bulk Operations** - Manage multiple items at once
+
+### ⚙️ Customization
+
+- **Email Templates** - HTML & plain text with variables
+- **Email Designer 5** - Visual email builder integration
+- **Flexible Configuration** - All settings in admin panel
+- **Custom Callbacks** - Post-login redirect URLs
+- **Auto User Creation** - Optional on first login
+- **Token Reusability** - One-time or multi-use tokens
 
 ---
 
@@ -215,49 +258,216 @@ Click **"Create License"** and you're done! The plugin will:
 
 ### 2️⃣ Configure Settings
 
-Go to **Settings → Magic Link → Settings** and configure:
+**Navigate to:** Settings → Magic Link → Settings
+
+**Essential Configuration:**
 
 ```javascript
 {
+  // Core Settings
   "enabled": true,
-  "createUserIfNotExists": true,    // Auto-create users
-  "expire_period": 3600,             // Token valid for 1 hour
-  "token_length": 20,                // Token security level
+  "createUserIfNotExists": true,    // Auto-create users on first login
+  "expire_period": 3600,             // Token valid for 1 hour (3600s)
+  "token_length": 20,                // Token security level (20-40 chars)
+  
+  // Email Configuration
   "from_email": "noreply@yourdomain.com",
-  "from_name": "Your App",
+  "from_name": "Your App Name",
   "object": "Your Magic Link Login",
-  "confirmationUrl": "https://yourdomain.com/auth/callback"
+  "confirmationUrl": "https://yourdomain.com/auth/callback",
+  
+  // Rate Limiting
+  "rate_limit_enabled": true,
+  "rate_limit_max_attempts": 5,      // 5 requests per window
+  "rate_limit_window_minutes": 15    // 15 minute window
 }
 ```
 
+**Choose Authentication Mode:**
+- Go to **Settings → MFA & Login Modes**
+- Select your preferred mode (Magic Link Only is default and free)
+- Configure OTP/TOTP settings if using Premium/Advanced features
+
 ### 3️⃣ Frontend Implementation
 
-**Request a magic link:**
+#### 🔗 Basic Magic Link Flow
+
+**Step 1: Request a magic link**
 ```javascript
 const response = await fetch('/api/magic-link/send-link', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     email: 'user@example.com',
-    context: { redirectTo: '/dashboard' }  // Optional
+    context: { redirectTo: '/dashboard' }
   })
 });
+
+const data = await response.json();
+console.log('Magic link sent!', data);
 ```
 
-**Verify token on callback page:**
+**Step 2: Verify token on callback page**
 ```javascript
 const urlParams = new URLSearchParams(window.location.search);
 const loginToken = urlParams.get('loginToken');
 
 if (loginToken) {
-  const response = await fetch(`/api/magic-link/login?loginToken=${loginToken}`);
-  const { jwt, user } = await response.json();
+  try {
+    const response = await fetch(`/api/magic-link/login?loginToken=${loginToken}`);
+    const { jwt, user } = await response.json();
+    
+    // Store JWT for authenticated requests
+    localStorage.setItem('token', jwt);
+    localStorage.setItem('user', JSON.stringify(user));
+    
+    // Redirect to dashboard
+    window.location.href = '/dashboard';
+  } catch (error) {
+    console.error('Login failed:', error);
+    alert('Invalid or expired magic link');
+  }
+}
+```
+
+#### 📧 Email OTP Flow (Premium)
+
+**Step 1: Request magic link (same as above)**
+
+**Step 2: User clicks magic link → redirected to OTP page**
+
+**Step 3: Verify OTP code**
+```javascript
+async function verifyOTP(email, otpCode) {
+  const response = await fetch('/api/magic-link/verify-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: email,
+      otp: otpCode
+    })
+  });
+
+  if (response.ok) {
+    const { jwt, user } = await response.json();
+    localStorage.setItem('token', jwt);
+    localStorage.setItem('user', JSON.stringify(user));
+    window.location.href = '/dashboard';
+  } else {
+    alert('Invalid OTP code. Please try again.');
+  }
+}
+
+// Usage
+const otpInput = document.getElementById('otp-input');
+verifyOTP('user@example.com', otpInput.value);
+```
+
+#### 🔐 TOTP Setup Flow (Advanced)
+
+**Step 1: Setup TOTP for user (requires authentication)**
+```javascript
+async function setupTOTP() {
+  const token = localStorage.getItem('token');
   
-  // Store JWT for authenticated requests
-  localStorage.setItem('token', jwt);
+  const response = await fetch('/api/magic-link/totp/setup', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  const { secret, qrCode, otpauthUrl } = await response.json();
   
-  // Redirect to dashboard
-  window.location.href = '/dashboard';
+  // Display QR code to user
+  document.getElementById('qr-code').innerHTML = `<img src="${qrCode}" alt="Scan with authenticator app" />`;
+  
+  // Show secret for manual entry
+  document.getElementById('secret').textContent = secret;
+  
+  return secret;
+}
+```
+
+**Step 2: Verify TOTP code**
+```javascript
+async function verifyTOTP(totpCode) {
+  const token = localStorage.getItem('token');
+  
+  const response = await fetch('/api/magic-link/totp/verify', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      token: totpCode
+    })
+  });
+
+  if (response.ok) {
+    alert('TOTP successfully enabled!');
+    return true;
+  } else {
+    alert('Invalid code. Please try again.');
+    return false;
+  }
+}
+```
+
+**Step 3: Login with Email + TOTP (Alternative Login)**
+```javascript
+async function loginWithTOTP(email, totpCode) {
+  const response = await fetch('/api/magic-link/totp/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email: email,
+      token: totpCode
+    })
+  });
+
+  if (response.ok) {
+    const { jwt, user } = await response.json();
+    localStorage.setItem('token', jwt);
+    localStorage.setItem('user', JSON.stringify(user));
+    window.location.href = '/dashboard';
+  } else {
+    alert('Invalid credentials');
+  }
+}
+```
+
+#### 🔍 Check License Tier (Client-side)
+
+```javascript
+async function checkLicenseTier() {
+  const adminToken = localStorage.getItem('adminToken');
+  
+  const response = await fetch('/magic-link/license/status', {
+    headers: {
+      'Authorization': `Bearer ${adminToken}`
+    }
+  });
+
+  const { data } = await response.json();
+  
+  // data.features.premium - Email OTP available
+  // data.features.advanced - TOTP MFA available
+  // data.features.enterprise - All features
+  
+  return {
+    isPremium: data.features?.premium || false,
+    isAdvanced: data.features?.advanced || false,
+    isEnterprise: data.features?.enterprise || false
+  };
+}
+
+// Usage
+const license = await checkLicenseTier();
+if (license.isPremium) {
+  console.log('Email OTP is available!');
 }
 ```
 
@@ -265,77 +475,155 @@ if (loginToken) {
 
 ## 📡 API Endpoints
 
-### Public Endpoints (No Auth Required)
+### 🌐 Public Endpoints (No Auth Required)
 
+#### Authentication
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/magic-link/send-link` | Generate and send magic link to email |
 | `GET` | `/api/magic-link/login?loginToken=xxx` | Authenticate user with token |
+| `POST` | `/api/magic-link/verify-otp` | Verify Email OTP code |
+| `POST` | `/api/magic-link/totp/login` | Login with Email + TOTP code |
 
-### Admin Endpoints (Admin Auth Required)
-
+#### TOTP Management (User Auth Required)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/magic-link/tokens` | List all tokens |
+| `POST` | `/api/magic-link/totp/setup` | Generate TOTP secret & QR code |
+| `POST` | `/api/magic-link/totp/verify` | Verify and enable TOTP |
+| `POST` | `/api/magic-link/totp/disable` | Disable TOTP for user |
+| `GET` | `/api/magic-link/totp/status` | Check if TOTP is configured |
+
+### 🔐 Admin Endpoints (Admin Auth Required)
+
+#### Token Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/magic-link/tokens` | List all magic link tokens |
 | `POST` | `/magic-link/tokens` | Create a new token |
-| `DELETE` | `/magic-link/tokens/:id` | Delete a token |
+| `DELETE` | `/magic-link/tokens/:id` | Permanently delete a token |
 | `POST` | `/magic-link/tokens/:id/block` | Block a token |
+| `POST` | `/magic-link/tokens/:id/activate` | Activate blocked token |
 | `POST` | `/magic-link/tokens/:id/extend` | Extend token validity |
+
+#### Security & Monitoring
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | `GET` | `/magic-link/jwt-sessions` | List active JWT sessions |
 | `POST` | `/magic-link/revoke-jwt` | Revoke a JWT session |
 | `POST` | `/magic-link/ban-ip` | Ban an IP address |
-| `GET` | `/magic-link/banned-ips` | List banned IPs |
+| `DELETE` | `/magic-link/ban-ip/:ip` | Unban an IP address |
+| `GET` | `/magic-link/banned-ips` | List all banned IPs |
+| `GET` | `/magic-link/rate-limit/stats` | Get rate limit statistics |
+| `POST` | `/magic-link/rate-limit/cleanup` | Cleanup expired entries |
+
+#### OTP Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/magic-link/otp-codes` | List all OTP codes |
+| `POST` | `/magic-link/otp-codes/cleanup` | Cleanup expired OTP codes |
+
+#### License Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/magic-link/license/status` | Get current license status |
+| `POST` | `/magic-link/license/auto-create` | Create license with admin data |
+| `POST` | `/magic-link/license/activate` | Activate license with key |
 
 ---
 
 ## ⚙️ Configuration
 
-### General Settings
-- `enabled` - Enable/disable magic link authentication
-- `createUserIfNotExists` - Auto-create users on first login
-- `expire_period` - Token expiration time (seconds)
-- `token_length` - Security level (20-40 recommended)
-- `stays_valid` - Token reusable after first use
-- `max_login_attempts` - Limit failed login attempts
+### 🔐 Authentication Mode Settings
 
-### Email Settings
-- `from_name` - Sender name
-- `from_email` - Sender email address
-- `response_email` - Reply-to email
-- `object` - Email subject line
-- `message_html` - HTML email template
-- `message_text` - Plain text email template
+**Configure in Admin Panel → Settings → MFA & Login Modes**
 
-### JWT Settings
-- `use_jwt_token` - Use JWT for authentication
-- `jwt_token_expires_in` - JWT validity period (e.g., '30d', '7d')
-- `store_login_info` - Track IP and user agent
+```javascript
+{
+  // Authentication Modes (mutually exclusive)
+  "otp_enabled": false,            // Enable Email OTP (Premium)
+  "mfa_require_totp": false,       // Enable TOTP MFA (Advanced)
+  "totp_as_primary_auth": false,   // Enable TOTP-only login (Advanced)
+  
+  // Email OTP Configuration (Premium)
+  "otp_type": "email",             // "email" | "sms" | "totp"
+  "otp_length": 6,                 // Code length (4-8 digits)
+  "otp_expiry": 300,               // Validity in seconds (default: 5 min)
+  "otp_max_attempts": 3,           // Max verification attempts
+  "otp_resend_cooldown": 60,       // Cooldown before resend (seconds)
+  
+  // TOTP Configuration (Advanced)
+  "totp_issuer": "Magic Link",     // Displayed in authenticator app
+  "totp_digits": 6,                // Code digits (6 or 8)
+  "totp_period": 30,               // Time period (seconds)
+  "totp_algorithm": "sha1"         // "sha1" | "sha256" | "sha512"
+}
+```
 
-### Advanced
-- `user_creation_strategy` - `email` | `emailUsername` | `manual`
-- `verify_email` - Require email verification
-- `callback_url` - Post-login redirect URL
+### ⚙️ General Settings
 
-### Security & Rate Limiting
-- `rate_limit_enabled` - Enable/disable rate limiting (default: `true`)
-- `rate_limit_max_attempts` - Maximum requests allowed (default: `5`)
-- `rate_limit_window_minutes` - Time window in minutes (default: `15`)
+```javascript
+{
+  "enabled": true,                 // Enable/disable plugin
+  "createUserIfNotExists": true,   // Auto-create users on first login
+  "expire_period": 3600,           // Token expiration (seconds)
+  "token_length": 20,              // Token security level (20-40)
+  "stays_valid": false,            // Token reusable after first use
+  "max_login_attempts": 5,         // Limit failed login attempts
+  "callback_url": "https://yourdomain.com/auth/callback"
+}
+```
+
+### 📧 Email Settings
+
+```javascript
+{
+  "from_name": "Your App",
+  "from_email": "noreply@yourdomain.com",
+  "response_email": "support@yourdomain.com",
+  "object": "Your Magic Link Login",
+  "message_html": "<h1>Welcome!</h1><p>Click to login: <a href='<%= URL %>?loginToken=<%= CODE %>'>Login</a></p>",
+  "message_text": "Your login link: <%= URL %>?loginToken=<%= CODE %>"
+}
+```
+
+**Template Variables:**
+- `<%= URL %>` - Your confirmation URL
+- `<%= CODE %>` - The generated token
+- `<%= USER %>` - User email/username
+- `<%= EXPIRES_AT %>` - Token expiration time
+
+### 🔒 JWT Settings
+
+```javascript
+{
+  "use_jwt_token": true,           // Use JWT for authentication
+  "jwt_token_expires_in": "30d",   // JWT validity (e.g., '7d', '30d', '365d')
+  "store_login_info": true         // Track IP and user agent
+}
+```
+
+### 🛡️ Security & Rate Limiting
+
+```javascript
+{
+  "rate_limit_enabled": true,       // Enable rate limiting
+  "rate_limit_max_attempts": 5,     // Max requests per window
+  "rate_limit_window_minutes": 15   // Time window in minutes
+}
+```
 
 **How it works:**
-- Limits token creation requests per IP address
-- Limits token creation requests per email address
-- Returns `429 Too Many Requests` when limit exceeded
-- Automatic cleanup of expired entries every 30 minutes
+- Limits token requests per IP address
+- Limits token requests per email address
+- Returns `429 Too Many Requests` when exceeded
+- Automatic cleanup every 30 minutes
+- Protects against brute-force and spam attacks
 
 **Example:** With default settings (5 attempts per 15 minutes):
 - User can request max 5 magic links in 15 minutes
 - After 5 attempts, they must wait up to 15 minutes
-- Protects against brute-force and spam attacks
-
-**Management:**
 - View statistics in Settings → Security & Rate Limiting
-- Manually cleanup expired entries
-- Reset all limits if needed
+- Manually cleanup expired entries or reset all limits
 
 ---
 
@@ -382,13 +670,48 @@ Customize your magic link emails using template variables:
 
 ## 🐛 Troubleshooting
 
+### Common Issues
+
 | Issue | Solution |
 |-------|----------|
-| Emails not sending | Check Strapi email provider configuration |
-| Token invalid errors | Verify token hasn't expired |
-| User not found | Enable `createUserIfNotExists` setting |
-| License activation fails | Check network connectivity |
-| npm install fails | Use `npm install --legacy-peer-deps` |
+| **Emails not sending** | Check Strapi email provider configuration in `config/plugins.js` |
+| **Token invalid errors** | Verify token hasn't expired. Check `expire_period` setting |
+| **User not found** | Enable `createUserIfNotExists` setting in admin panel |
+| **License activation fails** | Check network connectivity. Try manual activation with license key |
+| **npm install fails** | Use `npm install --legacy-peer-deps` or update to latest npm |
+| **OTP settings not visible** | Check license tier. Email OTP requires Premium license |
+| **TOTP not working** | Verify Advanced license is active. Check authenticator app time sync |
+| **"Current License: Free" but Premium activated** | Refresh browser cache. License info loads from `/magic-link/license/status` |
+| **Lock icons not centered** | Update to v4.16.1+. Mobile UI fixes are included |
+| **Email OTP shown without license** | Update to v4.16.3+. License validation is fixed |
+
+### Debug Mode
+
+Enable debug logging in your Strapi instance:
+
+```bash
+# In development
+NODE_ENV=development npm run develop
+
+# Check logs in terminal for Magic Link debug output
+```
+
+### Reset Plugin
+
+If you need to reset the plugin:
+
+```bash
+# 1. Stop Strapi
+# 2. Clear plugin database entries
+# 3. Restart Strapi
+npm run develop
+```
+
+### Get Support
+
+- 🐛 [GitHub Issues](https://github.com/begservice/strapi-plugin-magic-link-v5/issues)
+- 📧 Email: 124470865+begservice@users.noreply.github.com
+- 📖 Check the README for updated examples
 
 ---
 
@@ -412,7 +735,59 @@ Contributions are welcome! Please:
 
 ## 📝 Changelog
 
-This project uses [semantic-release](https://github.com/semantic-release/semantic-release) for automated versioning and releases. See [GitHub Releases](https://github.com/begservice/strapi-plugin-magic-link-v5/releases) for version history.
+### v4.16.3 (2025-11-22) - Latest 🎉
+
+**License Validation Fix**
+- ✅ Fixed license tier detection from backend features
+- ✅ Correctly extracts `premium`, `advanced`, `enterprise` from license response
+- ✅ Enriched license info with `tier` field for UI compatibility
+- 🐛 Fixed "Current License: Free" display bug when Premium is active
+
+### v4.16.2 (2025-11-22)
+
+**Active State & Auto-Disable Fix**
+- ✅ "Magic Link Only" now always shows ACTIVE with FREE license
+- ✅ Email OTP settings only visible with Premium+ license
+- ✅ Auto-disable premium features when license doesn't support them
+- ✅ Added useEffect hook for automatic license enforcement
+
+### v4.16.1 (2025-11-22)
+
+**Lock Icons & License Checks**
+- ✅ Perfectly centered lock/lightning icons in locked mode cards
+- ✅ Fixed license validation in active state detection
+- ✅ Locked features now show proper disabled state
+- 🎨 Improved locked overlay with flexbox centering
+
+### v4.16.0 (2025-11-22)
+
+**Major UX Improvements**
+- 🎨 Complete MFA settings redesign with modern UI
+- 💎 License tier status display with visual indicators
+- 🔒 Locked feature cards with clear premium/advanced badges
+- 🇩🇪 Full German translations for all MFA settings
+- ✅ Improved explanations and help texts
+- 📧 Better Email OTP configuration section
+- 🔐 Added step-by-step "How it works" guides
+
+### v4.15.6 (2025-11-22)
+
+**Email OTP Configuration**
+- ✅ Added Email OTP configuration section
+- ⚙️ Code length, expiry time, max attempts settings
+- 🔄 Resend cooldown configuration
+- 📧 OTP delivery method selection
+- ℹ️ Improved help text and info boxes
+
+### v4.15.5 (2025-11-22)
+
+**Mobile & Settings UI Fixes**
+- 📱 Fixed mobile button icon centering issues
+- 🗑️ Removed duplicate OTP accordion
+- 🎨 Improved badge colors for better readability
+- ✨ Better contrast for Premium/Advanced badges
+
+For full version history, see [GitHub Releases](https://github.com/begservice/strapi-plugin-magic-link-v5/releases).
 
 ---
 
@@ -424,12 +799,40 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## 💬 Support
+## 💬 Support & Community
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/begservice/strapi-plugin-magic-link-v5/issues)
-- 📧 **Contact**: 124470865+begservice@users.noreply.github.com
-- 📦 **npm**: [strapi-plugin-magic-link-v5](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
+### Need Help?
+
+- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/begservice/strapi-plugin-magic-link-v5/issues)
+- � **Feature Requests**: [GitHub Discussions](https://github.com/begservice/strapi-plugin-magic-link-v5/discussions)
+- 📧 **Email**: 124470865+begservice@users.noreply.github.com
+- 📦 **npm Package**: [strapi-plugin-magic-link-v5](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
+
+### Resources
+
+- 📖 **Documentation**: This README + [Strapi Docs](https://docs.strapi.io)
+- 💻 **Source Code**: [GitHub Repository](https://github.com/begservice/strapi-plugin-magic-link-v5)
+- 🎯 **Live Example**: Coming soon
+- 📹 **Video Tutorial**: Coming soon
+
+### Sponsoring
+
+If this plugin saves you time and you'd like to support development:
+
+- ⭐ Star the repository on GitHub
+- 🐛 Report bugs and suggest features
+- 💡 Contribute code improvements
+- 📢 Share with the Strapi community
 
 ---
 
-Made with ❤️ by [begservice](https://github.com/begservice)
+<div align="center">
+
+**Made with ❤️ by [begservice](https://github.com/begservice)**
+
+*Passwordless authentication, simplified.*
+
+[![GitHub](https://img.shields.io/github/stars/begservice/strapi-plugin-magic-link-v5?style=social)](https://github.com/begservice/strapi-plugin-magic-link-v5)
+[![npm](https://img.shields.io/npm/dt/strapi-plugin-magic-link-v5)](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
+
+</div>

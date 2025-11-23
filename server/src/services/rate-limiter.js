@@ -101,7 +101,12 @@ module.exports = ({ strapi }) => ({
    */
   async cleanupExpired() {
     try {
-      const pluginStore = strapi.store({
+      // Use global strapi to avoid context loss in setInterval
+      if (!global.strapi) {
+        throw new Error('Strapi instance not available');
+      }
+      
+      const pluginStore = global.strapi.store({
         type: 'plugin',
         name: 'magic-link',
       });
@@ -128,12 +133,16 @@ module.exports = ({ strapi }) => ({
       
       if (cleaned > 0) {
         await pluginStore.set({ key: 'rate_limits', value: rateLimitData });
-        strapi.log.info(`🧹 Cleaned up ${cleaned} expired rate limit entries`);
+        global.strapi.log.info(`🧹 Cleaned up ${cleaned} expired rate limit entries`);
       }
       
       return { cleaned };
     } catch (error) {
-      strapi.log.error('Error cleaning up rate limits:', error);
+      if (global.strapi && global.strapi.log) {
+        global.strapi.log.error('Error cleaning up rate limits:', error);
+      } else {
+        console.error('Error cleaning up rate limits:', error);
+      }
       return { cleaned: 0 };
     }
   },

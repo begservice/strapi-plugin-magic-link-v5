@@ -6,6 +6,7 @@ import CreateTokenModal from './CreateTokenModal';
 import ExtendTokenModal from './ExtendTokenModal';
 import JWTSessions from './JWTSessions';
 import IPBans from './IPBans';
+import OTPCodes from './OTPCodes';
 import { 
   Main, 
   Typography, 
@@ -224,6 +225,17 @@ const slideInFromLeft = keyframes`
   }
 `;
 
+const slideInContent = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+`;
+
 const pulse = keyframes`
   0%, 100% { 
     transform: scale(1);
@@ -393,82 +405,255 @@ const ActionButton = styled(Button)`
   &:active {
     transform: translateY(0);
   }
+
+  @media screen and (max-width: 768px) {
+    padding: 12px !important;
+    font-size: 0;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    /* Center icon container */
+    & > span,
+    & span {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      font-size: 0 !important;
+    }
+    
+    /* Center SVG icon */
+    svg {
+      width: 20px !important;
+      height: 20px !important;
+      margin: 0 !important;
+      display: block !important;
+    }
+    
+    /* Hide text on mobile */
+    & > span > span:not(:has(svg)) {
+      display: none !important;
+      visibility: hidden !important;
+    }
+  }
 `;
 
 const TabsWrapper = styled(Box)`
-  background: ${theme.colors.neutral[0]};
-  border-radius: ${theme.borderRadius.xl};
-  padding: ${theme.spacing.xs};
-  box-shadow: ${theme.shadows.sm};
+  position: relative;
+  background: linear-gradient(135deg, 
+    rgba(79, 70, 229, 0.05) 0%, 
+    rgba(147, 51, 234, 0.03) 100%
+  );
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   margin-bottom: ${theme.spacing.xl};
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
+  backdrop-filter: blur(12px);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    padding: 1px;
+    background: linear-gradient(135deg, 
+      rgba(79, 70, 229, 0.2), 
+      rgba(147, 51, 234, 0.2)
+    );
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0.5;
+  }
 
   @media screen and (max-width: 768px) {
-    background: ${theme.colors.neutral[200]} !important;
-    border-radius: 12px !important;
-    padding: 6px !important;
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
-    margin: 0 12px 20px 12px !important;
-    max-width: none !important;
+    border-radius: 12px;
+    padding: 4px;
+    margin: 0 16px 24px 16px;
+    max-width: none;
+    
+    &::before {
+      border-radius: 12px;
+    }
+  }
+`;
+
+const TabsContainer = styled.div`
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  
+  @media screen and (max-width: 768px) {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    overflow-x: visible;
+    padding: 4px;
+    width: fit-content;
+    margin: 0 auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+`;
+
+const TabIndicator = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    ${theme.colors.primary[600]} 0%, 
+    ${theme.colors.secondary[600]} 100%
+  );
+  border-radius: 12px;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 4px 12px rgba(79, 70, 229, 0.3),
+    0 2px 6px rgba(79, 70, 229, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  z-index: 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.2) 0%, 
+      rgba(255, 255, 255, 0) 100%
+    );
+  }
+  
+  @media screen and (max-width: 768px) {
+    display: none;
   }
 `;
 
 const TabButton = styled(Button)`
-  border-radius: ${theme.borderRadius.lg};
-  font-weight: 600;
-  transition: all ${theme.transitions.normal};
   position: relative;
+  z-index: 1;
+  border-radius: 12px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  border: none;
+  padding: 14px 24px;
+  white-space: nowrap;
   
   ${props => props.$active ? css`
-    background: ${props.theme.colors.primary600};
-    color: ${props.theme.colors.neutral0};
-    box-shadow: ${theme.shadows.sm};
+    color: white;
+    transform: scale(1.02);
+    
+    svg {
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    }
     
     &:hover {
-      background: ${props.theme.colors.primary700};
-      transform: translateY(-1px);
-      box-shadow: ${theme.shadows.md};
+      color: white;
+      transform: scale(1.02);
     }
   ` : css`
-    background: ${props.theme.colors.neutral100};
-    color: ${props.theme.colors.neutral700};
-    border: 1px solid ${props.theme.colors.neutral300};
+    color: ${theme.colors.neutral[700]};
     
     &:hover {
-      background: ${props.theme.colors.neutral200};
-      color: ${props.theme.colors.neutral900};
-      border-color: ${props.theme.colors.neutral400};
+      color: ${theme.colors.neutral[900]};
+      background: rgba(255, 255, 255, 0.5);
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
     }
   `}
 
   @media screen and (max-width: 768px) {
-    flex: 1 !important;
-    border-radius: 10px !important;
-    padding: 11px 8px !important;
-    font-size: 13px !important;
-    border: none !important;
-    background: ${props => props.$active ? 'white' : 'transparent'} !important;
-    color: ${props => props.$active ? theme.colors.neutral[900] : theme.colors.neutral[600]} !important;
-    box-shadow: ${props => props.$active ? '0 2px 6px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)' : 'none'} !important;
-    font-weight: ${props => props.$active ? '700' : '500'} !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    transform: ${props => props.$active ? 'scale(1)' : 'scale(0.96)'} !important;
+    padding: 0 !important;
+    font-size: 0;
+    border-radius: 12px;
+    min-height: 48px;
+    min-width: 48px;
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    scroll-snap-align: start;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: ${props => props.$active 
+      ? `linear-gradient(135deg, ${theme.colors.primary[600]} 0%, ${theme.colors.secondary[600]} 100%)`
+      : 'rgba(255,255,255,0.8)'};
+    color: ${props => props.$active ? theme.colors.neutral[0] : theme.colors.neutral[800]};
+    box-shadow: ${props => props.$active 
+      ? '0 6px 16px rgba(79, 70, 229, 0.25)'
+      : 'inset 0 0 0 1px rgba(79, 70, 229, 0.08)'};
     
-    &:hover {
-      background: ${props => props.$active ? 'white' : 'rgba(255,255,255,0.3)'} !important;
-      transform: ${props => props.$active ? 'scale(1)' : 'scale(0.98)'} !important;
+    ${props => props.$active ? css`
+      transform: scale(1);
+    ` : css`
+      &:hover {
+        transform: translateY(0);
+      }
+    `}
+    
+    /* Center icon container - all levels */
+    & > span,
+    & span {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      font-size: 0 !important;
+      line-height: 0 !important;
     }
-    
-    &:active {
-      transform: scale(0.94) !important;
-    }
-    
+
+    /* Center SVG icon */
     svg {
-      width: 16px !important;
-      height: 16px !important;
-      margin-right: 4px !important;
+      width: 20px !important;
+      height: 20px !important;
+      flex-shrink: 0;
+      margin: 0 !important;
+      display: block !important;
+    }
+    
+    /* Hide all text content */
+    & > span > span:not(:has(svg)),
+    & > span::before,
+    & > span::after {
+      display: none !important;
+      content: none !important;
+      visibility: hidden !important;
+    }
+  }
+  
+  @media screen and (max-width: 480px) {
+    padding: 0;
+    min-height: 44px;
+    min-width: 44px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    
+    > span svg {
+      width: 18px;
+      height: 18px;
     }
   }
 `;
@@ -490,6 +675,11 @@ const StatsGrid = styled(Box)`
     max-width: 100%;
     margin-bottom: ${theme.spacing.md};
   }
+`;
+
+const TabContentWrapper = styled.div`
+  animation: ${slideInContent} 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation-fill-mode: both;
 `;
 
 const StatCard = styled(Box)`
@@ -805,6 +995,22 @@ const TokensProfessional = () => {
   const [tokens, setTokens] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('magic-links');
+  
+  // Calculate indicator position for sliding animation
+  const getIndicatorStyle = () => {
+    const tabWidth = 100 / 4; // 4 tabs = 25% each
+    let translateX = 0;
+    
+    if (activeTab === 'magic-links') translateX = 0;
+    else if (activeTab === 'otp-codes') translateX = 1;
+    else if (activeTab === 'jwt-sessions') translateX = 2;
+    else if (activeTab === 'ip-bans') translateX = 3;
+    
+    return {
+      width: `calc(${tabWidth}% - 4px)`,
+      transform: `translateX(calc(${translateX * 100}% + ${translateX * 4}px))`,
+    };
+  };
   const [selectedTokens, setSelectedTokens] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -1159,22 +1365,29 @@ const TokensProfessional = () => {
         
         {/* Tab Navigation */}
         <TabsWrapper>
-          <Flex gap={1}>
+          <TabsContainer>
+            <TabIndicator style={getIndicatorStyle()} />
             <TabButton
               $active={activeTab === 'magic-links'}
               onClick={() => setActiveTab('magic-links')}
               startIcon={<Key />}
               size="L"
-              fullWidth
             >
               {formatMessage({ id: getTrad('tokens.tabs.magicLinks') })}
+            </TabButton>
+            <TabButton
+              $active={activeTab === 'otp-codes'}
+              onClick={() => setActiveTab('otp-codes')}
+              startIcon={<Lock />}
+              size="L"
+            >
+              OTP Codes
             </TabButton>
             <TabButton
               $active={activeTab === 'jwt-sessions'}
               onClick={() => setActiveTab('jwt-sessions')}
               startIcon={<Shield />}
               size="L"
-              fullWidth
             >
               {formatMessage({ id: getTrad('tokens.tabs.jwtSessions') })}
             </TabButton>
@@ -1183,45 +1396,43 @@ const TokensProfessional = () => {
               onClick={() => setActiveTab('ip-bans')}
               startIcon={<Earth />}
               size="L"
-              fullWidth
             >
               {formatMessage({ id: getTrad('tokens.tabs.ipBans') })}
             </TabButton>
-          </Flex>
+          </TabsContainer>
         </TabsWrapper>
         
         {/* Statistik Cards */}
         {activeTab === 'magic-links' && (
-          <StatsGrid>
-            {statCards.map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <StatCard 
-                  key={index}
-                  $color={stat.color}
-                  $delay={stat.delay}
-                >
-                  <Flex direction="column" alignItems="center">
-                    <StatIcon 
-                      className="stat-icon"
-                      $bg={stat.bg}
-                      $color={stat.color}
-                    >
-                      <IconComponent />
-                    </StatIcon>
-                    <StatValue className="stat-value">
-                      {stat.value}
-                    </StatValue>
-                    <StatLabel>{stat.title}</StatLabel>
-                  </Flex>
-                </StatCard>
-              );
-            })}
-          </StatsGrid>
-        )}
+          <TabContentWrapper key="magic-links-content">
+            <StatsGrid>
+              {statCards.map((stat, index) => {
+                const IconComponent = stat.icon;
+                return (
+                  <StatCard 
+                    key={index}
+                    $color={stat.color}
+                    $delay={stat.delay}
+                  >
+                    <Flex direction="column" alignItems="center">
+                      <StatIcon 
+                        className="stat-icon"
+                        $bg={stat.bg}
+                        $color={stat.color}
+                      >
+                        <IconComponent />
+                      </StatIcon>
+                      <StatValue className="stat-value">
+                        {stat.value}
+                      </StatValue>
+                      <StatLabel>{stat.title}</StatLabel>
+                    </Flex>
+                  </StatCard>
+                );
+              })}
+            </StatsGrid>
         
         {/* Filter Bar */}
-        {activeTab === 'magic-links' && (
           <FilterBar gap={3} alignItems="center">
             <Box flex="1">
               <Searchbar
@@ -1257,7 +1468,6 @@ const TokensProfessional = () => {
               <SingleSelectOption value="100">{formatMessage({ id: getTrad('tokens.pageSize.100') })}</SingleSelectOption>
             </SingleSelect>
           </FilterBar>
-        )}
         
         {/* Action Bar für Bulk Actions */}
         {selectedTokens.length > 0 && (
@@ -1286,8 +1496,7 @@ const TokensProfessional = () => {
         )}
         
         {/* Data Table */}
-        {activeTab === 'magic-links' && (
-          <DataTable>
+        <DataTable>
             {filteredAndSortedTokens.length === 0 ? (
               <EmptyState>
                 <Flex direction="column" alignItems="center" gap={6}>
@@ -1569,16 +1778,27 @@ const TokensProfessional = () => {
               </>
             )}
           </DataTable>
+          </TabContentWrapper>
         )}
         
         {/* JWT Sessions Tab */}
         {activeTab === 'jwt-sessions' && (
-          <JWTSessions />
+          <TabContentWrapper key="jwt-sessions-content">
+            <JWTSessions />
+          </TabContentWrapper>
         )}
         
         {/* IP-Bans Tab */}
         {activeTab === 'ip-bans' && (
-          <IPBans />
+          <TabContentWrapper key="ip-bans-content">
+            <IPBans />
+          </TabContentWrapper>
+        )}
+        
+        {activeTab === 'otp-codes' && (
+          <TabContentWrapper key="otp-codes-content">
+            <OTPCodes />
+          </TabContentWrapper>
         )}
         
         {/* Token Details Modal */}

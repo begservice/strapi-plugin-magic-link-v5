@@ -159,8 +159,6 @@ module.exports = ({ strapi }) => ({
 
       if (data.success) {
         const isValid = data.data.isActive && !data.data.isExpired;
-        const statusInfo = data.data.isExpired ? 'EXPIRED' : (data.data.isActive ? 'ACTIVE' : 'INACTIVE');
-        strapi.log.info(`✅ License verified online: ${statusInfo} (Key: ${licenseKey?.substring(0, 8)}...)`);
         
         // Store last validation timestamp
         if (isValid) {
@@ -324,8 +322,6 @@ module.exports = ({ strapi }) => ({
     const pingInterval = setInterval(async () => {
       await this.pingLicense(licenseKey);
     }, intervalMs);
-
-    strapi.log.info(`📡 Started pinging license every ${intervalMinutes} minutes`);
     
     return pingInterval;
   },
@@ -336,8 +332,6 @@ module.exports = ({ strapi }) => ({
    */
   async initialize() {
     try {
-      strapi.log.info('🔐 Initializing License Guard...');
-
       // Check if license key exists in plugin store
       const pluginStore = strapi.store({ 
         type: 'plugin', 
@@ -357,36 +351,11 @@ module.exports = ({ strapi }) => ({
         withinGracePeriod = hoursSinceValidation < gracePeriodHours;
       }
 
-      strapi.log.info('──────────────────────────────────────────────────────────');
-      strapi.log.info(`📦 Plugin Store Check:`);
       if (licenseKey) {
-        strapi.log.info(`   ✅ License Key found: ${licenseKey}`);
-        strapi.log.info(`   🔑 Key (short): ${licenseKey.substring(0, 8)}...`);
-        if (lastValidated) {
-          const lastValidatedDate = new Date(lastValidated);
-          const hoursAgo = Math.floor((now - lastValidatedDate) / (1000 * 60 * 60));
-          strapi.log.info(`   🕐 Last validated: ${hoursAgo}h ago (Grace: ${withinGracePeriod ? 'ACTIVE' : 'EXPIRED'})`);
-        } else {
-          strapi.log.info(`   🕐 Last validated: Never (Grace: ACTIVE for first ${gracePeriodHours}h)`);
-        }
-      } else {
-        strapi.log.info(`   ❌ No license key stored`);
-      }
-      strapi.log.info('──────────────────────────────────────────────────────────');
-
-      if (licenseKey) {
-        strapi.log.info('📄 Verifying stored license key...');
-        
         // Always allow grace period during initialization (server might not be ready yet)
         const verification = await this.verifyLicense(licenseKey, true);
         
         if (verification.valid) {
-          if (verification.gracePeriod) {
-            strapi.log.info('✅ License accepted (offline mode / grace period)');
-          } else {
-            strapi.log.info('✅ License is valid and active');
-          }
-          
           // Start pinging
           const pingInterval = this.startPinging(licenseKey, 15);
           
@@ -457,5 +426,159 @@ module.exports = ({ strapi }) => ({
       strapi.log.info('🛑 License pinging stopped');
     }
   },
+
+  /**
+   * Check if a feature is available
+   * @param {string} featureName - Feature name to check
+   * @returns {boolean}
+   */
+  async hasFeature(featureName) {
+    try {
+      const features = require('../config/features');
+      const pluginStore = strapi.store({ type: 'plugin', name: 'magic-link' });
+      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
+      
+      if (!licenseKey) {
+        return features.hasFeature(null, featureName);
+      }
+
+      const licenseData = await this.getLicenseByKey(licenseKey);
+      return features.hasFeature(licenseData, featureName);
+    } catch (error) {
+      strapi.log.error('Error checking feature:', error);
+      return false;
+    }
+  },
+
+  /**
+   * Get max allowed tokens
+   * @returns {number} Max tokens (-1 = unlimited)
+   */
+  async getMaxTokens() {
+    try {
+      const features = require('../config/features');
+      const pluginStore = strapi.store({ type: 'plugin', name: 'magic-link' });
+      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
+      
+      if (!licenseKey) {
+        return features.getMaxTokens(null);
+      }
+
+      const licenseData = await this.getLicenseByKey(licenseKey);
+      return features.getMaxTokens(licenseData);
+    } catch (error) {
+      strapi.log.error('Error getting max tokens:', error);
+      return features.free.maxTokens;
+    }
+  },
+
+  /**
+   * Get max allowed sessions
+   * @returns {number} Max sessions (-1 = unlimited)
+   */
+  async getMaxSessions() {
+    try {
+      const features = require('../config/features');
+      const pluginStore = strapi.store({ type: 'plugin', name: 'magic-link' });
+      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
+      
+      if (!licenseKey) {
+        return features.getMaxSessions(null);
+      }
+
+      const licenseData = await this.getLicenseByKey(licenseKey);
+      return features.getMaxSessions(licenseData);
+    } catch (error) {
+      strapi.log.error('Error getting max sessions:', error);
+      return features.free.maxSessions;
+    }
+  },
+
+  /**
+   * Get max allowed IP bans
+   * @returns {number} Max IP bans (-1 = unlimited)
+   */
+  async getMaxIPBans() {
+    try {
+      const features = require('../config/features');
+      const pluginStore = strapi.store({ type: 'plugin', name: 'magic-link' });
+      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
+      
+      if (!licenseKey) {
+        return features.getMaxIPBans(null);
+      }
+
+      const licenseData = await this.getLicenseByKey(licenseKey);
+      return features.getMaxIPBans(licenseData);
+    } catch (error) {
+      strapi.log.error('Error getting max IP bans:', error);
+      return features.free.maxIPBans;
+    }
+  },
+
+  /**
+   * Get available OTP types
+   * @returns {Array} Available OTP types
+   */
+  async getAvailableOTPTypes() {
+    try {
+      const features = require('../config/features');
+      const pluginStore = strapi.store({ type: 'plugin', name: 'magic-link' });
+      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
+      
+      if (!licenseKey) {
+        return features.getAvailableOTPTypes(null);
+      }
+
+      const licenseData = await this.getLicenseByKey(licenseKey);
+      return features.getAvailableOTPTypes(licenseData);
+    } catch (error) {
+      strapi.log.error('Error getting available OTP types:', error);
+      return [];
+    }
+  },
+
+  /**
+   * Get license tier info
+   * @returns {Object} License tier information
+   */
+  async getLicenseTierInfo() {
+    try {
+      const pluginStore = strapi.store({ type: 'plugin', name: 'magic-link' });
+      const licenseKey = await pluginStore.get({ key: 'licenseKey' });
+      
+      if (!licenseKey) {
+        return {
+          tier: 'free',
+          features: {
+            premium: false,
+            advanced: false,
+            enterprise: false
+          }
+        };
+      }
+
+      const licenseData = await this.getLicenseByKey(licenseKey);
+      
+      return {
+        tier: licenseData?.tier || 'free',
+        features: {
+          premium: licenseData?.featurePremium || licenseData?.features?.premium || false,
+          advanced: licenseData?.featureAdvanced || licenseData?.features?.advanced || false,
+          enterprise: licenseData?.featureEnterprise || licenseData?.features?.enterprise || false
+        }
+      };
+    } catch (error) {
+      strapi.log.error('Error getting license tier info:', error);
+      return {
+        tier: 'free',
+        features: {
+          premium: false,
+          advanced: false,
+          enterprise: false
+        }
+      };
+    }
+  }
 });
 

@@ -1,0 +1,44 @@
+{
+  "kind": "collectionType",
+  "collectionName": "magic_link_totp_configs",
+  "info": {
+    "singularName": "totp-config",
+    "pluralName": "totp-configs",
+    "displayName": "TOTP Configuration",
+    "description": "Stores TOTP configuration for users"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "config": {
+    "displayed": false
+  },
+  "attributes": {
+    "userId": {
+      "type": "integer",
+      "required": true,
+      "unique": true
+    },
+    "email": {
+      "type": "email",
+      "required": true
+    },
+    "secret": {
+      "type": "string",
+      "required": true,
+      "private": true
+    },
+    "enabled": {
+      "type": "boolean",
+      "default": false
+    },
+    "backupCodes": {
+      "type": "json",
+      "private": true
+    },
+    "lastUsed": {
+      "type": "datetime"
+    }
+  }
+}

@@ -9,6 +9,7 @@ const tokens = require('./tokens');
 const jwt = require('./jwt');
 const license = require('./license');
 const rateLimit = require('./rate-limit');
+const otp = require('./otp');
 
 module.exports = {
   controller,
@@ -17,4 +18,5 @@ module.exports = {
   jwt,
   license,
   rateLimit,
+  otp,
 };

@@ -2,36 +2,81 @@
 
 const { nanoid } = require('nanoid');
 const crypto = require('crypto');
+const emailHelpers = require('../utils/email-helpers');
 
-/**
- * Hilfsfunktion zum Senden einer Standard-E-Mail ohne Email Designer
- * @param {Object} user - Der Benutzer, an den die E-Mail gesendet wird
- * @param {string} magicLink - Der vollständige Magic-Link-URL
- * @param {Object} settings - Die Plugin-Einstellungen
- * @param {string} token - Der generierte Token-Wert
- */
-const sendStandardEmail = async (user, magicLink, settings, token) => {
+const formatExpiryText = (minutes) => {
+  if (!minutes || Number.isNaN(minutes)) {
+    return '1 hour';
+  }
+  const safeMinutes = Math.max(1, Math.round(minutes));
+  if (safeMinutes >= 60) {
+    const hours = Math.ceil(safeMinutes / 60);
+    return `${hours} hour${hours === 1 ? '' : 's'}`;
+  }
+  return `${safeMinutes} minute${safeMinutes === 1 ? '' : 's'}`;
+};
+
+const buildEmailContent = (user, magicLink, baseLoginUrl, settings, token, expiryText) => {
+  let htmlMessage = settings.message_html || '';
+  let textMessage = settings.message_text || '';
+
+  htmlMessage = htmlMessage
+    .replace(/{link}/g, magicLink)
+    .replace(/<%= URL %>/g, baseLoginUrl)
+    .replace(/<%= CODE %>/g, token)
+    .replace(/<%= EXPIRY_TEXT %>/g, expiryText)
+    .replace(/{expiry_text}/gi, expiryText)
+    .replace(/{username}/g, user.username || '')
+    .replace(/{email}/g, user.email || '');
+
+  textMessage = textMessage
+    .replace(/{link}/g, magicLink)
+    .replace(/<%= URL %>/g, baseLoginUrl)
+    .replace(/<%= CODE %>/g, token)
+    .replace(/<%= EXPIRY_TEXT %>/g, expiryText)
+    .replace(/{expiry_text}/gi, expiryText)
+    .replace(/{username}/g, user.username || '')
+    .replace(/{email}/g, user.email || '');
+
+  if (!htmlMessage.includes('<!DOCTYPE') && !htmlMessage.includes('<html')) {
+    htmlMessage = emailHelpers.wrapEmailTemplate(htmlMessage, {
+      title: settings.object || 'Magic Link Login',
+      preheader: 'Your secure login link is ready'
+    });
+  }
+
+  if (!textMessage || textMessage.trim().length === 0) {
+    textMessage = emailHelpers.createPlainTextVersion(htmlMessage);
+  }
+
+  const headers = emailHelpers.getEmailHeaders({
+    replyTo: settings.response_email
+  });
+
+  return { htmlMessage, textMessage, headers };
+};
+
+const sendStandardEmail = async (user, magicLink, baseLoginUrl, expiryText, settings, token) => {
   try {
-    // HTML- und Text-Versionen der Nachricht vorbereiten
-    let htmlMessage = settings.message_html || '';
-    let textMessage = settings.message_text || '';
-    
-    // Ersetze Platzhalter in den Nachrichten
-    htmlMessage = htmlMessage
-      .replace(/{link}/g, magicLink)
-      .replace(/<%= URL %>/g, settings.confirmationUrl || strapi.config.server.url)
-      .replace(/<%= CODE %>/g, token)
-      .replace(/{username}/g, user.username || '')
-      .replace(/{email}/g, user.email || '');
-    
-    textMessage = textMessage
-      .replace(/{link}/g, magicLink)
-      .replace(/<%= URL %>/g, settings.confirmationUrl || strapi.config.server.url)
-      .replace(/<%= CODE %>/g, token)
-      .replace(/{username}/g, user.username || '')
-      .replace(/{email}/g, user.email || '');
-    
-    // Sende die Email (Strapi v5 konform)
+    const { htmlMessage, textMessage, headers } = buildEmailContent(user, magicLink, baseLoginUrl, settings, token, expiryText);
+
+    const validation = emailHelpers.validateEmailConfig({
+      to: user.email,
+      from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
+      subject: settings.object,
+      text: textMessage,
+      html: htmlMessage
+    });
+
+    if (!validation.valid) {
+      strapi.log.error('Email validation errors:', validation.errors);
+      throw new Error('Invalid email configuration: ' + validation.errors.join(', '));
+    }
+
+    if (validation.warnings.length > 0) {
+      strapi.log.warn('Email validation warnings:', validation.warnings);
+    }
+
     await strapi.plugin('email').service('email').send({
       to: user.email,
       from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
@@ -39,8 +84,9 @@ const sendStandardEmail = async (user, magicLink, settings, token) => {
       subject: settings.object,
       html: htmlMessage,
       text: textMessage,
+      headers
     });
-    
+
     strapi.log.info(`Standard Magic Link Email an ${user.email} gesendet`);
   } catch (error) {
     strapi.log.error('Fehler beim Senden der Standard-E-Mail:', error);
@@ -60,8 +106,8 @@ module.exports = {
   async find(ctx) {
     try {
       // Query all tokens
-      const tokens = await strapi.db.query('plugin::magic-link.token').findMany({
-        orderBy: { createdAt: 'desc' },
+      const tokens = await strapi.entityService.findMany('plugin::magic-link.token', {
+        sort: { createdAt: 'desc' },
       });
 
       // SQLite speichert Booleans als 0/1 - konvertiere zu echten Booleans
@@ -120,26 +166,27 @@ module.exports = {
       
       let settings = await pluginStore.get({ key: 'settings' });
       
-      // --- DEBUG LOGGING START ---
-      strapi.log.info('[MagicLink Controller - create function] Loaded settings from store:', settings);
-      // --- DEBUG LOGGING END ---
+      // Reduce noise: only log at debug level
+      strapi.log.debug('[MagicLink Controller - create function] Loaded settings from store:', settings);
       
       // Find the user
-      let user = await strapi.db.query('plugin::users-permissions.user').findOne({
-        where: { email },
-        select: ['id', 'username', 'email'],
+      const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+        filters: { email },
+        fields: ['id', 'username', 'email'],
+        limit: 1,
       });
+      let user = users && users.length > 0 ? users[0] : null;
 
-      // --- DEBUG LOGGING START ---
-      strapi.log.info(`[MagicLink Controller - create function] Checking user existence for: ${email}`);
-      strapi.log.info(`[MagicLink Controller - create function] User found: ${!!user}`);
-      strapi.log.info(`[MagicLink Controller - create function] Value of createUserIfNotExists from settings: ${settings.createUserIfNotExists}`);
-      strapi.log.info(`[MagicLink Controller - create function] Value of create_new_user from settings: ${settings.create_new_user}`);
-      // --- DEBUG LOGGING END ---
+      const settingCreateUser = settings?.createUserIfNotExists ?? false;
+      const legacyCreateUser = settings?.create_new_user ?? false;
+      strapi.log.debug(`[MagicLink Controller - create function] Checking user existence for: ${email}`);
+      strapi.log.debug(`[MagicLink Controller - create function] User found: ${!!user}`);
+      strapi.log.debug(`[MagicLink Controller - create function] Value of createUserIfNotExists from settings: ${settingCreateUser}`);
+      strapi.log.debug(`[MagicLink Controller - create function] Value of legacy create_new_user from settings: ${legacyCreateUser}`);
 
       // Verwende den richtigen Einstellungsnamen: createUserIfNotExists anstatt create_new_user
       // Prüfe sowohl auf den neuen als auch auf den alten Namen für Abwärtskompatibilität
-      const canCreateUser = settings.createUserIfNotExists || settings.create_new_user;
+      const canCreateUser = Boolean(settingCreateUser || legacyCreateUser);
 
       // If user doesn't exist and automatic creation is not enabled, return error
       if (!user && !canCreateUser) {
@@ -188,6 +235,7 @@ module.exports = {
       
       // Set expiration (TTL from context, settings, or default 24 hours)
       const ttl = context.ttl || settings.token_lifetime || 24;
+      const expiryText = formatExpiryText(ttl * 60);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + ttl);
 
@@ -210,7 +258,7 @@ module.exports = {
       };
 
       // Create the token
-      const token = await strapi.db.query('plugin::magic-link.token').create({
+      const token = await strapi.entityService.create('plugin::magic-link.token', {
         data: {
           token: tokenValue,
           email: user.email,
@@ -232,14 +280,15 @@ module.exports = {
           }
           
           if (settings && settings.enabled && settings.from_email && settings.object) {
-            // Erstelle die Magic-Link-URL
-            const baseUrl = settings.confirmationUrl || strapi.config.server.url;
-            const magicLink = `${baseUrl}?token=${tokenValue}`;
+            // Erstelle die Magic-Link-URL (fällt auf Strapi-Server-URL zurück, wenn keine konfiguriert ist)
+            const baseUrl = settings.confirmationUrl || process.env.URL || strapi.config.get('server.url') || 'http://localhost:1337/api/magic-link/login';
+            const magicLink = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}loginToken=${tokenValue}`;
             
             // Prüfen, ob wir Email Designer verwenden sollen
-            if (settings.use_email_designer && settings.email_designer_template_id) {
-              // Prüfen, ob das Email Designer Plugin verfügbar ist
-              if (strapi.plugin('email-designer-5')) {
+            const wantsEmailDesigner = settings.use_email_designer && settings.email_designer_template_id;
+            const hasEmailDesigner = Boolean(strapi.plugin('email-designer-5'));
+
+            if (wantsEmailDesigner && hasEmailDesigner) {
                 // Konvertiere die Template-ID zu einer Zahl
                 const templateId = parseInt(settings.email_designer_template_id, 10);
                 
@@ -270,6 +319,7 @@ module.exports = {
                           magicLink: magicLink,
                           token: tokenValue,
                           expiresAt: expiresAt.toISOString(),
+                          expiryText,
                         }
                       );
                       
@@ -277,22 +327,19 @@ module.exports = {
                   } catch (emailDesignerError) {
                     strapi.log.error('Fehler bei Email Designer:', emailDesignerError);
                     strapi.log.info('Fallback auf Standard-Email-Versand...');
-                    await sendStandardEmail(user, magicLink, settings, tokenValue);
+                    await sendStandardEmail(user, magicLink, baseUrl, expiryText, settings, tokenValue);
                   }
                 } else {
                   strapi.log.warn(`Ungültige Email Designer Template ID: '${settings.email_designer_template_id}', verwende Standard-Email`);
                   // Fallback auf Standard-Email wenn die Template-ID ungültig ist
-                  await sendStandardEmail(user, magicLink, settings, tokenValue);
+                  await sendStandardEmail(user, magicLink, baseUrl, expiryText, settings, tokenValue);
                 }
-              } else {
-                strapi.log.warn('Email Designer Plugin ist aktiviert, aber nicht installiert');
-                
-                // Fallback auf Standard-Email
-                await sendStandardEmail(user, magicLink, settings, tokenValue);
-              }
+            } else if (wantsEmailDesigner && !hasEmailDesigner) {
+              strapi.log.debug('Email Designer aktiviert, aber Plugin nicht installiert – automatischer Fallback auf Standard-Email');
+              await sendStandardEmail(user, magicLink, baseUrl, expiryText, settings, tokenValue);
             } else {
               // Standard-Email-Versand
-              await sendStandardEmail(user, magicLink, settings, tokenValue);
+              await sendStandardEmail(user, magicLink, baseUrl, expiryText, settings, tokenValue);
             }
             
             strapi.log.info(`Magic Link Token erstellt und E-Mail an ${user.email} gesendet`);
@@ -322,23 +369,27 @@ module.exports = {
       const { id } = ctx.params;
 
       // Check if token exists
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
-        where: { id },
-      });
+      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
 
       if (!token) {
         return ctx.notFound('Token not found');
       }
 
       // Update the token to be inactive
-      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
-        where: { id },
+      const updatedToken = await strapi.entityService.update('plugin::magic-link.token', id, {
         data: {
           is_active: false,
         },
       });
 
-      return updatedToken;
+      // Sende strukturierte Response
+      ctx.send({
+        data: {
+          ...updatedToken,
+          status: 'blocked',
+          message: 'Token successfully blocked'
+        }
+      });
     } catch (error) {
       ctx.throw(500, error);
     }
@@ -353,20 +404,19 @@ module.exports = {
       const { id } = ctx.params;
 
       // Check if token exists
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
-        where: { id },
-      });
+      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
 
       if (!token) {
         return ctx.notFound('Token not found');
       }
 
       // Delete the token
-      await strapi.db.query('plugin::magic-link.token').delete({
-        where: { id },
-      });
+      await strapi.entityService.delete('plugin::magic-link.token', id);
 
-      return { success: true };
+      ctx.send({ 
+        success: true,
+        message: 'Token successfully deleted' 
+      });
     } catch (error) {
       strapi.log.error('Error deleting token:', error);
       ctx.throw(500, error);
@@ -382,23 +432,27 @@ module.exports = {
       const { id } = ctx.params;
 
       // Prüfe, ob Token existiert
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
-        where: { id },
-      });
+      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
 
       if (!token) {
         return ctx.notFound('Token nicht gefunden');
       }
 
       // Aktualisiere den Token auf aktiv
-      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
-        where: { id },
+      const updatedToken = await strapi.entityService.update('plugin::magic-link.token', id, {
         data: {
           is_active: true,
         },
       });
 
-      return updatedToken;
+      // Sende strukturierte Response
+      ctx.send({
+        data: {
+          ...updatedToken,
+          status: 'active',
+          message: 'Token successfully activated'
+        }
+      });
     } catch (error) {
       strapi.log.error('Fehler beim Aktivieren des Tokens:', error);
       ctx.throw(500, error);
@@ -415,9 +469,7 @@ module.exports = {
       const { days } = ctx.request.body;
 
       // Prüfe, ob Token existiert
-      const token = await strapi.db.query('plugin::magic-link.token').findOne({
-        where: { id },
-      });
+      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
 
       if (!token) {
         return ctx.notFound('Token nicht gefunden');
@@ -441,14 +493,21 @@ module.exports = {
       newExpiryDate.setDate(newExpiryDate.getDate() + daysToAdd);
 
       // Aktualisiere den Token mit dem neuen Ablaufdatum
-      const updatedToken = await strapi.db.query('plugin::magic-link.token').update({
-        where: { id },
+      const updatedToken = await strapi.entityService.update('plugin::magic-link.token', id, {
         data: {
           expires_at: newExpiryDate,
         },
       });
 
-      return updatedToken;
+      // Sende die Response mit dem aktualisierten Token und dem neuen Ablaufdatum
+      ctx.send({
+        data: {
+          ...updatedToken,
+          expiresAt: newExpiryDate.toISOString(),
+          extendedBy: `${daysToAdd} days`,
+          message: `Token validity extended by ${daysToAdd} days`
+        }
+      });
     } catch (error) {
       strapi.log.error('Fehler beim Verlängern des Tokens:', error);
       ctx.throw(500, error);
@@ -476,10 +535,12 @@ module.exports = {
       const settings = await pluginStore.get({ key: 'settings' });
       
       // Find the user - Entferne UUID aus der Abfrage, damit es in Strapi v5 funktioniert
-      const user = await strapi.db.query('plugin::users-permissions.user').findOne({
-        where: { email },
-        select: ['id', 'username', 'email', 'confirmed', 'blocked', 'documentId'],
+      const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+        filters: { email },
+        fields: ['id', 'username', 'email', 'confirmed', 'blocked', 'documentId'],
+        limit: 1,
       });
+      const user = users && users.length > 0 ? users[0] : null;
 
       if (!user) {
         // Mit createUserIfNotExists-Option kann die API weiterhin true zurückgeben
@@ -551,10 +612,19 @@ module.exports = {
         await pluginStore.set({ key: 'banned_ips', value: bannedIPs });
         
         // Deactivate all tokens associated with this IP
-        await strapi.db.query('plugin::magic-link.token').updateMany({
-          where: { ip_address: ipAddress },
-          data: { is_active: false },
+        const tokensToDeactivate = await strapi.entityService.findMany('plugin::magic-link.token', {
+          filters: { ip_address: ipAddress, is_active: true },
+          fields: ['id'],
         });
+        
+        if (tokensToDeactivate && tokensToDeactivate.length > 0) {
+          for (const token of tokensToDeactivate) {
+            await strapi.entityService.update('plugin::magic-link.token', token.id, {
+              data: { is_active: false },
+            });
+          }
+          strapi.log.info(`✅ Deactivated ${tokensToDeactivate.length} token(s) for IP ${ipAddress}`);
+        }
       }
       
       return { success: true, message: `IP ${ipAddress} has been banned` };
@@ -679,7 +749,7 @@ module.exports = {
       let tokenStatusPoints = 0;
       
       // Hole alle Tokens
-      const tokens = await strapi.db.query('plugin::magic-link.token').findMany({});
+      const tokens = await strapi.entityService.findMany('plugin::magic-link.token', {});
       
       // Berechne Verhältnis von aktiven zu inaktiven Tokens
       const activeTokens = tokens.filter(token => token.is_active).length;
