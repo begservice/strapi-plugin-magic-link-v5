@@ -9,7 +9,22 @@ const emailHelpers = require('../utils/email-helpers');
  * OTP Service
  * Handles One-Time Password generation, validation, and delivery
  */
-module.exports = ({ strapi }) => ({
+module.exports = ({ strapi }) => {
+  const strapiInstance = strapi;
+
+  const getStrapi = () => {
+    if (global.strapi) {
+      return global.strapi;
+    }
+
+    if (strapiInstance) {
+      return strapiInstance;
+    }
+
+    throw new Error('Strapi instance not available');
+  };
+
+  return {
   /**
    * Generate a random OTP code
    * @param {number} length - Length of the OTP code (default: 6)
@@ -297,30 +312,27 @@ If you didn't request this code, you can safely ignore this email.
    * Clean up expired OTP codes
    */
   async cleanupExpiredCodes() {
-    const now = new Date();
-    
     try {
-      // Use global strapi to avoid context loss in setInterval
-      if (!global.strapi) {
-        throw new Error('Strapi instance not available');
-      }
+      const activeStrapi = getStrapi();
+      const now = new Date();
       
-      const expiredCodes = await global.strapi.entityService.findMany('plugin::magic-link.otp-code', {
+      const expiredCodes = await activeStrapi.entityService.findMany('plugin::magic-link.otp-code', {
         filters: {
           expiresAt: { $lt: now }
         }
       });
 
       for (const code of expiredCodes) {
-        await global.strapi.entityService.delete('plugin::magic-link.otp-code', code.id);
+        await activeStrapi.entityService.delete('plugin::magic-link.otp-code', code.id);
       }
 
       if (expiredCodes.length > 0) {
-        global.strapi.log.info(`Cleaned up ${expiredCodes.length} expired OTP codes`);
+        activeStrapi.log.info(`Cleaned up ${expiredCodes.length} expired OTP codes`);
       }
     } catch (error) {
-      if (global.strapi && global.strapi.log) {
-        global.strapi.log.error('Error cleaning up expired OTP codes:', error);
+      const activeStrapi = global.strapi || strapiInstance;
+      if (activeStrapi && activeStrapi.log) {
+        activeStrapi.log.error('Error cleaning up expired OTP codes:', error);
       } else {
         console.error('Error cleaning up expired OTP codes:', error);
       }
@@ -584,4 +596,5 @@ If you didn't request this code, you can safely ignore this email.
       throw error;
     }
   }
-});
+};
+};
