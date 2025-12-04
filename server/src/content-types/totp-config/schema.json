@@ -10,9 +10,13 @@
   "options": {
     "draftAndPublish": false
   },
-  "pluginOptions": {},
-  "config": {
-    "displayed": false
+  "pluginOptions": {
+    "content-manager": {
+      "visible": false
+    },
+    "content-type-builder": {
+      "visible": false
+    }
   },
   "attributes": {
     "userId": {
