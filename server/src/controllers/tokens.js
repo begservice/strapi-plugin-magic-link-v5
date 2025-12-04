@@ -3,6 +3,7 @@
 const { nanoid } = require('nanoid');
 const crypto = require('crypto');
 const emailHelpers = require('../utils/email-helpers');
+const cryptoUtils = require('../utils/crypto');
 
 const formatExpiryText = (minutes) => {
   if (!minutes || Number.isNaN(minutes)) {
@@ -17,8 +18,25 @@ const formatExpiryText = (minutes) => {
 };
 
 const buildEmailContent = (user, magicLink, baseLoginUrl, settings, token, expiryText) => {
-  let htmlMessage = settings.message_html || '';
-  let textMessage = settings.message_text || '';
+  // Default email templates if not configured
+  const defaultHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2>Your Magic Link</h2>
+      <p>Hello${user.username ? ' ' + user.username : ''},</p>
+      <p>Click the button below to log in securely:</p>
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="{link}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+          Log In Now
+        </a>
+      </p>
+      <p style="color: #666; font-size: 14px;">This link expires in {expiry_text}.</p>
+      <p style="color: #999; font-size: 12px;">If you didn't request this, you can safely ignore this email.</p>
+    </div>
+  `;
+  const defaultText = `Your Magic Link\n\nClick here to log in: {link}\n\nThis link expires in {expiry_text}.`;
+
+  let htmlMessage = settings?.message_html || defaultHtml;
+  let textMessage = settings?.message_text || defaultText;
 
   htmlMessage = htmlMessage
     .replace(/{link}/g, magicLink)
@@ -40,7 +58,7 @@ const buildEmailContent = (user, magicLink, baseLoginUrl, settings, token, expir
 
   if (!htmlMessage.includes('<!DOCTYPE') && !htmlMessage.includes('<html')) {
     htmlMessage = emailHelpers.wrapEmailTemplate(htmlMessage, {
-      title: settings.object || 'Magic Link Login',
+      title: settings?.object || 'Magic Link Login',
       preheader: 'Your secure login link is ready'
     });
   }
@@ -50,7 +68,7 @@ const buildEmailContent = (user, magicLink, baseLoginUrl, settings, token, expir
   }
 
   const headers = emailHelpers.getEmailHeaders({
-    replyTo: settings.response_email
+    replyTo: settings?.response_email
   });
 
   return { htmlMessage, textMessage, headers };
@@ -60,10 +78,18 @@ const sendStandardEmail = async (user, magicLink, baseLoginUrl, expiryText, sett
   try {
     const { htmlMessage, textMessage, headers } = buildEmailContent(user, magicLink, baseLoginUrl, settings, token, expiryText);
 
+    // Use defaults if settings are not configured
+    const fromName = settings?.from_name || 'Magic Link';
+    const fromEmail = settings?.from_email || strapi.config.get('plugin.email.settings.defaultFrom') || 'noreply@localhost';
+    const emailSubject = settings?.object || 'Your Magic Link';
+    const fromAddress = `${fromName} <${fromEmail}>`;
+    
+    strapi.log.debug(`[MagicLink] Sending email from: ${fromAddress}, subject: ${emailSubject}`);
+
     const validation = emailHelpers.validateEmailConfig({
       to: user.email,
-      from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
-      subject: settings.object,
+      from: fromAddress,
+      subject: emailSubject,
       text: textMessage,
       html: htmlMessage
     });
@@ -79,9 +105,9 @@ const sendStandardEmail = async (user, magicLink, baseLoginUrl, expiryText, sett
 
     await strapi.plugin('email').service('email').send({
       to: user.email,
-      from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
-      replyTo: settings.response_email || undefined,
-      subject: settings.object,
+      from: fromAddress,
+      replyTo: settings?.response_email || undefined,
+      subject: emailSubject,
       html: htmlMessage,
       text: textMessage,
       headers
@@ -105,16 +131,29 @@ module.exports = {
    */
   async find(ctx) {
     try {
-      // Query all tokens
-      const tokens = await strapi.entityService.findMany('plugin::magic-link.token', {
-        sort: { createdAt: 'desc' },
+      // Query all tokens using Document Service API
+      const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+        sort: [{ createdAt: 'desc' }],
       });
 
       // SQLite speichert Booleans als 0/1 - konvertiere zu echten Booleans
-      const normalizedTokens = tokens.map(token => ({
+      // Also: Mask hashed tokens for security - only show first/last 4 chars
+      const normalizedTokens = tokens.map(token => {
+        // For security, mask the token hash (or legacy plaintext)
+        // Since tokens are now hashed, we show a masked identifier
+        const tokenDisplay = token.token_salt 
+          ? `[hashed]••••${token.token.slice(-8)}` // Hashed token
+          : (token.token?.length > 8 
+              ? `${token.token.slice(0, 4)}••••${token.token.slice(-4)}` // Legacy plaintext
+              : token.token); // Very short token (shouldn't happen)
+        
+        return {
         ...token,
+          token: tokenDisplay, // Masked for display
+          token_salt: undefined, // Don't expose salt
         is_active: !!token.is_active  // Konvertiere 0/1 zu false/true
-      }));
+        };
+      });
 
       // Berechne den Sicherheitswert
       const securityScore = await this.calculateSecurityScore();
@@ -169,10 +208,14 @@ module.exports = {
       // Reduce noise: only log at debug level
       strapi.log.debug('[MagicLink Controller - create function] Loaded settings from store:', settings);
       
-      // Find the user
-      const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+      // Check if plugin is enabled
+      if (!settings?.enabled) {
+        return ctx.badRequest('Magic Link plugin is disabled. Enable it in settings first.');
+      }
+      
+      // Find the user using Document Service API
+      const users = await strapi.documents('plugin::users-permissions.user').findMany({
         filters: { email },
-        fields: ['id', 'username', 'email'],
         limit: 1,
       });
       let user = users && users.length > 0 ? users[0] : null;
@@ -201,16 +244,33 @@ module.exports = {
         // --- DEBUG LOGGING START ---
         strapi.log.info(`[MagicLink Controller - create function] User does not exist BUT canCreateUser is true. Attempting to create user...`);
         // --- DEBUG LOGGING END ---
-        // Generate a unique username based on the email
-        const username = email.split('@')[0] + '_' + nanoid(8);
+        
+        // Generate username based on user creation strategy
+        // Strategy: 'email' = use email as username
+        // Strategy: 'emailUsername' = use email prefix + random suffix for uniqueness
+        // Strategy: 'manual' = don't auto-create users (handled above)
+        const userCreationStrategy = settings.user_creation_strategy || 'email';
+        let username;
+        
+        strapi.log.debug(`[MagicLink] User creation strategy: ${userCreationStrategy}`);
+        
+        if (userCreationStrategy === 'email' || userCreationStrategy === 'email-only') {
+          // Use full email as username (default for magic-link)
+          username = email;
+        } else {
+          // Generate a unique username based on the email prefix (emailUsername strategy)
+          username = email.split('@')[0] + '_' + nanoid(8);
+        }
         
         // Create a cryptographically secure random password
         const password = crypto.randomBytes(32).toString('hex');
         
-        // Get the default role (authenticated)
-        const defaultRole = await strapi
-          .query('plugin::users-permissions.role')
-          .findOne({ where: { type: 'authenticated' } });
+        // Get the default role (authenticated) using Document Service API
+        const roles = await strapi.documents('plugin::users-permissions.role').findMany({
+          filters: { type: 'authenticated' },
+          limit: 1,
+        });
+        const defaultRole = roles && roles.length > 0 ? roles[0] : null;
           
         if (!defaultRole) {
           return ctx.badRequest('Authenticated role not found');
@@ -230,18 +290,66 @@ module.exports = {
         strapi.log.info(`Created new user with email: ${email}`);
       }
 
-      // Generate cryptographically secure random token (32 characters)
-      const tokenValue = nanoid(32);
+      // Get token length from settings (default 32 for security)
+      const tokenLength = Math.max(16, Math.min(64, settings?.token_length || 32));
       
-      // Set expiration (TTL from context, settings, or default 24 hours)
-      const ttl = context.ttl || settings.token_lifetime || 24;
-      const expiryText = formatExpiryText(ttl * 60);
+      // Generate cryptographically secure random token
+      const tokenValue = nanoid(tokenLength);
+      strapi.log.debug(`[MagicLink] Generated token with length: ${tokenLength}`);
+      
+      // Hash the token for secure storage
+      const { hash: tokenHash, salt: tokenSalt } = cryptoUtils.hashToken(tokenValue);
+      
+      // Validate and filter context based on whitelist/blacklist settings
+      let filteredContext = { ...(typeof context === 'string' ? JSON.parse(context) : context) };
+      
+      // Apply context whitelist (if set, only allow these fields)
+      if (settings?.context_whitelist && settings.context_whitelist.length > 0) {
+        const whitelist = settings.context_whitelist.map(f => f.trim().toLowerCase());
+        const newContext = {};
+        for (const key of Object.keys(filteredContext)) {
+          if (whitelist.includes(key.toLowerCase())) {
+            newContext[key] = filteredContext[key];
+          }
+        }
+        filteredContext = newContext;
+        strapi.log.debug(`[MagicLink] Context filtered by whitelist: ${whitelist.join(', ')}`);
+      }
+      
+      // Apply context blacklist (remove these fields)
+      if (settings?.context_blacklist && settings.context_blacklist.length > 0) {
+        const blacklist = settings.context_blacklist.map(f => f.trim().toLowerCase());
+        for (const key of Object.keys(filteredContext)) {
+          if (blacklist.includes(key.toLowerCase())) {
+            delete filteredContext[key];
+          }
+        }
+        strapi.log.debug(`[MagicLink] Context fields removed by blacklist: ${blacklist.join(', ')}`);
+      }
+      
+      // Set expiration (TTL from context in hours, or expire_period from settings in seconds, or default 1 hour)
+      // Priority: context.ttl (hours) > settings.expire_period (seconds) > default 3600 seconds
+      let expirationSeconds;
+      if (filteredContext.ttl) {
+        // TTL from context is in hours, convert to seconds
+        expirationSeconds = filteredContext.ttl * 3600;
+      } else if (settings?.expire_period) {
+        // expire_period from settings is already in seconds
+        expirationSeconds = settings.expire_period;
+      } else {
+        // Default: 1 hour = 3600 seconds
+        expirationSeconds = 3600;
+      }
+      
+      const expiryText = formatExpiryText(Math.floor(expirationSeconds / 60));
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + ttl);
+      expiresAt.setSeconds(expiresAt.getSeconds() + expirationSeconds);
+      
+      strapi.log.debug(`[MagicLink] Token expiration set to ${expirationSeconds} seconds (${Math.round(expirationSeconds/3600)} hours)`);
 
       // Erweitere den Kontext mit Ablaufdatum und Benutzerinformationen
       const enrichedContext = {
-        ...(typeof context === 'string' ? JSON.parse(context) : context),
+        ...filteredContext,
         expires_at: expiresAt.toISOString(),
         expiry_formatted: new Intl.DateTimeFormat('de-DE', {
           year: 'numeric', 
@@ -257,10 +365,12 @@ module.exports = {
         }
       };
 
-      // Create the token
-      const token = await strapi.entityService.create('plugin::magic-link.token', {
+      // Create the token using Document Service API
+      // Store HASHED token, not plaintext!
+      const token = await strapi.documents('plugin::magic-link.token').create({
         data: {
-          token: tokenValue,
+          token: tokenHash, // Store hashed token
+          token_salt: tokenSalt, // Store salt for verification
           email: user.email,
           user_id: user.id,
           expires_at: expiresAt,
@@ -270,6 +380,10 @@ module.exports = {
           context: enrichedContext, // Verwende den angereicherten Kontext
         },
       });
+      
+      // Add plaintext token for display/email (NOT stored in DB)
+      token._plaintextToken = tokenValue;
+      token.token = tokenValue; // Override hash with plaintext for response
 
       // Sende eine E-Mail mit dem Magic-Link nur wenn send_email true ist
       if (send_email) {
@@ -279,7 +393,14 @@ module.exports = {
             settings = await pluginStore.get({ key: 'settings' });
           }
           
-          if (settings && settings.enabled && settings.from_email && settings.object) {
+          strapi.log.debug(`[MagicLink] Email settings check: enabled=${settings?.enabled}, from_email=${settings?.from_email}, object=${settings?.object}`);
+          
+          // Check if we can send emails - use defaults if needed
+          const canSendEmail = settings?.enabled !== false;
+          const fromEmail = settings?.from_email || strapi.config.get('plugin.email.settings.defaultFrom') || 'noreply@localhost';
+          const emailSubject = settings?.object || 'Your Magic Link';
+          
+          if (canSendEmail) {
             // Erstelle die Magic-Link-URL (fällt auf Strapi-Server-URL zurück, wenn keine konfiguriert ist)
             const baseUrl = settings.confirmationUrl || process.env.URL || strapi.config.get('server.url') || 'http://localhost:1337/api/magic-link/login';
             const magicLink = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}loginToken=${tokenValue}`;
@@ -366,17 +487,29 @@ module.exports = {
    */
   async block(ctx) {
     try {
-      const { id } = ctx.params;
+      const { id } = ctx.params; // Can be documentId or numeric ID
 
-      // Check if token exists
-      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
+      // Try to find token - first by documentId, then by numeric id
+      let token = await strapi.documents('plugin::magic-link.token').findOne({
+        documentId: id,
+      });
+
+      // If not found and id looks numeric, try finding by id field
+      if (!token && /^\d+$/.test(id)) {
+        const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+          filters: { id: parseInt(id, 10) },
+          limit: 1,
+        });
+        token = tokens && tokens.length > 0 ? tokens[0] : null;
+      }
 
       if (!token) {
         return ctx.notFound('Token not found');
       }
 
-      // Update the token to be inactive
-      const updatedToken = await strapi.entityService.update('plugin::magic-link.token', id, {
+      // Update the token to be inactive using Document Service API
+      const updatedToken = await strapi.documents('plugin::magic-link.token').update({
+        documentId: token.documentId,
         data: {
           is_active: false,
         },
@@ -401,17 +534,30 @@ module.exports = {
    */
   async delete(ctx) {
     try {
-      const { id } = ctx.params;
+      const { id } = ctx.params; // Can be documentId or numeric ID
 
-      // Check if token exists
-      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
+      // Try to find token - first by documentId, then by numeric id
+      let token = await strapi.documents('plugin::magic-link.token').findOne({
+        documentId: id,
+      });
+
+      // If not found and id looks numeric, try finding by id field
+      if (!token && /^\d+$/.test(id)) {
+        const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+          filters: { id: parseInt(id, 10) },
+          limit: 1,
+        });
+        token = tokens && tokens.length > 0 ? tokens[0] : null;
+      }
 
       if (!token) {
         return ctx.notFound('Token not found');
       }
 
-      // Delete the token
-      await strapi.entityService.delete('plugin::magic-link.token', id);
+      // Delete the token using Document Service API
+      await strapi.documents('plugin::magic-link.token').delete({
+        documentId: token.documentId,
+      });
 
       ctx.send({ 
         success: true,
@@ -429,17 +575,29 @@ module.exports = {
    */
   async activate(ctx) {
     try {
-      const { id } = ctx.params;
+      const { id } = ctx.params; // Can be documentId or numeric ID
 
-      // Prüfe, ob Token existiert
-      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
+      // Try to find token - first by documentId, then by numeric id
+      let token = await strapi.documents('plugin::magic-link.token').findOne({
+        documentId: id,
+      });
+
+      // If not found and id looks numeric, try finding by id field
+      if (!token && /^\d+$/.test(id)) {
+        const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+          filters: { id: parseInt(id, 10) },
+          limit: 1,
+        });
+        token = tokens && tokens.length > 0 ? tokens[0] : null;
+      }
 
       if (!token) {
         return ctx.notFound('Token nicht gefunden');
       }
 
-      // Aktualisiere den Token auf aktiv
-      const updatedToken = await strapi.entityService.update('plugin::magic-link.token', id, {
+      // Aktualisiere den Token auf aktiv using Document Service API
+      const updatedToken = await strapi.documents('plugin::magic-link.token').update({
+        documentId: token.documentId,
         data: {
           is_active: true,
         },
@@ -465,11 +623,22 @@ module.exports = {
    */
   async extend(ctx) {
     try {
-      const { id } = ctx.params;
+      const { id } = ctx.params; // Can be documentId or numeric ID
       const { days } = ctx.request.body;
 
-      // Prüfe, ob Token existiert
-      const token = await strapi.entityService.findOne('plugin::magic-link.token', id);
+      // Try to find token - first by documentId, then by numeric id
+      let token = await strapi.documents('plugin::magic-link.token').findOne({
+        documentId: id,
+      });
+
+      // If not found and id looks numeric, try finding by id field
+      if (!token && /^\d+$/.test(id)) {
+        const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+          filters: { id: parseInt(id, 10) },
+          limit: 1,
+        });
+        token = tokens && tokens.length > 0 ? tokens[0] : null;
+      }
 
       if (!token) {
         return ctx.notFound('Token nicht gefunden');
@@ -492,8 +661,9 @@ module.exports = {
       // Tage hinzufügen
       newExpiryDate.setDate(newExpiryDate.getDate() + daysToAdd);
 
-      // Aktualisiere den Token mit dem neuen Ablaufdatum
-      const updatedToken = await strapi.entityService.update('plugin::magic-link.token', id, {
+      // Aktualisiere den Token mit dem neuen Ablaufdatum using Document Service API
+      const updatedToken = await strapi.documents('plugin::magic-link.token').update({
+        documentId: token.documentId,
         data: {
           expires_at: newExpiryDate,
         },
@@ -510,6 +680,66 @@ module.exports = {
       });
     } catch (error) {
       strapi.log.error('Fehler beim Verlängern des Tokens:', error);
+      ctx.throw(500, error);
+    }
+  },
+
+  /**
+   * Resend magic link email for an existing token
+   * @param {Object} ctx - The request context
+   */
+  async resend(ctx) {
+    try {
+      const { id } = ctx.params;
+
+      // Try to find token - first by documentId, then by numeric id
+      let token = await strapi.documents('plugin::magic-link.token').findOne({
+        documentId: id,
+      });
+
+      if (!token && /^\d+$/.test(id)) {
+        const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+          filters: { id: parseInt(id, 10) },
+          limit: 1,
+        });
+        token = tokens && tokens.length > 0 ? tokens[0] : null;
+      }
+
+      if (!token) {
+        return ctx.notFound('Token nicht gefunden');
+      }
+
+      // Check if token is still active and not expired
+      if (!token.is_active) {
+        return ctx.badRequest('Token ist nicht aktiv');
+      }
+
+      if (token.is_used) {
+        return ctx.badRequest('Token wurde bereits verwendet');
+      }
+
+      if (token.expires_at && new Date(token.expires_at) < new Date()) {
+        return ctx.badRequest('Token ist abgelaufen');
+      }
+
+      // Get settings
+      const pluginStore = strapi.store({
+        type: 'plugin',
+        name: 'magic-link',
+      });
+      const settings = await pluginStore.get({ key: 'settings' });
+
+      if (!settings || !settings.enabled) {
+        return ctx.badRequest('Magic Link ist nicht aktiviert');
+      }
+
+      // Unfortunately we can't resend the original token because it's hashed
+      // We need to inform the user about this limitation
+      // The best we can do is create a new token for this email
+      return ctx.badRequest('Token kann nicht erneut gesendet werden - der Original-Token ist gehashed. Bitte erstelle einen neuen Token für diese E-Mail.');
+
+    } catch (error) {
+      strapi.log.error('Fehler beim erneuten Senden:', error);
       ctx.throw(500, error);
     }
   },
@@ -534,10 +764,9 @@ module.exports = {
       
       const settings = await pluginStore.get({ key: 'settings' });
       
-      // Find the user - Entferne UUID aus der Abfrage, damit es in Strapi v5 funktioniert
-      const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+      // Find the user using Document Service API
+      const users = await strapi.documents('plugin::users-permissions.user').findMany({
         filters: { email },
-        fields: ['id', 'username', 'email', 'confirmed', 'blocked', 'documentId'],
         limit: 1,
       });
       const user = users && users.length > 0 ? users[0] : null;
@@ -611,19 +840,19 @@ module.exports = {
         // Save updated banned IPs list
         await pluginStore.set({ key: 'banned_ips', value: bannedIPs });
         
-        // Deactivate all tokens associated with this IP
-        const tokensToDeactivate = await strapi.entityService.findMany('plugin::magic-link.token', {
+        // Deactivate all tokens associated with this IP using Document Service API
+        const tokensToDeactivate = await strapi.documents('plugin::magic-link.token').findMany({
           filters: { ip_address: ipAddress, is_active: true },
-          fields: ['id'],
         });
         
         if (tokensToDeactivate && tokensToDeactivate.length > 0) {
           for (const token of tokensToDeactivate) {
-            await strapi.entityService.update('plugin::magic-link.token', token.id, {
+            await strapi.documents('plugin::magic-link.token').update({
+              documentId: token.documentId,
               data: { is_active: false },
             });
           }
-          strapi.log.info(`✅ Deactivated ${tokensToDeactivate.length} token(s) for IP ${ipAddress}`);
+          strapi.log.info(`[SUCCESS] Deactivated ${tokensToDeactivate.length} token(s) for IP ${ipAddress}`);
         }
       }
       
@@ -748,13 +977,13 @@ module.exports = {
       // 4. Bewerte Token-Status: max. 15 Punkte
       let tokenStatusPoints = 0;
       
-      // Hole alle Tokens
-      const tokens = await strapi.entityService.findMany('plugin::magic-link.token', {});
-      
-      // Berechne Verhältnis von aktiven zu inaktiven Tokens
-      const activeTokens = tokens.filter(token => token.is_active).length;
-      const inactiveTokens = tokens.filter(token => !token.is_active).length;
-      const tokenRatio = tokens.length > 0 ? inactiveTokens / tokens.length : 0;
+      // Use count() for efficient token counting (Strapi v5 best practice)
+      const [activeTokens, inactiveTokens] = await Promise.all([
+        strapi.documents('plugin::magic-link.token').count({ filters: { is_active: true } }),
+        strapi.documents('plugin::magic-link.token').count({ filters: { is_active: false } }),
+      ]);
+      const totalTokens = activeTokens + inactiveTokens;
+      const tokenRatio = totalTokens > 0 ? inactiveTokens / totalTokens : 0;
       
       // Bewerte basierend auf dem Verhältnis (mehr inaktive = höhere Sicherheit)
       if (tokenRatio >= 0.8) tokenStatusPoints = 15;

@@ -49,8 +49,9 @@ module.exports = {
 
     // If OTP is enabled and available, require OTP verification
     if (settings.otp_enabled && hasOTPFeature) {
-      // Mark token as requiring OTP
-      await strapi.entityService.update('plugin::magic-link.token', token.id, {
+      // Mark token as requiring OTP using Document Service API
+      await strapi.documents('plugin::magic-link.token').update({
+        documentId: token.documentId,
         data: {
           // Store that this token requires OTP
           context: {
@@ -91,8 +92,8 @@ module.exports = {
     if (settings.mfa_require_totp) {
       const otpService = strapi.plugin('magic-link').service('otp');
       
-      // Check if user has TOTP enabled
-      const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+      // Check if user has TOTP enabled using Document Service API
+      const users = await strapi.documents('plugin::users-permissions.user').findMany({
         filters: { email: token.email },
         limit: 1,
       });
@@ -103,8 +104,9 @@ module.exports = {
         
         // If user has TOTP configured and enabled, require verification
         if (totpStatus.configured && totpStatus.enabled) {
-          // Mark token as requiring TOTP verification
-          await strapi.entityService.update('plugin::magic-link.token', token.id, {
+          // Mark token as requiring TOTP verification using Document Service API
+          await strapi.documents('plugin::magic-link.token').update({
+            documentId: token.documentId,
             data: {
               context: {
                 ...(token.context || {}),
@@ -136,7 +138,8 @@ module.exports = {
 
     await magicLink.updateTokenOnLogin(token, requestInfo);
 
-    const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+    // Find user using Document Service API
+    const users = await strapi.documents('plugin::users-permissions.user').findMany({
       filters: { email: token.email },
       limit: 1,
     });
@@ -193,10 +196,19 @@ module.exports = {
     }
     
     // Generiere JWT-Token mit dem sanitierten Context
-    const jwtToken = jwtService.issue({ 
+    // In Strapi v5, jwtService.issue() might be async
+    let jwtToken = jwtService.issue({ 
       id: user.id,
       context: sanitizedContext
     });
+    
+    // Handle if it's a Promise
+    if (jwtToken && typeof jwtToken.then === 'function') {
+      jwtToken = await jwtToken;
+    }
+    
+    // Debug logging
+    strapi.log.debug('[magic-link] JWT Token generated:', typeof jwtToken, jwtToken ? 'has value' : 'empty');
     
     // Hole JWT-Konfiguration, um Ablaufzeit zu berechnen
     let expirationTime = settings.jwt_token_expires_in || '30d';
@@ -376,8 +388,9 @@ module.exports = {
       return ctx.badRequest(verificationResult.message || 'Invalid TOTP code');
     }
     
-    // Mark token as TOTP-verified
-    await strapi.entityService.update('plugin::magic-link.token', token.id, {
+    // Mark token as TOTP-verified using Document Service API
+    await strapi.documents('plugin::magic-link.token').update({
+      documentId: token.documentId,
       data: {
         context: {
           ...context,
@@ -394,7 +407,8 @@ module.exports = {
     
     await magicLink.updateTokenOnLogin(token, requestInfo);
     
-    const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+    // Find user using Document Service API
+    const users = await strapi.documents('plugin::users-permissions.user').findMany({
       filters: { id: context.userId },
       limit: 1,
     });
@@ -505,8 +519,8 @@ module.exports = {
       return ctx.forbidden('TOTP login requires Advanced license');
     }
     
-    // Find user by email
-    const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+    // Find user by email using Document Service API
+    const users = await strapi.documents('plugin::users-permissions.user').findMany({
       filters: { email: email.trim().toLowerCase() },
       limit: 1,
     });

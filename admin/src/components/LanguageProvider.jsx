@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { IntlProvider } from 'react-intl';
 import enTranslations from '../translations/en.json';
 import deTranslations from '../translations/de.json';

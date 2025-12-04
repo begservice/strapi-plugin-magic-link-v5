@@ -58,8 +58,8 @@ module.exports = {
           expiryMinutes: Math.floor(otpSettings.expiry / 60)
         });
       } else if (otpSettings.type === 'sms') {
-        // SMS sending (requires phone number)
-        const user = await strapi.entityService.findMany('plugin::users-permissions.user', {
+        // SMS sending (requires phone number) using Document Service API
+        const user = await strapi.documents('plugin::users-permissions.user').findMany({
           filters: { email: email.toLowerCase() },
           limit: 1
         });
@@ -111,8 +111,8 @@ module.exports = {
       }
 
       // OTP is valid - now complete the magic link login
-      // Find the user
-      const users = await strapi.entityService.findMany('plugin::users-permissions.user', {
+      // Find the user using Document Service API
+      const users = await strapi.documents('plugin::users-permissions.user').findMany({
         filters: { email: email.toLowerCase() },
         limit: 1
       });
@@ -179,13 +179,13 @@ module.exports = {
         return ctx.badRequest('OTP is not enabled');
       }
 
-      // Check resend cooldown
-      const lastOTP = await strapi.entityService.findMany('plugin::magic-link.otp-code', {
+      // Check resend cooldown using Document Service API
+      const lastOTP = await strapi.documents('plugin::magic-link.otp-code').findMany({
         filters: {
           email: email.toLowerCase(),
           type: otpSettings.type
         },
-        sort: { createdAt: 'desc' },
+        sort: [{ createdAt: 'desc' }],
         limit: 1
       });
 
@@ -200,10 +200,11 @@ module.exports = {
         }
       }
 
-      // Mark old codes as used
+      // Mark old codes as used using Document Service API
       if (lastOTP && lastOTP.length > 0) {
         for (const code of lastOTP) {
-          await strapi.entityService.update('plugin::magic-link.otp-code', code.id, {
+          await strapi.documents('plugin::magic-link.otp-code').update({
+            documentId: code.documentId,
             data: { used: true }
           });
         }
@@ -225,7 +226,8 @@ module.exports = {
           expiryMinutes: Math.floor(otpSettings.expiry / 60)
         });
       } else if (otpSettings.type === 'sms') {
-        const user = await strapi.entityService.findMany('plugin::users-permissions.user', {
+        // SMS sending using Document Service API
+        const user = await strapi.documents('plugin::users-permissions.user').findMany({
           filters: { email: email.toLowerCase() },
           limit: 1
         });
@@ -263,14 +265,16 @@ module.exports = {
         filters.type = type;
       }
 
-      const codes = await strapi.entityService.findMany('plugin::magic-link.otp-code', {
+      // Using Document Service API
+      const codes = await strapi.documents('plugin::magic-link.otp-code').findMany({
         filters,
-        sort: { createdAt: 'desc' },
-        start: (page - 1) * pageSize,
+        sort: [{ createdAt: 'desc' }],
+        offset: (page - 1) * pageSize,
         limit: pageSize
       });
 
-      const total = await strapi.entityService.count('plugin::magic-link.otp-code', {
+      // Count total using Document Service API count() method
+      const total = await strapi.documents('plugin::magic-link.otp-code').count({
         filters
       });
 
@@ -294,9 +298,12 @@ module.exports = {
    */
   async deleteCode(ctx) {
     try {
-      const { id } = ctx.params;
+      const { id } = ctx.params; // This is now documentId
 
-      await strapi.entityService.delete('plugin::magic-link.otp-code', id);
+      // Using Document Service API
+      await strapi.documents('plugin::magic-link.otp-code').delete({
+        documentId: id
+      });
 
       ctx.send({
         success: true,

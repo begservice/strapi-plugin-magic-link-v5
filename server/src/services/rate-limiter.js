@@ -74,7 +74,7 @@ module.exports = ({ strapi }) => ({
         const timeRemaining = windowMs - timeSinceFirst;
         const retryAfterSeconds = Math.ceil(timeRemaining / 1000);
         
-        strapi.log.warn(`⚠️ Rate limit exceeded for ${type}: ${identifier} (${limitEntry.count}/${maxAttempts} requests)`);
+        strapi.log.warn(`[RATE-LIMIT] Limit exceeded for ${type}: ${identifier} (${limitEntry.count}/${maxAttempts} requests)`);
         
         return {
           allowed: false,

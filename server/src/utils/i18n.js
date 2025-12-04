@@ -25,7 +25,7 @@ class I18n {
     }
     
     if (!localesDir) {
-      console.warn('⚠️ [Magic-Link i18n] No i18n directory found, using fallback messages');
+      console.warn('[WARNING] [Magic-Link i18n] No i18n directory found, using fallback messages');
       // Set default English translations as fallback
       this.translations.en = {
         errors: {
@@ -50,9 +50,9 @@ class I18n {
         }
       });
       
-      console.log(`✅ [Magic-Link i18n] Loaded translations for: ${Object.keys(this.translations).join(', ')}`);
+      console.log(`[SUCCESS] [Magic-Link i18n] Loaded translations for: ${Object.keys(this.translations).join(', ')}`);
     } catch (error) {
-      console.error('❌ [Magic-Link i18n] Error loading translations:', error);
+      console.error('[ERROR] [Magic-Link i18n] Error loading translations:', error);
     }
   }
 

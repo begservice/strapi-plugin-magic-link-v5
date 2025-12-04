@@ -4,12 +4,30 @@
  * magic-link.js service
  *
  * @description: A set of functions similar to controller's actions to avoid code duplication.
+ * 
+ * Security:
+ * - Magic Link tokens are hashed before storage
+ * - Uses Document Service API (strapi.documents) for Strapi v5
  */
 
 const _ = require('lodash');
 const { nanoid } = require('nanoid');
 const { sanitize } = require('@strapi/utils');
 const emailHelpers = require('../utils/email-helpers');
+const cryptoUtils = require('../utils/crypto');
+
+// Helper to format expiry time in human-readable format
+const formatExpiryText = (minutes) => {
+  if (!minutes || Number.isNaN(minutes)) {
+    return '1 hour';
+  }
+  const safeMinutes = Math.max(1, Math.round(minutes));
+  if (safeMinutes >= 60) {
+    const hours = Math.ceil(safeMinutes / 60);
+    return `${hours} hour${hours === 1 ? '' : 's'}`;
+  }
+  return `${safeMinutes} minute${safeMinutes === 1 ? '' : 's'}`;
+};
 
 module.exports = ({ strapi }) => ({
   async initialize() {
@@ -40,9 +58,17 @@ module.exports = ({ strapi }) => ({
 
   async createUser(user) {
     const userSettings = await this.userSettings();
-    const role = await strapi
-      .query('plugin::users-permissions.role')
-      .findOne({ where: { type: userSettings.default_role } });
+    
+    // Using Document Service API for role lookup
+    const roles = await strapi.documents('plugin::users-permissions.role').findMany({
+      filters: { type: userSettings.default_role },
+      limit: 1,
+    });
+    const role = roles && roles.length > 0 ? roles[0] : null;
+
+    if (!role) {
+      throw new Error('Default role not found');
+    }
 
     const newUser = {
       ...user,
@@ -52,9 +78,10 @@ module.exports = ({ strapi }) => ({
       role: role.id,
     };
 
-    const createdUser = await strapi
-      .query('plugin::users-permissions.user')
-      .create({ data: newUser });
+    // Using Document Service API
+    const createdUser = await strapi.documents('plugin::users-permissions.user').create({
+      data: newUser,
+    });
 
     return createdUser;
   },
@@ -63,30 +90,24 @@ module.exports = ({ strapi }) => ({
     const settings = await this.settings();
     const createUserIfNotExists = settings?.createUserIfNotExists !== false;
     
-    // --- DEBUG LOGGING START ---
-    strapi.log.info(`[MagicLink Service - user function] Checking user: ${email || username}`);
-    strapi.log.info(`[MagicLink Service - user function] createUserIfNotExists setting value: ${createUserIfNotExists} (Type: ${typeof createUserIfNotExists})`);
-    // --- DEBUG LOGGING END ---
+    strapi.log.debug(`[MagicLink Service] Checking user: ${email || username}, createUserIfNotExists: ${createUserIfNotExists}`);
 
-    const user = await strapi.query('plugin::users-permissions.user').findOne({
-      where: email ? { email } : { username },
+    // Using Document Service API
+    const users = await strapi.documents('plugin::users-permissions.user').findMany({
+      filters: email ? { email } : { username },
+      limit: 1,
     });
+    const user = users && users.length > 0 ? users[0] : null;
     
-    // --- DEBUG LOGGING START ---
-    strapi.log.info(`[MagicLink Service - user function] User found: ${!!user}`);
-    // --- DEBUG LOGGING END ---
+    strapi.log.debug(`[MagicLink Service] User found: ${!!user}`);
 
     if (!user && !createUserIfNotExists) {
-      // --- DEBUG LOGGING START ---
-      strapi.log.warn(`[MagicLink Service - user function] User not found AND createUserIfNotExists is false. Throwing error.`);
-      // --- DEBUG LOGGING END ---
-      throw new Error('User not found and auto-creation disabled.'); // Slightly more specific error
+      strapi.log.warn(`[MagicLink Service] User not found AND createUserIfNotExists is false.`);
+      throw new Error('User not found and auto-creation disabled.');
     }
 
     if (!user && createUserIfNotExists) {
-      // --- DEBUG LOGGING START ---
-      strapi.log.info(`[MagicLink Service - user function] User not found BUT createUserIfNotExists is true. Creating user...`);
-      // --- DEBUG LOGGING END ---
+      strapi.log.info(`[MagicLink Service] Creating new user for: ${email}`);
       const newUser = await this.createUser({
         email,
         username: username || email.split('@')[0],
@@ -104,47 +125,79 @@ module.exports = ({ strapi }) => ({
     const expires = new Date();
     expires.setHours(expires.getHours() + 1);
 
-    const tokenObject = await strapi.query('plugin::magic-link.token').create({
+    // Hash the token for secure storage
+    const { hash: tokenHash, salt: tokenSalt } = cryptoUtils.hashToken(token);
+
+    // Using Document Service API
+    const tokenObject = await strapi.documents('plugin::magic-link.token').create({
       data: {
         email,
-        token,
+        token: tokenHash, // Store hashed token
+        token_salt: tokenSalt, // Store salt for verification
         expires_at: expires,
         is_active: true,
         context: typeof context === 'string' ? JSON.parse(context) : context,
       },
     });
 
-    return tokenObject;
+    // Return with plaintext token for URL (not stored in DB)
+    return { ...tokenObject, token, _plaintextToken: token };
   },
 
   async fetchToken(token) {
-    return strapi.query('plugin::magic-link.token').findOne({
-      where: { token },
+    // Since tokens are now hashed, we need to find by comparing hashes
+    // Get active tokens and find the matching one
+    const tokens = await strapi.documents('plugin::magic-link.token').findMany({
+      filters: { is_active: true },
+      sort: [{ createdAt: 'desc' }],
+      limit: 100, // Limit search for performance
     });
+    
+    // Find token with matching hash (timing-safe comparison)
+    const matchedToken = tokens.find(t => {
+      // Handle both old (plaintext) and new (hashed) tokens
+      if (t.token_salt) {
+        // New hashed token
+        return cryptoUtils.verifyToken(token, t.token, t.token_salt);
+      } else {
+        // Legacy plaintext token (backwards compatibility)
+        return t.token === token;
+      }
+    });
+    
+    return matchedToken || null;
   },
 
   async isTokenValid(token) {
-    const { is_active, expires_at } = token;
+    const { is_active, expires_at, is_used } = token;
     const settings = await this.settings();
     const staysValid = settings?.stays_valid || false;
 
+    // Token must be active
     if (!is_active) {
       return false;
     }
 
-    if (staysValid) {
-      return true;
-    }
-
+    // Token must not be expired (always check, regardless of stays_valid)
     const currentTime = new Date();
     const expiryTime = new Date(expires_at);
+    if (currentTime >= expiryTime) {
+      return false;
+    }
 
-    return currentTime < expiryTime;
+    // If stays_valid is false, token can only be used once
+    // If stays_valid is true, token can be used multiple times until expiry
+    if (!staysValid && is_used) {
+      return false;
+    }
+
+    return true;
   },
 
   async deactivateToken(token) {
-    return strapi.query('plugin::magic-link.token').update({
-      where: { id: token.id },
+    // Using Document Service API
+    return strapi.documents('plugin::magic-link.token').update({
+      documentId: token.documentId,
       data: { is_active: false },
     });
   },
@@ -156,6 +209,12 @@ module.exports = ({ strapi }) => ({
 
     // Prepare data to update
     const updateData = { 
+      // Always mark token as used
+      is_used: true,
+      // Set first used_at if not already set
+      used_at: token.used_at || new Date(),
+      // If stays_valid is false, deactivate token after first use
+      // If stays_valid is true, keep token active for multiple uses
       is_active: staysValid 
     };
 
@@ -171,10 +230,12 @@ module.exports = ({ strapi }) => ({
         updateData.ip_address = requestInfo.ipAddress;
       }
     }
+    
+    strapi.log.debug(`[MagicLink] Token ${token.documentId} used. stays_valid=${staysValid}, is_active=${updateData.is_active}`);
 
-    // Update token in database
-    return strapi.query('plugin::magic-link.token').update({
-      where: { id: token.id },
+    // Using Document Service API
+    return strapi.documents('plugin::magic-link.token').update({
+      documentId: token.documentId,
       data: updateData
     });
   },
@@ -196,17 +257,32 @@ module.exports = ({ strapi }) => ({
 
     // Replace variables in the email template
     const url = settings?.confirmationUrl || `${process.env.URL || 'http://localhost:1337'}/api/magic-link/login`;
-    const code = token.token;
+    // Use plaintext token for email (from _plaintextToken or legacy token field)
+    const code = token._plaintextToken || token.token;
 
+    // Calculate expiry text early for template replacement
+    let expiryTextForTemplate = '1 hour'; // Default
+    if (token.expires_at) {
+      const expiresAt = new Date(token.expires_at);
+      const now = new Date();
+      const minutesUntilExpiry = Math.max(1, Math.floor((expiresAt - now) / (1000 * 60)));
+      expiryTextForTemplate = formatExpiryText(minutesUntilExpiry);
+    } else if (settings?.expire_period) {
+      const minutes = Math.floor(settings.expire_period / 60);
+      expiryTextForTemplate = formatExpiryText(minutes);
+    }
+    
     // Replace variables in the email template
     let html = _.template(emailTemplate.html)({
       URL: url,
       CODE: code,
+      EXPIRY_TEXT: expiryTextForTemplate,
     });
 
     let text = _.template(emailTemplate.text)({
       URL: url,
       CODE: code,
+      EXPIRY_TEXT: expiryTextForTemplate,
     });
 
     // Wrap HTML in email-client compatible template if not already wrapped
@@ -247,6 +323,7 @@ module.exports = ({ strapi }) => ({
 
     // Build the full login URL for click tracking
     const loginUrl = `${url}?loginToken=${code}`;
+    
     const templatePayload = {
       URL: url,
       Url: url,
@@ -266,6 +343,10 @@ module.exports = ({ strapi }) => ({
       TOKEN: code,
       email: token.email,
       recipient: token.email,
+      // Expiry text for email templates
+      EXPIRY_TEXT: expiryTextForTemplate,
+      expiryText: expiryTextForTemplate,
+      expiry_text: expiryTextForTemplate,
     };
     
     // Check if MagicMail should be used
@@ -276,7 +357,7 @@ module.exports = ({ strapi }) => ({
         
         // Warn if MagicMail is enabled but no template selected
         if (!settings.magic_mail_template_id) {
-          strapi.log.warn('⚠️ MagicMail is enabled but no template ID is set. Using fallback HTML/text content.');
+          strapi.log.warn('[WARNING] MagicMail is enabled but no template ID is set. Using fallback HTML/text content.');
         }
 
         const numericTemplateId = settings.magic_mail_template_id
@@ -311,6 +392,16 @@ module.exports = ({ strapi }) => ({
 
         const routerTemplateId = templateReferenceId || numericTemplateId;
         
+        // IMPORTANT: Do NOT track magic link URLs!
+        // Tracking replaces the login URL with an ugly tracking URL which:
+        // 1. Breaks if tracking service is down
+        // 2. Looks suspicious to users
+        // 3. Can't be easily copied/shared
+        // 4. Adds unnecessary latency to login flow
+        //
+        // Instead, we pass the magic link URL directly in the template data
+        // so it renders as-is without modification.
+        
         await strapi.plugin('magic-mail').service('email-router').send({
           to: token.email,
           from: emailConfig.from,
@@ -319,12 +410,19 @@ module.exports = ({ strapi }) => ({
           text,
           html,
           headers,
-          // IMPORTANT: Pass links array for click tracking
+          // CRITICAL: Skip link tracking for magic links!
+          // Link tracking replaces URLs with ugly tracking URLs which:
+          // 1. Look suspicious to users (phishing concern)
+          // 2. Break if tracking service is down
+          // 3. Can't be easily copied/shared
+          // 4. Add unnecessary latency to login flow
+          // Open tracking (pixel) is still enabled for analytics
+          skipLinkTracking: true,
           links: [
             {
               original: loginUrl,
               label: 'Magic Link Login',
-              track: true
+              track: false
             }
           ],
           // Optional: Use selected template

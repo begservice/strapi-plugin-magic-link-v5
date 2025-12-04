@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes, css } from 'styled-components';
 import { useIntl } from 'react-intl';
@@ -14,7 +14,6 @@ import {
   Flex, 
   Button, 
   Loader, 
-  EmptyStateLayout,
   Table,
   Thead,
   Tbody,
@@ -37,8 +36,6 @@ import {
 import { useFetchClient, useNotification } from '@strapi/strapi/admin';
 import { 
   Plus, 
-  ArrowLeft, 
-  ArrowRight,
   Key, 
   Shield, 
   Earth,
@@ -51,15 +48,11 @@ import {
   Cross,
   WarningCircle,
   Check,
-  Pencil,
   User,
   Calendar,
   Lock,
   ArrowClockwise,
-  Filter,
   Download,
-  Upload,
-  Search,
   Duplicate,
   Link,
   Sparkle,
@@ -407,37 +400,41 @@ const ActionButton = styled(Button)`
   }
 
   @media screen and (max-width: 768px) {
-    padding: 12px !important;
-    font-size: 0;
-    min-width: 48px;
+    padding: 10px 14px !important;
+    font-size: 11px;
+    min-width: auto;
     min-height: 48px;
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
+    gap: 4px;
     
-    /* Center icon container */
-    & > span,
-    & span {
+    /* Stack icon and text vertically */
+    & > span {
       display: flex !important;
+      flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
+      gap: 4px !important;
       margin: 0 !important;
       padding: 0 !important;
-      font-size: 0 !important;
     }
     
-    /* Center SVG icon */
+    /* Style SVG icon */
     svg {
-      width: 20px !important;
-      height: 20px !important;
+      width: 18px !important;
+      height: 18px !important;
       margin: 0 !important;
       display: block !important;
     }
     
-    /* Hide text on mobile */
-    & > span > span:not(:has(svg)) {
-      display: none !important;
-      visibility: hidden !important;
+    /* Show text label below icon */
+    & > span > span:last-child {
+      display: block !important;
+      font-size: 10px !important;
+      line-height: 1.2 !important;
+      white-space: nowrap;
     }
   }
 `;
@@ -497,17 +494,23 @@ const TabsContainer = styled.div`
   gap: 4px;
   
   @media screen and (max-width: 768px) {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     overflow-x: visible;
     padding: 4px;
-    width: fit-content;
+    width: 100%;
+    max-width: 400px;
     margin: 0 auto;
 
     &::-webkit-scrollbar {
       display: none;
     }
+  }
+  
+  @media screen and (max-width: 400px) {
+    gap: 6px;
+    max-width: 100%;
   }
 `;
 
@@ -555,6 +558,15 @@ const TabButton = styled(Button)`
   padding: 14px 24px;
   white-space: nowrap;
   
+  /* Short label hidden on desktop */
+  .tab-label-short {
+    display: none;
+  }
+  
+  .tab-label-full {
+    display: inline;
+  }
+  
   ${props => props.$active ? css`
     color: white;
     transform: scale(1.02);
@@ -582,25 +594,26 @@ const TabButton = styled(Button)`
   `}
 
   @media screen and (max-width: 768px) {
-    padding: 0 !important;
-    font-size: 0;
+    padding: 10px 16px !important;
+    font-size: 11px;
     border-radius: 12px;
-    min-height: 48px;
-    min-width: 48px;
-    width: 48px;
-    height: 48px;
-    flex: 0 0 48px;
+    min-height: 60px;
+    min-width: 70px;
+    flex: 1;
+    max-width: 90px;
     scroll-snap-align: start;
     display: flex !important;
+    flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
+    gap: 6px;
     background: ${props => props.$active 
       ? `linear-gradient(135deg, ${theme.colors.primary[600]} 0%, ${theme.colors.secondary[600]} 100%)`
-      : 'rgba(255,255,255,0.8)'};
+      : 'rgba(255,255,255,0.9)'};
     color: ${props => props.$active ? theme.colors.neutral[0] : theme.colors.neutral[800]};
     box-shadow: ${props => props.$active 
       ? '0 6px 16px rgba(79, 70, 229, 0.25)'
-      : 'inset 0 0 0 1px rgba(79, 70, 229, 0.08)'};
+      : '0 2px 8px rgba(0, 0, 0, 0.06)'};
     
     ${props => props.$active ? css`
       transform: scale(1);
@@ -610,50 +623,54 @@ const TabButton = styled(Button)`
       }
     `}
     
-    /* Center icon container - all levels */
-    & > span,
-    & span {
+    /* Show short label, hide full label on mobile */
+    .tab-label-full {
+      display: none !important;
+    }
+    
+    .tab-label-short {
+      display: block !important;
+      font-size: 11px !important;
+      font-weight: 600;
+      line-height: 1.2;
+      text-align: center;
+    }
+    
+    /* Stack icon and text vertically */
+    & > span {
       display: flex !important;
+      flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
+      gap: 6px !important;
       margin: 0 !important;
       padding: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      font-size: 0 !important;
-      line-height: 0 !important;
     }
 
-    /* Center SVG icon */
+    /* Style SVG icon */
     svg {
-      width: 20px !important;
-      height: 20px !important;
+      width: 22px !important;
+      height: 22px !important;
       flex-shrink: 0;
       margin: 0 !important;
       display: block !important;
     }
-    
-    /* Hide all text content */
-    & > span > span:not(:has(svg)),
-    & > span::before,
-    & > span::after {
-      display: none !important;
-      content: none !important;
-      visibility: hidden !important;
-    }
   }
   
   @media screen and (max-width: 480px) {
-    padding: 0;
-    min-height: 44px;
-    min-width: 44px;
-    width: 44px;
-    height: 44px;
-    flex: 0 0 44px;
+    padding: 8px 12px !important;
+    min-height: 56px;
+    min-width: 60px;
+    max-width: 80px;
+    gap: 4px;
     
-    > span svg {
-      width: 18px;
-      height: 18px;
+    svg {
+      width: 20px !important;
+      height: 20px !important;
+    }
+    
+    .tab-label-short {
+      font-size: 10px !important;
     }
   }
 `;
@@ -1018,6 +1035,8 @@ const TokensProfessional = () => {
   const [showExtendModal, setShowExtendModal] = useState(false);
   const [selectedTokenToExtend, setSelectedTokenToExtend] = useState(null);
   const [extendDays, setExtendDays] = useState(7);
+  const [showCreatedTokenModal, setShowCreatedTokenModal] = useState(false);
+  const [createdTokenData, setCreatedTokenData] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -1220,7 +1239,7 @@ const TokensProfessional = () => {
     }
     
     try {
-      await post('/magic-link/tokens', {
+      const response = await post('/magic-link/tokens', {
         email: newToken.email,
         send_email: newToken.sendEmail,
         context: {
@@ -1229,10 +1248,23 @@ const TokensProfessional = () => {
         }
       });
       
+      // Capture the plaintext token from the response!
+      const createdToken = response?.data;
+      
       await fetchTokens();
       setShowCreateModal(false);
       setNewToken({ email: '', ttl: 24, context: {}, sendEmail: true });
       setSearchQuery(''); // Explizit Suchfeld leeren
+      
+      // Show the created token modal with plaintext token
+      if (createdToken && createdToken.token) {
+        setCreatedTokenData({
+          token: createdToken.token,
+          email: createdToken.email,
+          expires_at: createdToken.expires_at,
+        });
+        setShowCreatedTokenModal(true);
+      }
       
       toggleNotification({
         type: 'success',
@@ -1372,32 +1404,40 @@ const TokensProfessional = () => {
               onClick={() => setActiveTab('magic-links')}
               startIcon={<Key />}
               size="L"
+              data-short-label="Links"
             >
-              {formatMessage({ id: getTrad('tokens.tabs.magicLinks') })}
+              <span className="tab-label-full">{formatMessage({ id: getTrad('tokens.tabs.magicLinks') })}</span>
+              <span className="tab-label-short">Links</span>
             </TabButton>
             <TabButton
               $active={activeTab === 'otp-codes'}
               onClick={() => setActiveTab('otp-codes')}
               startIcon={<Lock />}
               size="L"
+              data-short-label="OTP"
             >
-              OTP Codes
+              <span className="tab-label-full">OTP Codes</span>
+              <span className="tab-label-short">OTP</span>
             </TabButton>
             <TabButton
               $active={activeTab === 'jwt-sessions'}
               onClick={() => setActiveTab('jwt-sessions')}
               startIcon={<Shield />}
               size="L"
+              data-short-label="JWT"
             >
-              {formatMessage({ id: getTrad('tokens.tabs.jwtSessions') })}
+              <span className="tab-label-full">{formatMessage({ id: getTrad('tokens.tabs.jwtSessions') })}</span>
+              <span className="tab-label-short">JWT</span>
             </TabButton>
             <TabButton
               $active={activeTab === 'ip-bans'}
               onClick={() => setActiveTab('ip-bans')}
               startIcon={<Earth />}
               size="L"
+              data-short-label="IP"
             >
-              {formatMessage({ id: getTrad('tokens.tabs.ipBans') })}
+              <span className="tab-label-full">{formatMessage({ id: getTrad('tokens.tabs.ipBans') })}</span>
+              <span className="tab-label-short">IP</span>
             </TabButton>
           </TabsContainer>
         </TabsWrapper>
@@ -1585,7 +1625,7 @@ const TokensProfessional = () => {
                       <Th action={<IconButton label={formatMessage({ id: getTrad('tokens.table.sortBy') })} onClick={() => handleSort('email')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
                         {formatMessage({ id: getTrad('tokens.table.email') })}
                       </Th>
-                      <Th>{formatMessage({ id: getTrad('tokens.table.token') })}</Th>
+                      <Th>{formatMessage({ id: getTrad('tokens.table.reference') })}</Th>
                       <Th action={<IconButton label={formatMessage({ id: getTrad('tokens.table.sortBy') })} onClick={() => handleSort('status')} variant="ghost" withTooltip={false}><CaretDown /></IconButton>}>
                         {formatMessage({ id: getTrad('tokens.table.status') })}
                       </Th>
@@ -1635,30 +1675,32 @@ const TokensProfessional = () => {
                             </Flex>
                           </Flex>
                         </Td>
-                        <Td data-label={formatMessage({ id: getTrad('tokens.table.token') })}>
-                          <Box style={{ maxWidth: '200px' }}>
+                        <Td data-label={formatMessage({ id: getTrad('tokens.table.reference') })}>
+                          <Flex direction="column" alignItems="flex-start" gap={1}>
                             <Typography 
                               variant="pi" 
-                              textColor="neutral600" 
-                              ellipsis
-                              title={`Token: ${token.token} (Klicken zum Kopieren)`}
+                              fontWeight="semiBold"
                               style={{ 
                                 fontFamily: 'monospace', 
                                 fontSize: '12px',
-                                cursor: 'pointer'
-                              }}
-                              onClick={() => {
-                                navigator.clipboard.writeText(token.token);
-                                toggleNotification({
-                            type: 'success',
-                            message: formatMessage({ id: getTrad('tokens.notifications.tokenCopied') }),
-                            title: formatMessage({ id: getTrad('tokens.notifications.success') })
-                                });
+                                background: theme.colors.neutral[100],
+                                padding: '2px 8px',
+                                borderRadius: '4px',
                               }}
                             >
-                              {token.token}
+                              #{token.documentId ? token.documentId.slice(-8) : token.id}
                             </Typography>
-                          </Box>
+                            {token.is_used && token.used_at && (
+                              <Typography variant="omega" textColor="success600" style={{ fontSize: '11px' }}>
+                                ✓ {formatMessage({ id: getTrad('tokens.table.usedAt') })}: {formatDate(token.used_at)}
+                              </Typography>
+                            )}
+                            {token.login_ip && (
+                              <Typography variant="omega" textColor="neutral500" style={{ fontSize: '10px', fontFamily: 'monospace' }}>
+                                IP: {token.login_ip}
+                              </Typography>
+                            )}
+                          </Flex>
                         </Td>
                         <Td data-label={formatMessage({ id: getTrad('tokens.table.status') })}>
                           {getStatusBadge(token)}
@@ -1700,7 +1742,7 @@ const TokensProfessional = () => {
                         <Td data-label={formatMessage({ id: getTrad('tokens.table.actions') })}>
                           <Flex gap={1} justifyContent="flex-end">
                             <IconButton
-                              label="Details anzeigen"
+                              label={formatMessage({ id: getTrad('tokens.actions.viewDetails') })}
                               variant="ghost"
                               onClick={() => {
                                 setSelectedTokenDetails(token);
@@ -1710,34 +1752,21 @@ const TokensProfessional = () => {
                             >
                               <Eye />
                             </IconButton>
+                            {!token.is_used && token.status !== 'blocked' && (
+                              <IconButton
+                                label={formatMessage({ id: getTrad('tokens.actions.extend') })}
+                                variant="ghost"
+                                onClick={() => {
+                                  setSelectedTokenToExtend(token);
+                                  setShowExtendModal(true);
+                                }}
+                                withTooltip={false}
+                              >
+                                <Clock />
+                              </IconButton>
+                            )}
                             <IconButton
-                              label="Token kopieren"
-                              variant="ghost"
-                              onClick={() => {
-                                navigator.clipboard.writeText(token.token);
-                                toggleNotification({
-                            type: 'success',
-                            message: formatMessage({ id: getTrad('tokens.notifications.tokenCopied') }),
-                            title: formatMessage({ id: getTrad('tokens.notifications.success') })
-                                });
-                              }}
-                              withTooltip={false}
-                            >
-                              <Link />
-                            </IconButton>
-                            <IconButton
-                              label="Token verlängern"
-                              variant="ghost"
-                              onClick={() => {
-                                setSelectedTokenToExtend(token);
-                                setShowExtendModal(true);
-                              }}
-                              withTooltip={false}
-                            >
-                              <Clock />
-                            </IconButton>
-                            <IconButton
-                              label="Löschen"
+                              label={formatMessage({ id: getTrad('tokens.actions.delete') })}
                               variant="danger-ghost"
                               onClick={() => handleDelete(token.id)}
                               withTooltip={false}
@@ -1880,220 +1909,328 @@ const TokensProfessional = () => {
                 {/* Body */}
                 <Box padding={7}>
                   <Flex direction="column" alignItems="stretch" gap={5}>
-                    {/* Token */}
-                    <Box>
-                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.5px' }}>
-                        {formatMessage({ id: getTrad('tokens.details.token') })}
+                    
+                    {/* Reference ID */}
+                    <Flex alignItems="center" gap={3}>
+                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral600" style={{ fontSize: '12px' }}>
+                        {formatMessage({ id: getTrad('tokens.details.reference') })}:
                       </Typography>
-                      <Box
-                        padding={4}
-                        background="neutral100"
-                        style={{
+                      <Typography 
+                        variant="pi" 
+                        fontWeight="bold"
+                        style={{ 
+                          fontFamily: 'monospace', 
+                          fontSize: '14px',
+                          background: theme.colors.neutral[100],
+                          padding: '4px 12px',
                           borderRadius: '6px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          transition: 'all 0.2s',
-                          border: '1px solid transparent',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#f0f0f7';
-                          e.currentTarget.style.border = '1px solid #d0d0e0';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#f6f6f9';
-                          e.currentTarget.style.border = '1px solid transparent';
-                        }}
-                        onClick={() => {
-                          navigator.clipboard.writeText(selectedTokenDetails.token);
-                          toggleNotification({
-                            type: 'success',
-                            message: 'Token kopiert!',
-                          });
                         }}
                       >
-                        <Typography 
-                          variant="pi" 
-                          style={{ 
-                            fontFamily: 'monospace', 
-                            fontSize: '13px',
-                            wordBreak: 'break-all',
-                            display: 'block',
-                            marginBottom: '8px',
-                            color: '#32324d',
-                          }}
-                        >
-                          {selectedTokenDetails.token}
-                        </Typography>
-                        <Typography variant="pi" textColor="neutral500" style={{ fontSize: '11px', fontStyle: 'italic' }}>
-                          {formatMessage({ id: getTrad('tokens.details.clickToCopy') })}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* Magic Link */}
-                    <Box>
-                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.5px' }}>
-                        {formatMessage({ id: getTrad('tokens.details.magicLink') })}
+                        #{selectedTokenDetails.documentId ? selectedTokenDetails.documentId.slice(-8) : selectedTokenDetails.id}
                       </Typography>
-                      <Box
-                        padding={4}
-                        background="primary100"
-                        style={{
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          transition: 'all 0.2s',
-                          border: '1px solid transparent',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#e0e0ff';
-                          e.currentTarget.style.border = '1px solid #c0c0ff';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#f0f0ff';
-                          e.currentTarget.style.border = '1px solid transparent';
-                        }}
-                        onClick={() => {
-                          const magicLink = `${window.location.origin}/api/magic-link/login?loginToken=${selectedTokenDetails.token}`;
-                          navigator.clipboard.writeText(magicLink);
-                          toggleNotification({
-                            type: 'success',
-                            message: formatMessage({ id: getTrad('tokens.notifications.linkCopied') }),
-                          });
-                        }}
-                      >
-                        <Typography 
-                          variant="pi" 
-                          style={{ 
-                            fontSize: '13px',
-                            wordBreak: 'break-all',
-                            display: 'block',
-                            marginBottom: '8px',
-                            lineHeight: '1.6',
-                            color: '#271fe0',
-                          }}
-                        >
-                          {`${window.location.origin}/api/magic-link/login?loginToken=${selectedTokenDetails.token}`}
-                        </Typography>
-                        <Typography variant="pi" textColor="primary600" style={{ fontSize: '11px', fontStyle: 'italic' }}>
-                          {formatMessage({ id: getTrad('tokens.details.clickToCopy') })}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    {/* cURL Command */}
-                    <Box>
-                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.5px' }}>
-                        {formatMessage({ id: getTrad('tokens.details.curlCommand') })}
-                      </Typography>
-                      <Box
-                        padding={4}
-                        background="neutral100"
-                        style={{
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          position: 'relative',
-                          transition: 'all 0.2s',
-                          border: '1px solid transparent',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = '#f0f0f7';
-                          e.currentTarget.style.border = '1px solid #d0d0e0';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = '#f6f6f9';
-                          e.currentTarget.style.border = '1px solid transparent';
-                        }}
-                        onClick={() => {
-                          const curlCommand = `curl -X GET "${window.location.origin}/api/magic-link/login?loginToken=${selectedTokenDetails.token}"`;
-                          navigator.clipboard.writeText(curlCommand);
-                          toggleNotification({
-                            type: 'success',
-                            message: formatMessage({ id: getTrad('tokens.notifications.curlCopied') }),
-                          });
-                        }}
-                      >
-                        <Typography 
-                          variant="pi" 
-                          style={{ 
-                            fontFamily: 'monospace', 
-                            fontSize: '12px',
-                            wordBreak: 'break-all',
-                            display: 'block',
-                            marginBottom: '8px',
-                            color: '#32324d',
-                            lineHeight: '1.5',
-                          }}
-                        >
-                          {`curl -X GET "${window.location.origin}/api/magic-link/login?loginToken=${selectedTokenDetails.token}"`}
-                        </Typography>
-                        <Typography variant="pi" textColor="neutral500" style={{ fontSize: '11px', fontStyle: 'italic' }}>
-                          {formatMessage({ id: getTrad('tokens.details.clickToCopyCurl') })}
-                        </Typography>
-                      </Box>
-                    </Box>
+                    </Flex>
 
                     {/* Status & Dates Grid */}
                     <Box
-                      padding={4}
-                      background="neutral100"
                       style={{
-                        borderRadius: '6px',
+                        borderRadius: '12px',
                         border: '1px solid #e0e0e8',
+                        overflow: 'hidden',
                       }}
                     >
-                      <Flex direction="column" gap={3}>
-                        {/* Status */}
-                        <Flex alignItems="center" justifyContent="space-between">
-                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px' }}>
-                            {formatMessage({ id: getTrad('tokens.details.status') })}
+                      {/* Status Row */}
+                      <Flex 
+                        alignItems="center" 
+                        justifyContent="space-between"
+                        style={{
+                          padding: '14px 20px',
+                          background: '#f8f8fc',
+                          borderBottom: '1px solid #e0e0e8',
+                        }}
+                      >
+                        <Typography variant="omega" fontWeight="semiBold" textColor="neutral700" style={{ fontSize: '13px' }}>
+                          {formatMessage({ id: getTrad('tokens.details.status') })}
+                        </Typography>
+                        {getStatusBadge(selectedTokenDetails)}
+                      </Flex>
+                      
+                      {/* Created Date Row */}
+                      <Flex 
+                        alignItems="center" 
+                        justifyContent="space-between"
+                        style={{
+                          padding: '12px 20px',
+                          background: 'white',
+                          borderBottom: '1px solid #f0f0f5',
+                        }}
+                      >
+                        <Typography variant="omega" textColor="neutral600" style={{ fontSize: '13px' }}>
+                          {formatMessage({ id: getTrad('tokens.details.created') })}
+                        </Typography>
+                        <Typography variant="pi" style={{ fontSize: '13px', fontWeight: '600', color: '#32324d' }}>
+                          {formatDate(selectedTokenDetails.createdAt)}
+                        </Typography>
+                      </Flex>
+                      
+                      {/* Expiry Date Row */}
+                      <Flex 
+                        alignItems="center" 
+                        justifyContent="space-between"
+                        style={{
+                          padding: '12px 20px',
+                          background: 'white',
+                          borderBottom: selectedTokenDetails.used_at || selectedTokenDetails.last_used_at ? '1px solid #f0f0f5' : 'none',
+                        }}
+                      >
+                        <Typography variant="omega" textColor="neutral600" style={{ fontSize: '13px' }}>
+                          {formatMessage({ id: getTrad('tokens.details.expiresAt') })}
+                        </Typography>
+                        <Typography 
+                          variant="pi" 
+                          style={{ 
+                            fontSize: '13px', 
+                            fontWeight: '600',
+                            color: selectedTokenDetails.expires_at && new Date(selectedTokenDetails.expires_at) < new Date() ? '#d02b20' : '#32324d'
+                          }}
+                        >
+                          {formatDate(selectedTokenDetails.expires_at) || formatMessage({ id: getTrad('tokens.details.unlimited') })}
+                        </Typography>
+                      </Flex>
+                      
+                      {/* Used Date (if applicable) */}
+                      {selectedTokenDetails.used_at && (
+                        <Flex 
+                          alignItems="center" 
+                          justifyContent="space-between"
+                          style={{
+                            padding: '12px 20px',
+                            background: '#f0fdf4',
+                            borderBottom: selectedTokenDetails.last_used_at && selectedTokenDetails.last_used_at !== selectedTokenDetails.used_at ? '1px solid #dcfce7' : 'none',
+                          }}
+                        >
+                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '13px' }}>
+                            {formatMessage({ id: getTrad('tokens.details.usedAt') })}
                           </Typography>
-                          {getStatusBadge(selectedTokenDetails)}
+                          <Flex alignItems="center" gap={2}>
+                            <Box style={{ 
+                              width: '8px', 
+                              height: '8px', 
+                              borderRadius: '50%', 
+                              background: '#22c55e' 
+                            }} />
+                            <Typography variant="pi" style={{ fontSize: '13px', fontWeight: '600', color: '#15803d' }}>
+                              {formatDate(selectedTokenDetails.used_at)}
+                            </Typography>
+                          </Flex>
                         </Flex>
-                        
-                        {/* Divider */}
-                        <Box style={{ height: '1px', background: '#e0e0e8', margin: '4px 0' }} />
-                        
-                        {/* Created Date */}
-                        <Flex alignItems="center" justifyContent="space-between">
-                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px' }}>
-                            {formatMessage({ id: getTrad('tokens.details.created') })}
+                      )}
+
+                      {/* Last Used At (if different from used_at) */}
+                      {selectedTokenDetails.last_used_at && selectedTokenDetails.last_used_at !== selectedTokenDetails.used_at && (
+                        <Flex 
+                          alignItems="center" 
+                          justifyContent="space-between"
+                          style={{
+                            padding: '12px 20px',
+                            background: 'white',
+                          }}
+                        >
+                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '13px' }}>
+                            {formatMessage({ id: getTrad('tokens.details.lastUsedAt') })}
                           </Typography>
-                          <Typography variant="pi" style={{ fontSize: '13px', fontWeight: '500' }}>
-                            {formatDate(selectedTokenDetails.createdAt)}
+                          <Typography variant="pi" style={{ fontSize: '13px', fontWeight: '600', color: '#32324d' }}>
+                            {formatDate(selectedTokenDetails.last_used_at)}
                           </Typography>
                         </Flex>
-                        
-                        {/* Expiry Date */}
-                        <Flex alignItems="center" justifyContent="space-between">
-                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px' }}>
-                            {formatMessage({ id: getTrad('tokens.details.expiresAt') })}
-                          </Typography>
-                          <Typography 
-                            variant="pi" 
-                            style={{ 
-                              fontSize: '13px', 
-                              fontWeight: '500',
-                              color: selectedTokenDetails.expires_at && new Date(selectedTokenDetails.expires_at) < new Date() ? '#d02b20' : '#32324d'
+                      )}
+                    </Box>
+
+                    {/* Technical Details */}
+                    {(selectedTokenDetails.ip_address || selectedTokenDetails.user_agent) && (
+                      <Box>
+                        <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>
+                          {formatMessage({ id: getTrad('tokens.details.technicalInfo') })}
+                        </Typography>
+                        <Box
+                          padding={4}
+                          background="neutral100"
+                          style={{
+                            borderRadius: '8px',
+                            border: '1px solid #e0e0e8',
+                          }}
+                        >
+                          <Flex direction="column" gap={2}>
+                            {selectedTokenDetails.ip_address && (
+                              <Flex alignItems="center" gap={2}>
+                                <Earth style={{ width: '14px', height: '14px', color: theme.colors.neutral[500] }} />
+                                <Typography variant="pi" textColor="neutral700" style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+                                  {selectedTokenDetails.ip_address}
+                                </Typography>
+                              </Flex>
+                            )}
+                            {selectedTokenDetails.user_agent && (
+                              <Typography variant="pi" textColor="neutral500" style={{ fontSize: '11px', wordBreak: 'break-all' }}>
+                                {selectedTokenDetails.user_agent}
+                              </Typography>
+                            )}
+                          </Flex>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* Context Data */}
+                    {selectedTokenDetails.context && Object.keys(selectedTokenDetails.context).length > 0 && (
+                      <Box>
+                        <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>
+                          {formatMessage({ id: getTrad('tokens.details.context') })}
+                        </Typography>
+                        <Box
+                          padding={4}
+                          style={{
+                            borderRadius: '8px',
+                            background: '#1e1e2e',
+                            border: '1px solid #313244',
+                          }}
+                        >
+                          <pre style={{ 
+                            margin: 0, 
+                            fontFamily: 'Monaco, Consolas, monospace', 
+                            fontSize: '12px',
+                            color: '#cdd6f4',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            lineHeight: '1.6',
+                          }}>
+                            {JSON.stringify(selectedTokenDetails.context, null, 2)}
+                          </pre>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* Action Buttons */}
+                    <Box style={{ marginTop: '8px' }}>
+                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '12px', textTransform: 'uppercase', fontSize: '11px', letterSpacing: '0.5px' }}>
+                        {formatMessage({ id: getTrad('tokens.details.actions') })}
+                      </Typography>
+                      <Flex gap={2} wrap="wrap">
+                        {/* New Token Button - Create a new token for same email (useful for expired/used/blocked tokens) */}
+                        {(selectedTokenDetails.is_used || (selectedTokenDetails.expires_at && new Date(selectedTokenDetails.expires_at) < new Date()) || selectedTokenDetails.status === 'blocked') && (
+                          <Button
+                            variant="success"
+                            size="S"
+                            startIcon={<Plus />}
+                            onClick={async () => {
+                              try {
+                                const response = await post('/magic-link/tokens', {
+                                  email: selectedTokenDetails.email,
+                                  context: selectedTokenDetails.context || {},
+                                });
+                                const data = response?.data;
+                                toggleNotification({
+                                  type: 'success',
+                                  message: formatMessage({ id: getTrad('tokens.notifications.reactivateSuccess') }),
+                                });
+                                setShowDetailsModal(false);
+                                // Show the new token modal
+                                if (data?.token) {
+                                  setCreatedTokenData({
+                                    token: data.token,
+                                    email: selectedTokenDetails.email,
+                                  });
+                                  setShowCreatedTokenModal(true);
+                                }
+                                fetchTokens();
+                              } catch (error) {
+                                toggleNotification({
+                                  type: 'warning',
+                                  message: formatMessage({ id: getTrad('tokens.notifications.reactivateError') }),
+                                });
+                              }
                             }}
                           >
-                            {formatDate(selectedTokenDetails.expires_at) || formatMessage({ id: getTrad('tokens.details.unlimited') })}
-                          </Typography>
-                        </Flex>
-                        
-                        {/* Used Date (if applicable) */}
-                        {selectedTokenDetails.used_at && (
-                          <>
-                            <Flex alignItems="center" justifyContent="space-between">
-                              <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px' }}>
-                                {formatMessage({ id: getTrad('tokens.details.usedAt') })}
-                              </Typography>
-                              <Typography variant="pi" style={{ fontSize: '13px', fontWeight: '500', color: '#8e4b10' }}>
-                                {formatDate(selectedTokenDetails.used_at)}
-                              </Typography>
-                            </Flex>
-                          </>
+                            {formatMessage({ id: getTrad('tokens.actions.reactivate') })}
+                          </Button>
                         )}
+
+                        {/* Extend Button - Only for active, unused tokens */}
+                        {selectedTokenDetails.is_active && !selectedTokenDetails.is_used && selectedTokenDetails.status !== 'blocked' && (
+                          <Button
+                            variant="secondary"
+                            size="S"
+                            startIcon={<Clock />}
+                            onClick={() => {
+                              setSelectedTokenToExtend(selectedTokenDetails);
+                              setShowExtendModal(true);
+                              setShowDetailsModal(false);
+                            }}
+                          >
+                            {formatMessage({ id: getTrad('tokens.actions.extend') })}
+                          </Button>
+                        )}
+
+                        {/* Block/Unblock Button */}
+                        {selectedTokenDetails.status !== 'blocked' && !selectedTokenDetails.is_used ? (
+                          <Button
+                            variant="danger"
+                            size="S"
+                            startIcon={<Lock />}
+                            onClick={async () => {
+                              try {
+                                await post(`/magic-link/tokens/${selectedTokenDetails.documentId || selectedTokenDetails.id}/block`);
+                                toggleNotification({
+                                  type: 'success',
+                                  message: formatMessage({ id: getTrad('tokens.notifications.blockSuccess') }),
+                                });
+                                setShowDetailsModal(false);
+                                fetchTokens();
+                              } catch (error) {
+                                toggleNotification({
+                                  type: 'warning',
+                                  message: formatMessage({ id: getTrad('tokens.notifications.blockError') }),
+                                });
+                              }
+                            }}
+                          >
+                            {formatMessage({ id: getTrad('tokens.actions.block') })}
+                          </Button>
+                        ) : selectedTokenDetails.status === 'blocked' && (
+                          <Button
+                            variant="success"
+                            size="S"
+                            startIcon={<Check />}
+                            onClick={async () => {
+                              try {
+                                await post(`/magic-link/tokens/${selectedTokenDetails.documentId || selectedTokenDetails.id}/activate`);
+                                toggleNotification({
+                                  type: 'success',
+                                  message: formatMessage({ id: getTrad('tokens.notifications.activateSuccess') }),
+                                });
+                                setShowDetailsModal(false);
+                                fetchTokens();
+                              } catch (error) {
+                                toggleNotification({
+                                  type: 'warning',
+                                  message: formatMessage({ id: getTrad('tokens.notifications.error') }),
+                                });
+                              }
+                            }}
+                          >
+                            {formatMessage({ id: getTrad('tokens.actions.activate') })}
+                          </Button>
+                        )}
+
+                        {/* Delete Button */}
+                        <Button
+                          variant="danger-light"
+                          size="S"
+                          startIcon={<Trash />}
+                          onClick={() => {
+                            handleDelete(selectedTokenDetails.id);
+                            setShowDetailsModal(false);
+                          }}
+                        >
+                          {formatMessage({ id: getTrad('tokens.actions.delete') })}
+                        </Button>
                       </Flex>
                     </Box>
                   </Flex>
@@ -2119,6 +2256,274 @@ const TokensProfessional = () => {
                       variant="tertiary"
                     >
                       {formatMessage({ id: getTrad('tokens.details.close') })}
+                    </Button>
+                  </Flex>
+                </Box>
+              </Box>
+            </div>
+          </>
+        )}
+        
+        {/* Token Created Successfully Modal - Shows plaintext token */}
+        {showCreatedTokenModal && createdTokenData && (
+          <>
+            {/* Backdrop */}
+            <div
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(4, 28, 47, 0.45)',
+                backdropFilter: 'blur(3px)',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '20px',
+              }}
+              onClick={() => setShowCreatedTokenModal(false)}
+            >
+              {/* Modal Content */}
+              <Box
+                background="neutral0"
+                shadow="filterShadow"
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  maxWidth: '600px',
+                  maxHeight: 'calc(100vh - 40px)',
+                  overflow: 'auto',
+                  borderRadius: '8px',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header */}
+                <Box
+                  padding={6}
+                  style={{
+                    borderBottom: '1px solid #E9E9F0',
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    position: 'relative',
+                  }}
+                >
+                  <Flex direction="column" alignItems="stretch" gap={2}>
+                    <Flex justifyContent="space-between" alignItems="flex-start">
+                      <Flex alignItems="center" gap={3}>
+                        <Box
+                          style={{
+                            width: '48px',
+                            height: '48px',
+                            borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.2)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <Check style={{ width: '28px', height: '28px', color: 'white' }} />
+                        </Box>
+                        <Typography variant="alpha" style={{ 
+                          color: 'white', 
+                          fontSize: '24px', 
+                          fontWeight: '700',
+                          letterSpacing: '-0.025em',
+                        }}>
+                          {formatMessage({ id: getTrad('tokens.created.title') })}
+                        </Typography>
+                      </Flex>
+                      <IconButton
+                        onClick={() => setShowCreatedTokenModal(false)}
+                        label={formatMessage({ id: getTrad('tokens.details.close') })}
+                        withTooltip={false}
+                        style={{
+                          background: 'rgba(255,255,255,0.2)',
+                          color: 'white',
+                        }}
+                      >
+                        <Cross />
+                      </IconButton>
+                    </Flex>
+                    <Typography variant="epsilon" style={{ 
+                      color: 'rgba(255,255,255,0.9)', 
+                      fontSize: '16px',
+                      fontWeight: '400',
+                    }}>
+                      {createdTokenData.email}
+                    </Typography>
+                  </Flex>
+                </Box>
+
+                {/* Body */}
+                <Box padding={7}>
+                  <Flex direction="column" alignItems="stretch" gap={5}>
+                    {/* Warning */}
+                    <Box
+                      padding={4}
+                      style={{
+                        borderRadius: '8px',
+                        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                        border: '1px solid #f59e0b',
+                      }}
+                    >
+                      <Flex alignItems="flex-start" gap={3}>
+                        <WarningCircle style={{ width: '24px', height: '24px', color: '#d97706', flexShrink: 0 }} />
+                        <Typography variant="omega" style={{ color: '#92400e', lineHeight: '1.6' }}>
+                          {formatMessage({ id: getTrad('tokens.created.warning') })}
+                        </Typography>
+                      </Flex>
+                    </Box>
+
+                    {/* Plaintext Token */}
+                    <Box>
+                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.5px' }}>
+                        {formatMessage({ id: getTrad('tokens.created.plaintextToken') })}
+                      </Typography>
+                      <Box
+                        padding={4}
+                        style={{
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'all 0.2s',
+                          background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+                          border: '2px solid #22c55e',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#dcfce7';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)';
+                        }}
+                        onClick={() => {
+                          navigator.clipboard.writeText(createdTokenData.token);
+                          toggleNotification({
+                            type: 'success',
+                            message: formatMessage({ id: getTrad('tokens.notifications.tokenCopied') }),
+                          });
+                        }}
+                      >
+                        <Typography 
+                          variant="pi" 
+                          style={{ 
+                            fontFamily: 'monospace', 
+                            fontSize: '16px',
+                            fontWeight: '600',
+                            wordBreak: 'break-all',
+                            display: 'block',
+                            marginBottom: '8px',
+                            color: '#166534',
+                            letterSpacing: '1px',
+                          }}
+                        >
+                          {createdTokenData.token}
+                        </Typography>
+                        <Typography variant="pi" textColor="success700" style={{ fontSize: '11px', fontStyle: 'italic' }}>
+                          {formatMessage({ id: getTrad('tokens.details.clickToCopy') })}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Magic Link */}
+                    <Box>
+                      <Typography variant="sigma" fontWeight="semiBold" textColor="neutral800" style={{ marginBottom: '8px', textTransform: 'uppercase', fontSize: '12px', letterSpacing: '0.5px' }}>
+                        {formatMessage({ id: getTrad('tokens.details.magicLink') })}
+                      </Typography>
+                      <Box
+                        padding={4}
+                        background="primary100"
+                        style={{
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'all 0.2s',
+                          border: '1px solid #c7d2fe',
+                        }}
+                        onClick={() => {
+                          const magicLink = `${window.location.origin}/api/magic-link/login?loginToken=${createdTokenData.token}`;
+                          navigator.clipboard.writeText(magicLink);
+                          toggleNotification({
+                            type: 'success',
+                            message: formatMessage({ id: getTrad('tokens.notifications.linkCopied') }),
+                          });
+                        }}
+                      >
+                        <Typography 
+                          variant="pi" 
+                          style={{ 
+                            fontSize: '13px',
+                            wordBreak: 'break-all',
+                            display: 'block',
+                            marginBottom: '8px',
+                            lineHeight: '1.6',
+                            color: '#271fe0',
+                          }}
+                        >
+                          {`${window.location.origin}/api/magic-link/login?loginToken=${createdTokenData.token}`}
+                        </Typography>
+                        <Typography variant="pi" textColor="primary600" style={{ fontSize: '11px', fontStyle: 'italic' }}>
+                          {formatMessage({ id: getTrad('tokens.details.clickToCopy') })}
+                        </Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Expiry Info */}
+                    <Box
+                      padding={4}
+                      background="neutral100"
+                      style={{
+                        borderRadius: '6px',
+                        border: '1px solid #e0e0e8',
+                      }}
+                    >
+                      <Flex alignItems="center" justifyContent="space-between">
+                        <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px' }}>
+                          {formatMessage({ id: getTrad('tokens.details.expiresAt') })}
+                        </Typography>
+                        <Typography variant="pi" style={{ fontSize: '13px', fontWeight: '500' }}>
+                          {formatDate(createdTokenData.expires_at) || formatMessage({ id: getTrad('tokens.details.unlimited') })}
+                        </Typography>
+                      </Flex>
+                    </Box>
+                  </Flex>
+                </Box>
+
+                {/* Footer */}
+                <Box
+                  paddingTop={5}
+                  paddingBottom={5}
+                  paddingLeft={7}
+                  paddingRight={7}
+                  style={{
+                    borderTop: '1px solid #E9E9F0',
+                    background: '#fafafa',
+                    borderBottomLeftRadius: '8px',
+                    borderBottomRightRadius: '8px',
+                  }}
+                >
+                  <Flex justifyContent="flex-end" gap={3}>
+                    <Button 
+                      onClick={() => {
+                        const magicLink = `${window.location.origin}/api/magic-link/login?loginToken=${createdTokenData.token}`;
+                        navigator.clipboard.writeText(magicLink);
+                        toggleNotification({
+                          type: 'success',
+                          message: formatMessage({ id: getTrad('tokens.notifications.linkCopied') }),
+                        });
+                      }}
+                      size="M"
+                      variant="secondary"
+                      startIcon={<Link />}
+                    >
+                      {formatMessage({ id: getTrad('tokens.created.copyLink') })}
+                    </Button>
+                    <Button 
+                      onClick={() => setShowCreatedTokenModal(false)}
+                      size="M"
+                      variant="success"
+                    >
+                      {formatMessage({ id: getTrad('tokens.created.done') })}
                     </Button>
                   </Flex>
                 </Box>

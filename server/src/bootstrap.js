@@ -48,9 +48,12 @@ module.exports = async ({ strapi }) => {
       from_name: 'Administration Panel',
       from_email: '', // Empty by default - will use Strapi email config
       response_email: '',
-      token_length: 20,
+      token_length: 32,
       stays_valid: false,
       store_login_info: true,
+      // Context Field Control
+      context_whitelist: [], // If set, only these fields are allowed in context (e.g., ['redirectTo', 'role'])
+      context_blacklist: ['password', 'secret', 'apiKey', 'token'], // These fields are always removed from context
       object: 'Magic Link Login',
       message_html: `<p>Hi!</p>
 <p>Please click on the link below to login.</p>
@@ -199,7 +202,7 @@ Thanks.`,
       
       if (!licenseStatus.valid && licenseStatus.demo) {
         strapi.log.warn('╔════════════════════════════════════════════════════════════════╗');
-        strapi.log.warn('║  ⚠️  MAGIC LINK PLUGIN RUNNING IN DEMO MODE                   ║');
+        strapi.log.warn('║  [WARNING] MAGIC LINK PLUGIN RUNNING IN DEMO MODE             ║');
         strapi.log.warn('║                                                                ║');
         strapi.log.warn('║  To activate, create a license via Admin UI:                  ║');
         strapi.log.warn('║  Go to Settings → Magic Link → License                        ║');
@@ -213,7 +216,7 @@ Thanks.`,
         const storedKey = await pluginStore.get({ key: 'licenseKey' });
         
         strapi.log.info('╔════════════════════════════════════════════════════════════════╗');
-        strapi.log.info('║  ✅ MAGIC LINK PLUGIN LICENSE ACTIVE                           ║');
+        strapi.log.info('║  [SUCCESS] MAGIC LINK PLUGIN LICENSE ACTIVE                    ║');
         strapi.log.info('║                                                                ║');
         
         if (licenseStatus.data) {
@@ -228,39 +231,41 @@ Thanks.`,
         }
         
         strapi.log.info('║                                                                ║');
-        strapi.log.info('║  🔄 Auto-pinging every 15 minutes                              ║');
+        strapi.log.info('║  [AUTO] Pinging every 15 minutes                               ║');
         strapi.log.info('╚════════════════════════════════════════════════════════════════╝');
       }
     }, 3000); // Wait 3 seconds for API to be ready
   } catch (error) {
-    strapi.log.error('❌ Error initializing License Guard:', error);
+    strapi.log.error('[ERROR] Error initializing License Guard:', error);
   }
 
-  // 🔄 Auto-Migration: Update old 'magic-link' provider to 'local'
+  // [AUTO-MIGRATION] Update old 'magic-link' provider to 'local'
   // This ensures users can login with both Magic-Link AND Email/Password
   try {
     setTimeout(async () => {
-      const usersToUpdate = await strapi.entityService.findMany('plugin::users-permissions.user', {
+      // Using Document Service API
+      const usersToUpdate = await strapi.documents('plugin::users-permissions.user').findMany({
         filters: { provider: 'magic-link' },
-        fields: ['id', 'email'],
       });
 
       if (usersToUpdate && usersToUpdate.length > 0) {
-        strapi.log.info('🔄 [Magic-Link Migration] Found %d user(s) with old provider "magic-link"', usersToUpdate.length);
+        strapi.log.info('[MIGRATION] Found %d user(s) with old provider "magic-link"', usersToUpdate.length);
         
-        // Update all users in bulk (using Query Engine for bulk operation)
-        await strapi.db.query('plugin::users-permissions.user').updateMany({
-          where: { provider: 'magic-link' },
+        // Update all users using Document Service API
+        for (const user of usersToUpdate) {
+          await strapi.documents('plugin::users-permissions.user').update({
+            documentId: user.documentId,
           data: { provider: 'local' },
         });
+        }
 
-        strapi.log.info('✅ [Magic-Link Migration] Updated %d user(s) to provider "local"', usersToUpdate.length);
-        strapi.log.info('   Users can now login with both Magic-Link AND Email/Password! 🎉');
+        strapi.log.info('[SUCCESS] Migration complete: Updated %d user(s) to provider "local"', usersToUpdate.length);
+        strapi.log.info('[INFO] Users can now login with both Magic-Link AND Email/Password');
       } else {
-        strapi.log.info('✅ [Magic-Link Migration] All users already using provider "local" - no migration needed');
+        strapi.log.info('[INFO] Migration skipped: All users already using provider "local"');
       }
     }, 5000); // Wait 5 seconds to ensure DB is ready
   } catch (error) {
-    strapi.log.error('❌ [Magic-Link Migration] Error updating providers:', error);
+    strapi.log.error('[ERROR] Migration failed:', error);
   }
 };

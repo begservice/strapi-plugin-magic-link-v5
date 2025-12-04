@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useIntl } from 'react-intl';
 import {
@@ -21,7 +21,6 @@ import {
   NextLink,
   IconButton,
   TextInput,
-  Modal,
 } from '@strapi/design-system';
 import { useFetchClient, useNotification } from '@strapi/strapi/admin';
 import {

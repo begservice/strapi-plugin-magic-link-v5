@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import {
   Box,
@@ -13,7 +13,6 @@ import {
   Flex,
   Badge,
   IconButton,
-  EmptyStateLayout,
   Searchbar,
   SingleSelect,
   SingleSelectOption,

@@ -24,12 +24,19 @@ module.exports = {
       const now = new Date();
       
       // Aufbereitung der Daten für die Anzeige
-      const sessions = jwtSessions.map(session => ({
+      const sessions = jwtSessions.map(session => {
+        // Safe token display - handle null, undefined, and non-string values
+        let tokenDisplay = 'N/A';
+        if (session.jwtToken && typeof session.jwtToken === 'string' && session.jwtToken.length > 0) {
+          tokenDisplay = session.jwtToken.substring(0, 30) + '...';
+        }
+        
+        return {
         id: session.id,
         userId: session.userId,
         username: session.username,
         email: session.userEmail,
-        token: session.jwtToken ? session.jwtToken.substring(0, 30) + '...' : 'N/A', // Nur Teile des Tokens anzeigen
+          token: tokenDisplay,
         createdAt: session.createdAt,
         expiresAt: session.expiresAt,
         ipAddress: session.ipAddress,
@@ -37,7 +44,8 @@ module.exports = {
         source: session.source || 'Magic Link Login',
         revoked: session.isRevoked,
         isExpired: new Date(session.expiresAt) < now
-      }));
+        };
+      });
       
       ctx.send(sessions);
     } catch (error) {

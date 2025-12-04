@@ -25,7 +25,7 @@ const generateOTPEmailHTML = (code, options = {}) => {
       <tr>
         <td style="padding-bottom: 30px; text-align: center;">
           <h1 style="margin: 0 0 10px 0; font-size: 28px; font-weight: 700; color: #1f2937;">
-            🔐 Your Verification Code
+            Your Verification Code
           </h1>
           ${userName ? `<p style="margin: 0; font-size: 16px; color: #6b7280;">Hello ${userName},</p>` : ''}
         </td>
@@ -51,7 +51,7 @@ const generateOTPEmailHTML = (code, options = {}) => {
             ">${code}</span>
           </div>
           <p style="margin: 20px 0 0 0; font-size: 14px; color: #6b7280;">
-            ⏱️ This code expires in <strong>${expiryMinutes} minutes</strong>
+            [EXPIRES] This code expires in <strong>${expiryMinutes} minutes</strong>
           </p>
         </td>
       </tr>
@@ -61,7 +61,7 @@ const generateOTPEmailHTML = (code, options = {}) => {
             <tr>
               <td style="background: #fef3c7; padding: 15px; border-radius: 8px; border-left: 4px solid #f59e0b;">
                 <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.6;">
-                  <strong>⚠️ Security Notice:</strong> If you didn't request this code, please ignore this email. 
+                  <strong>[SECURITY NOTICE]</strong> If you didn't request this code, please ignore this email. 
                   Your account is still secure.
                 </p>
               </td>
@@ -101,16 +101,16 @@ const generateOTPEmailText = (code, options = {}) => {
   } = options;
 
   return `
-🔐 Your Verification Code
+Your Verification Code
 ${userName ? `\nHello ${userName},` : ''}
 
 Enter this code to complete your login:
 
 ${code}
 
-⏱️ This code expires in ${expiryMinutes} minutes
+[EXPIRES] This code expires in ${expiryMinutes} minutes
 
-⚠️ Security Notice:
+[SECURITY NOTICE]
 If you didn't request this code, please ignore this email.
 Your account is still secure.
 

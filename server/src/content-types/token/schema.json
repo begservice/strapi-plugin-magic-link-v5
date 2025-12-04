@@ -17,7 +17,12 @@
     },
     "token": {
       "type": "string",
-      "required": true
+      "required": true,
+      "private": true
+    },
+    "token_salt": {
+      "type": "string",
+      "private": true
     },
     "expires_at": {
       "type": "datetime",

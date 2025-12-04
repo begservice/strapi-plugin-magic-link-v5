@@ -2,7 +2,7 @@ import pluginPkg from '../../package.json';
 import pluginId from './pluginId';
 import { Initializer } from './components/Initializer';
 import { PluginIcon } from './components/PluginIcon';
-import { Faders, Key } from '@strapi/icons';
+import { Key } from '@strapi/icons';
 import pluginPermissions from './permissions';
 import getTrad from './utils/getTrad';
 

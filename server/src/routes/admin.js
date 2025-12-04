@@ -83,6 +83,14 @@ module.exports = {
       },
     },
     {
+      method: 'POST',
+      path: '/tokens/:id/resend',
+      handler: 'tokens.resend',
+      config: {
+        policies: [],
+      },
+    },
+    {
       method: 'DELETE',
       path: '/tokens/:id',
       handler: 'tokens.delete',
@@ -234,6 +242,14 @@ module.exports = {
     },
     {
       method: 'POST',
+      path: '/rate-limit/reset',
+      handler: 'rateLimit.reset',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
       path: '/rate-limit/reset',
       handler: 'rateLimit.reset',
       config: {

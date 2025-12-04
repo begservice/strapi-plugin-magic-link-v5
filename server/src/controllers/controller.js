@@ -73,7 +73,7 @@ module.exports = {
         emailProviderConfigured = false;
       }
       
-      strapi.log.info('📧 Email Provider Check:', {
+      strapi.log.info('[EMAIL] Email Provider Check:', {
         emailProviderConfigured,
         emailProviderName,
         emailDesignerInstalled: isEmailDesignerInstalled,
@@ -171,7 +171,7 @@ module.exports = {
         createUserIfNotExists: false,
         stays_valid: false,
         expire_period: 3600,
-        token_length: 20,
+        token_length: 32,
         max_login_attempts: 5,
         login_path: '/magic-link/login',
         confirmationUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -180,6 +180,9 @@ module.exports = {
         object: 'Your Magic Link for Login',
         from_name: 'Magic Link Service',
         from_email: 'noreply@example.com',
+        // Context Field Control
+        context_whitelist: [],
+        context_blacklist: ['password', 'secret', 'apiKey', 'token'],
         message_html: `<!DOCTYPE html>
 <html>
 <head>
@@ -208,19 +211,17 @@ This link will expire in 1 hour.`,
       // Einstellungen zurücksetzen
       await pluginStore.set({ key: 'settings', value: defaultSettings });
 
-      // Delete all Magic Link tokens
-      // Note: Using Query Engine for bulk delete as Entity Service doesn't support deleteMany
-      // This is acceptable for administrative bulk operations
-      const tokens = await strapi.entityService.findMany('plugin::magic-link.token', {
-        fields: ['id'],
-      });
+      // Delete all Magic Link tokens using Document Service API
+      const tokens = await strapi.documents('plugin::magic-link.token').findMany({});
       
       if (tokens && tokens.length > 0) {
         // Delete in batches to avoid memory issues
         for (const token of tokens) {
-          await strapi.entityService.delete('plugin::magic-link.token', token.id);
+          await strapi.documents('plugin::magic-link.token').delete({
+            documentId: token.documentId
+          });
         }
-        strapi.log.info(`✅ Deleted ${tokens.length} Magic Link token(s)`);
+        strapi.log.info(`[SUCCESS] Deleted ${tokens.length} Magic Link token(s)`);
       }
 
       // JWT Sessions löschen

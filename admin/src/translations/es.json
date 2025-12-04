@@ -248,6 +248,8 @@
   
   "magic-link.tokens.table.email": "Correo",
   "magic-link.tokens.table.token": "Token",
+  "magic-link.tokens.table.reference": "Referencia",
+  "magic-link.tokens.table.usedAt": "Usado",
   "magic-link.tokens.table.status": "Estado",
   "magic-link.tokens.table.created": "Creado",
   "magic-link.tokens.table.expiresAt": "Válido hasta",

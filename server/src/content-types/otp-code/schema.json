@@ -21,7 +21,8 @@
   "attributes": {
     "code": {
       "type": "string",
-      "required": true
+      "required": true,
+      "private": true
     },
     "email": {
       "type": "email",

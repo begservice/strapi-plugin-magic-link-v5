@@ -4,24 +4,65 @@ const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const emailHelpers = require('../utils/email-helpers');
+const cryptoUtils = require('../utils/crypto');
 
 /**
  * OTP Service
  * Handles One-Time Password generation, validation, and delivery
+ * Using Document Service API (strapi.documents) for Strapi v5
+ * 
+ * Security:
+ * - OTP codes are hashed before storage (SHA256 + pepper)
+ * - TOTP secrets are encrypted at rest (AES-256-GCM)
+ * - Backup codes are hashed (SHA256)
  */
 module.exports = ({ strapi }) => {
-  const strapiInstance = strapi;
+  // Store the strapi instance reference
+  let strapiInstance = strapi;
 
+  // Helper to get strapi instance - prefers global.strapi for consistency
   const getStrapi = () => {
+    // Prefer global.strapi as it's always available after bootstrap
     if (global.strapi) {
       return global.strapi;
     }
-
+    // Fallback to stored instance
     if (strapiInstance) {
       return strapiInstance;
     }
-
     throw new Error('Strapi instance not available');
+  };
+
+  // Helper for safe logging (works in intervals/timeouts)
+  const log = {
+    info: (...args) => {
+      try {
+        getStrapi().log.info(...args);
+      } catch (e) {
+        console.log('[OTP Info]', ...args);
+      }
+    },
+    error: (...args) => {
+      try {
+        getStrapi().log.error(...args);
+      } catch (e) {
+        console.error('[OTP Error]', ...args);
+      }
+    },
+    warn: (...args) => {
+      try {
+        getStrapi().log.warn(...args);
+      } catch (e) {
+        console.warn('[OTP Warn]', ...args);
+      }
+    },
+    debug: (...args) => {
+      try {
+        getStrapi().log.debug(...args);
+      } catch (e) {
+        console.debug('[OTP Debug]', ...args);
+      }
+    }
   };
 
   return {
@@ -61,14 +102,19 @@ module.exports = ({ strapi }) => {
 
     // Generate OTP code
     const code = this.generateCode(codeLength);
+    
+    // Hash the OTP code before storage for security
+    const hashedCode = cryptoUtils.hashOTP(code);
 
     // Calculate expiry time
     const expiresAt = new Date(Date.now() + (expirySeconds * 1000));
 
-    // Create OTP entry using Entity Service
-    const otpEntry = await strapi.entityService.create('plugin::magic-link.otp-code', {
+    // Create OTP entry using Document Service API
+    // Store HASHED code, not plaintext!
+    const activeStrapi = getStrapi();
+    const otpEntry = await activeStrapi.documents('plugin::magic-link.otp-code').create({
       data: {
-        code,
+        code: hashedCode, // Store hashed, not plaintext
         email: email.toLowerCase(),
         type,
         used: false,
@@ -84,9 +130,10 @@ module.exports = ({ strapi }) => {
       }
     });
 
-    strapi.log.info(`OTP code created for ${email} (type: ${type}, expires in ${expirySeconds}s)`);
+    log.info(`OTP code created for ${email} (type: ${type}, expires in ${expirySeconds}s)`);
     
-    return otpEntry;
+    // Return entry with plaintext code for sending (not stored in DB)
+    return { ...otpEntry, code };
   },
 
   /**
@@ -97,7 +144,8 @@ module.exports = ({ strapi }) => {
    * @returns {Object} Verification result
    */
   async verifyOTP(email, code, type = 'email') {
-    const pluginStore = strapi.store({
+    const activeStrapi = getStrapi();
+    const pluginStore = activeStrapi.store({
       type: 'plugin',
       name: 'magic-link',
     });
@@ -105,16 +153,19 @@ module.exports = ({ strapi }) => {
     const maxAttempts = settings.otp_max_attempts || 3;
 
     try {
-      // Find the OTP code
-      const otpEntries = await strapi.entityService.findMany('plugin::magic-link.otp-code', {
+      // Hash the provided code for comparison
+      const hashedCode = cryptoUtils.hashOTP(code);
+      
+      // Find the OTP code using Document Service API
+      // We search by hashed code now
+      const otpEntries = await activeStrapi.documents('plugin::magic-link.otp-code').findMany({
         filters: {
           email: email.toLowerCase(),
-          code,
           type,
           used: false
         },
-        sort: { createdAt: 'desc' },
-        limit: 1
+        sort: [{ createdAt: 'desc' }],
+        limit: 10 // Get recent entries to find matching hash
       });
 
       if (!otpEntries || otpEntries.length === 0) {
@@ -125,7 +176,18 @@ module.exports = ({ strapi }) => {
         };
       }
 
-      const otpEntry = otpEntries[0];
+      // Find entry with matching hash (timing-safe comparison)
+      const otpEntry = otpEntries.find(entry => 
+        cryptoUtils.verifyOTP(code, entry.code)
+      );
+      
+      if (!otpEntry) {
+        return {
+          valid: false,
+          error: 'invalid_code',
+          message: 'Invalid or expired OTP code'
+        };
+      }
 
       // Check if expired
       const now = new Date();
@@ -133,7 +195,8 @@ module.exports = ({ strapi }) => {
       
       if (now > expiresAt) {
         // Mark as used to prevent reuse
-        await strapi.entityService.update('plugin::magic-link.otp-code', otpEntry.id, {
+        await activeStrapi.documents('plugin::magic-link.otp-code').update({
+          documentId: otpEntry.documentId,
           data: { used: true }
         });
         
@@ -147,7 +210,8 @@ module.exports = ({ strapi }) => {
       // Check attempts
       if (otpEntry.attempts >= maxAttempts) {
         // Mark as used after max attempts
-        await strapi.entityService.update('plugin::magic-link.otp-code', otpEntry.id, {
+        await activeStrapi.documents('plugin::magic-link.otp-code').update({
+          documentId: otpEntry.documentId,
           data: { used: true }
         });
         
@@ -160,21 +224,22 @@ module.exports = ({ strapi }) => {
 
       // Code is valid!
       // Mark as used
-      await strapi.entityService.update('plugin::magic-link.otp-code', otpEntry.id, {
+      await activeStrapi.documents('plugin::magic-link.otp-code').update({
+        documentId: otpEntry.documentId,
         data: { 
           used: true,
           attempts: otpEntry.attempts + 1
         }
       });
 
-      strapi.log.info(`OTP verified successfully for ${email}`);
+      log.info(`OTP verified successfully for ${email}`);
 
       return {
         valid: true,
         otpEntry
       };
     } catch (error) {
-      strapi.log.error('Error verifying OTP:', error);
+      log.error('Error verifying OTP:', error);
       return {
         valid: false,
         error: 'server_error',
@@ -190,7 +255,8 @@ module.exports = ({ strapi }) => {
    * @param {Object} options - Email options
    */
   async sendOTPEmail(email, code, options = {}) {
-    const pluginStore = strapi.store({
+    const activeStrapi = getStrapi();
+    const pluginStore = activeStrapi.store({
       type: 'plugin',
       name: 'magic-link',
     });
@@ -204,7 +270,7 @@ module.exports = ({ strapi }) => {
     // Create HTML email content
     const htmlContent = `
       <div style="text-align: center; padding: 20px;">
-        <h1 style="color: #4F46E5; margin-bottom: 20px;">🔐 Your Verification Code</h1>
+        <h1 style="color: #4F46E5; margin-bottom: 20px;">Your Verification Code</h1>
         <p style="font-size: 16px; color: #374151; margin-bottom: 30px;">
           Enter this code to complete your login:
         </p>
@@ -254,9 +320,9 @@ If you didn't request this code, you can safely ignore this email.
     });
 
     // Check if MagicMail should be used
-    if (settings.use_magic_mail && strapi.plugin('magic-mail')) {
+    if (settings.use_magic_mail && activeStrapi.plugin('magic-mail')) {
       try {
-        await strapi.plugin('magic-mail').service('email-router').sendEmail({
+        await activeStrapi.plugin('magic-mail').service('email-router').sendEmail({
           to: email,
           from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
           replyTo: settings.response_email || undefined,
@@ -266,15 +332,15 @@ If you didn't request this code, you can safely ignore this email.
           headers
         });
         
-        strapi.log.info(`OTP email sent via MagicMail to ${email}`);
+        log.info(`OTP email sent via MagicMail to ${email}`);
         return true;
       } catch (error) {
-        strapi.log.error('MagicMail send failed, falling back to default provider:', error);
+        log.error('MagicMail send failed, falling back to default provider:', error);
       }
     }
 
     // Send via default email provider
-    await strapi.plugin('email').service('email').send({
+    await activeStrapi.plugin('email').service('email').send({
       to: email,
       from: settings.from_email ? `${settings.from_name} <${settings.from_email}>` : undefined,
       replyTo: settings.response_email || undefined,
@@ -284,7 +350,7 @@ If you didn't request this code, you can safely ignore this email.
       headers
     });
 
-    strapi.log.info(`OTP email sent to ${email}`);
+    log.info(`OTP email sent to ${email}`);
     return true;
   },
 
@@ -295,7 +361,8 @@ If you didn't request this code, you can safely ignore this email.
    * @returns {boolean} Success status
    */
   async sendOTPSMS(phoneNumber, code) {
-    const pluginStore = strapi.store({
+    const activeStrapi = getStrapi();
+    const pluginStore = activeStrapi.store({
       type: 'plugin',
       name: 'magic-link',
     });
@@ -303,7 +370,7 @@ If you didn't request this code, you can safely ignore this email.
 
     // TODO: Implement SMS sending with Twilio/Vonage
     // For now, log that this is a premium feature
-    strapi.log.info(`SMS OTP to ${phoneNumber}: ${code} (SMS provider not yet implemented)`);
+    log.info(`SMS OTP to ${phoneNumber}: ${code} (SMS provider not yet implemented)`);
     
     return true;
   },
@@ -316,26 +383,23 @@ If you didn't request this code, you can safely ignore this email.
       const activeStrapi = getStrapi();
       const now = new Date();
       
-      const expiredCodes = await activeStrapi.entityService.findMany('plugin::magic-link.otp-code', {
+      const expiredCodes = await activeStrapi.documents('plugin::magic-link.otp-code').findMany({
         filters: {
           expiresAt: { $lt: now }
         }
       });
 
       for (const code of expiredCodes) {
-        await activeStrapi.entityService.delete('plugin::magic-link.otp-code', code.id);
+        await activeStrapi.documents('plugin::magic-link.otp-code').delete({
+          documentId: code.documentId
+        });
       }
 
       if (expiredCodes.length > 0) {
         activeStrapi.log.info(`Cleaned up ${expiredCodes.length} expired OTP codes`);
       }
     } catch (error) {
-      const activeStrapi = global.strapi || strapiInstance;
-      if (activeStrapi && activeStrapi.log) {
-        activeStrapi.log.error('Error cleaning up expired OTP codes:', error);
-      } else {
-        console.error('Error cleaning up expired OTP codes:', error);
-      }
+      log.error('Error cleaning up expired OTP codes:', error);
     }
   },
 
@@ -343,7 +407,8 @@ If you didn't request this code, you can safely ignore this email.
    * Get OTP settings
    */
   async getOTPSettings() {
-    const pluginStore = strapi.store({
+    const activeStrapi = getStrapi();
+    const pluginStore = activeStrapi.store({
       type: 'plugin',
       name: 'magic-link',
     });
@@ -366,8 +431,9 @@ If you didn't request this code, you can safely ignore this email.
    * @returns {Object} TOTP setup data with QR code
    */
   async setupTOTP(userId, email) {
+    const activeStrapi = getStrapi();
     try {
-      const pluginStore = strapi.store({
+      const pluginStore = activeStrapi.store({
         type: 'plugin',
         name: 'magic-link',
       });
@@ -382,28 +448,32 @@ If you didn't request this code, you can safely ignore this email.
         length: 32
       });
 
+      // Encrypt the TOTP secret before storage
+      const encryptedSecret = cryptoUtils.encrypt(secret.base32);
+
       // Check if user already has TOTP config
-      const existing = await strapi.entityService.findMany('plugin::magic-link.totp-config', {
+      const existing = await activeStrapi.documents('plugin::magic-link.totp-config').findMany({
         filters: { userId },
         limit: 1
       });
 
       if (existing && existing.length > 0) {
         // Update existing config
-        await strapi.entityService.update('plugin::magic-link.totp-config', existing[0].id, {
+        await activeStrapi.documents('plugin::magic-link.totp-config').update({
+          documentId: existing[0].documentId,
           data: {
-            secret: secret.base32,
+            secret: encryptedSecret, // Store encrypted
             enabled: false, // Not enabled until first verification
             email
           }
         });
       } else {
         // Create new config
-        await strapi.entityService.create('plugin::magic-link.totp-config', {
+        await activeStrapi.documents('plugin::magic-link.totp-config').create({
           data: {
             userId,
             email,
-            secret: secret.base32,
+            secret: encryptedSecret, // Store encrypted
             enabled: false
           }
         });
@@ -412,7 +482,7 @@ If you didn't request this code, you can safely ignore this email.
       // Generate QR code
       const qrCodeDataURL = await QRCode.toDataURL(secret.otpauth_url);
 
-      strapi.log.info(`TOTP setup initiated for user ${userId} (${email})`);
+      log.info(`TOTP setup initiated for user ${userId} (${email})`);
 
       return {
         secret: secret.base32,
@@ -421,7 +491,7 @@ If you didn't request this code, you can safely ignore this email.
         manualEntryKey: secret.base32
       };
     } catch (error) {
-      strapi.log.error('Error setting up TOTP:', error);
+      log.error('Error setting up TOTP:', error);
       throw error;
     }
   },
@@ -434,8 +504,9 @@ If you didn't request this code, you can safely ignore this email.
    * @returns {Object} Verification result
    */
   async verifyTOTP(userId, token, enableAfterVerify = true) {
+    const activeStrapi = getStrapi();
     try {
-      const configs = await strapi.entityService.findMany('plugin::magic-link.totp-config', {
+      const configs = await activeStrapi.documents('plugin::magic-link.totp-config').findMany({
         filters: { userId },
         limit: 1
       });
@@ -449,10 +520,13 @@ If you didn't request this code, you can safely ignore this email.
       }
 
       const config = configs[0];
+      
+      // Decrypt the secret before verification
+      const decryptedSecret = cryptoUtils.decrypt(config.secret);
 
       // Verify the token
       const verified = speakeasy.totp.verify({
-        secret: config.secret,
+        secret: decryptedSecret,
         encoding: 'base32',
         token: token,
         window: 1 // Allow 1 step before/after for time sync issues
@@ -473,10 +547,11 @@ If you didn't request this code, you can safely ignore this email.
 
       if (enableAfterVerify && !config.enabled) {
         updateData.enabled = true;
-        strapi.log.info(`TOTP enabled for user ${userId}`);
+        log.info(`TOTP enabled for user ${userId}`);
       }
 
-      await strapi.entityService.update('plugin::magic-link.totp-config', config.id, {
+      await activeStrapi.documents('plugin::magic-link.totp-config').update({
+        documentId: config.documentId,
         data: updateData
       });
 
@@ -485,7 +560,7 @@ If you didn't request this code, you can safely ignore this email.
         enabled: updateData.enabled || config.enabled
       };
     } catch (error) {
-      strapi.log.error('Error verifying TOTP:', error);
+      log.error('Error verifying TOTP:', error);
       return {
         valid: false,
         error: 'server_error',
@@ -500,8 +575,9 @@ If you didn't request this code, you can safely ignore this email.
    * @returns {boolean} Success status
    */
   async disableTOTP(userId) {
+    const activeStrapi = getStrapi();
     try {
-      const configs = await strapi.entityService.findMany('plugin::magic-link.totp-config', {
+      const configs = await activeStrapi.documents('plugin::magic-link.totp-config').findMany({
         filters: { userId },
         limit: 1
       });
@@ -510,12 +586,14 @@ If you didn't request this code, you can safely ignore this email.
         return false;
       }
 
-      await strapi.entityService.delete('plugin::magic-link.totp-config', configs[0].id);
+      await activeStrapi.documents('plugin::magic-link.totp-config').delete({
+        documentId: configs[0].documentId
+      });
       
-      strapi.log.info(`TOTP disabled for user ${userId}`);
+      log.info(`TOTP disabled for user ${userId}`);
       return true;
     } catch (error) {
-      strapi.log.error('Error disabling TOTP:', error);
+      log.error('Error disabling TOTP:', error);
       return false;
     }
   },
@@ -526,10 +604,10 @@ If you didn't request this code, you can safely ignore this email.
    * @returns {Object} TOTP status
    */
   async getTOTPStatus(userId) {
+    const activeStrapi = getStrapi();
     try {
-      const configs = await strapi.entityService.findMany('plugin::magic-link.totp-config', {
+      const configs = await activeStrapi.documents('plugin::magic-link.totp-config').findMany({
         filters: { userId },
-        fields: ['enabled', 'lastUsed'],
         limit: 1
       });
 
@@ -546,7 +624,7 @@ If you didn't request this code, you can safely ignore this email.
         lastUsed: configs[0].lastUsed
       };
     } catch (error) {
-      strapi.log.error('Error getting TOTP status:', error);
+      log.error('Error getting TOTP status:', error);
       return {
         enabled: false,
         configured: false
@@ -560,8 +638,9 @@ If you didn't request this code, you can safely ignore this email.
    * @returns {Array} Backup codes
    */
   async generateBackupCodes(userId) {
+    const activeStrapi = getStrapi();
     try {
-      const configs = await strapi.entityService.findMany('plugin::magic-link.totp-config', {
+      const configs = await activeStrapi.documents('plugin::magic-link.totp-config').findMany({
         filters: { userId },
         limit: 1
       });
@@ -582,17 +661,18 @@ If you didn't request this code, you can safely ignore this email.
         crypto.createHash('sha256').update(code).digest('hex')
       );
 
-      await strapi.entityService.update('plugin::magic-link.totp-config', configs[0].id, {
+      await activeStrapi.documents('plugin::magic-link.totp-config').update({
+        documentId: configs[0].documentId,
         data: {
           backupCodes: hashedCodes
         }
       });
 
-      strapi.log.info(`Backup codes generated for user ${userId}`);
+      log.info(`Backup codes generated for user ${userId}`);
 
       return backupCodes;
     } catch (error) {
-      strapi.log.error('Error generating backup codes:', error);
+      log.error('Error generating backup codes:', error);
       throw error;
     }
   }

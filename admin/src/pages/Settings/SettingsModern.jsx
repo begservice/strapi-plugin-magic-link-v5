@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { useIntl } from 'react-intl';
 import {
@@ -213,12 +213,14 @@ const SettingsModern = () => {
     from_name: '',
     from_email: '',
     response_email: '',
-    token_length: 20,
+    token_length: 32,
     stays_valid: false,
     object: '',
     message_html: '',
     message_text: '',
     max_login_attempts: 5,
+    context_whitelist: [],
+    context_blacklist: ['password', 'secret', 'apiKey', 'token'],
     login_path: '/magic-link/login',
     user_creation_strategy: 'email',
     verify_email: false,
@@ -835,6 +837,56 @@ const SettingsModern = () => {
                       <Box padding={2} background="warning50" style={{ borderRadius: '4px', marginTop: '8px' }}>
                         <Typography variant="pi" textColor="warning700" style={{ fontSize: '11px' }}>
                           {formatMessage({ id: getTrad('settings.maxAttempts.warning') })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid.Item>
+                </Grid.Root>
+
+                <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '16px', display: 'block', color: theme.colors.neutral[700] }}>
+                  {formatMessage({ id: getTrad('settings.context.title') })}
+                </Typography>
+                <Grid.Root gap={6} style={{ marginBottom: '32px' }}>
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        {formatMessage({ id: getTrad('settings.context.whitelist.label') })}
+                      </Typography>
+                      <TextInput
+                        hint={formatMessage({ id: getTrad('settings.context.whitelist.hint') })}
+                        value={(settings.context_whitelist || []).join(', ')}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const list = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
+                          updateSetting('context_whitelist', list);
+                        }}
+                        placeholder={formatMessage({ id: getTrad('settings.context.whitelist.placeholder') })}
+                      />
+                      <Box padding={2} background="primary50" style={{ borderRadius: '4px', marginTop: '8px' }}>
+                        <Typography variant="pi" textColor="primary700" style={{ fontSize: '11px' }}>
+                          {formatMessage({ id: getTrad('settings.context.whitelist.info') })}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid.Item>
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        {formatMessage({ id: getTrad('settings.context.blacklist.label') })}
+                      </Typography>
+                      <TextInput
+                        hint={formatMessage({ id: getTrad('settings.context.blacklist.hint') })}
+                        value={(settings.context_blacklist || []).join(', ')}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const list = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
+                          updateSetting('context_blacklist', list);
+                        }}
+                        placeholder={formatMessage({ id: getTrad('settings.context.blacklist.placeholder') })}
+                      />
+                      <Box padding={2} background="danger50" style={{ borderRadius: '4px', marginTop: '8px' }}>
+                        <Typography variant="pi" textColor="danger700" style={{ fontSize: '11px' }}>
+                          {formatMessage({ id: getTrad('settings.context.blacklist.info') })}
                         </Typography>
                       </Box>
                     </Box>

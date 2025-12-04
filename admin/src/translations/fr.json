@@ -248,6 +248,8 @@
   
   "magic-link.tokens.table.email": "Email",
   "magic-link.tokens.table.token": "Jeton",
+  "magic-link.tokens.table.reference": "Référence",
+  "magic-link.tokens.table.usedAt": "Utilisé",
   "magic-link.tokens.table.status": "Statut",
   "magic-link.tokens.table.created": "Créé",
   "magic-link.tokens.table.expiresAt": "Valide jusqu'à",

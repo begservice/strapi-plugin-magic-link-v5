@@ -118,14 +118,14 @@ module.exports = ({ strapi }) => ({
       const data = await response.json();
 
       if (data.success) {
-        strapi.log.info('✅ License created successfully:', data.data.licenseKey);
+        strapi.log.info('[SUCCESS] License created successfully:', data.data.licenseKey);
         return data.data;
       } else {
-        strapi.log.error('❌ License creation failed:', data);
+        strapi.log.error('[ERROR] License creation failed:', data);
         return null;
       }
     } catch (error) {
-      strapi.log.error('❌ Error creating license:', error);
+      strapi.log.error('[ERROR] Error creating license:', error);
       return null;
     }
   },
@@ -174,18 +174,18 @@ module.exports = ({ strapi }) => ({
           data: data.data,
         };
       } else {
-        strapi.log.warn(`⚠️ License verification failed: ${data.message || 'Unknown error'} (Key: ${licenseKey?.substring(0, 8)}...)`);
+        strapi.log.warn(`[WARNING] License verification failed: ${data.message || 'Unknown error'} (Key: ${licenseKey?.substring(0, 8)}...)`);
         return { valid: false, data: null };
       }
     } catch (error) {
       // If grace period is allowed, accept the key anyway
       if (allowGracePeriod) {
-        strapi.log.warn(`⚠️ Cannot verify license online: ${error.message} (Key: ${licenseKey?.substring(0, 8)}...)`);
-        strapi.log.info(`🕐 Grace period active - accepting stored license key`);
+        strapi.log.warn(`[WARNING] Cannot verify license online: ${error.message} (Key: ${licenseKey?.substring(0, 8)}...)`);
+        strapi.log.info(`[INFO] Grace period active - accepting stored license key`);
         return { valid: true, data: null, gracePeriod: true };
       }
       
-      strapi.log.error(`❌ Error verifying license: ${error.message} (Key: ${licenseKey?.substring(0, 8)}...)`);
+      strapi.log.error(`[ERROR] Error verifying license: ${error.message} (Key: ${licenseKey?.substring(0, 8)}...)`);
       return { valid: false, data: null };
     }
   },
@@ -214,7 +214,7 @@ module.exports = ({ strapi }) => ({
         strapi.log.debug(`📡 License ping successful: ${data.data?.isActive ? 'ACTIVE' : 'INACTIVE'} (Key: ${licenseKey?.substring(0, 8)}...)`);
         return data.data;
       } else {
-        strapi.log.debug(`⚠️ License ping failed: ${data.message || 'Unknown error'} (Key: ${licenseKey?.substring(0, 8)}...)`);
+        strapi.log.debug(`[WARNING] License ping failed: ${data.message || 'Unknown error'} (Key: ${licenseKey?.substring(0, 8)}...)`);
         return null;
       }
     } catch (error) {
@@ -240,14 +240,14 @@ module.exports = ({ strapi }) => ({
       const data = await response.json();
 
       if (data.success) {
-        strapi.log.info('✅ License upgraded:', licenseId);
+        strapi.log.info('[SUCCESS] License upgraded:', licenseId);
         return data.data;
       } else {
-        strapi.log.error('❌ License upgrade failed:', licenseId);
+        strapi.log.error('[ERROR] License upgrade failed:', licenseId);
         return null;
       }
     } catch (error) {
-      strapi.log.error('❌ Error upgrading license:', error);
+      strapi.log.error('[ERROR] Error upgrading license:', error);
       return null;
     }
   },
@@ -266,7 +266,7 @@ module.exports = ({ strapi }) => ({
       }
       return null;
     } catch (error) {
-      strapi.log.error('❌ Error fetching license by key:', error);
+      strapi.log.error('[ERROR] Error fetching license by key:', error);
       return null;
     }
   },
@@ -285,7 +285,7 @@ module.exports = ({ strapi }) => ({
       }
       return [];
     } catch (error) {
-      strapi.log.error('❌ Error fetching licenses by email:', error);
+      strapi.log.error('[ERROR] Error fetching licenses by email:', error);
       return [];
     }
   },
@@ -304,7 +304,7 @@ module.exports = ({ strapi }) => ({
       }
       return null;
     } catch (error) {
-      strapi.log.error('❌ Error fetching online stats:', error);
+      strapi.log.error('[ERROR] Error fetching online stats:', error);
       return null;
     }
   },
@@ -368,7 +368,7 @@ module.exports = ({ strapi }) => ({
           
           return { valid: true, data: verification.data };
         } else {
-          strapi.log.warn('⚠️ Stored license is invalid or expired');
+          strapi.log.warn('[WARNING] Stored license is invalid or expired');
           // Only clear if we got a definitive rejection (not a network error during grace period)
           if (!withinGracePeriod) {
             await pluginStore.delete({ key: 'licenseKey' });
@@ -377,11 +377,11 @@ module.exports = ({ strapi }) => ({
         }
       }
 
-      strapi.log.warn('⚠️ No valid license found. Plugin will run in demo mode.');
+      strapi.log.warn('[WARNING] No valid license found. Plugin will run in demo mode.');
       
       return { valid: false, demo: true };
     } catch (error) {
-      strapi.log.error('❌ Error initializing license guard:', error);
+      strapi.log.error('[ERROR] Error initializing license guard:', error);
       return { valid: false, error: error.message };
     }
   },
@@ -391,7 +391,7 @@ module.exports = ({ strapi }) => ({
    */
   async storeLicenseKey(licenseKey) {
     try {
-      strapi.log.info(`🔐 Storing license key: ${licenseKey}`);
+      strapi.log.info(`[LICENSE] Storing license key: ${licenseKey}`);
       const pluginStore = strapi.store({ 
         type: 'plugin', 
         name: 'magic-link' 
@@ -404,14 +404,14 @@ module.exports = ({ strapi }) => ({
       // Verify it was stored
       const stored = await pluginStore.get({ key: 'licenseKey' });
       if (stored === licenseKey) {
-        strapi.log.info('✅ License key stored and verified successfully');
+        strapi.log.info('[SUCCESS] License key stored and verified successfully');
         return true;
       } else {
-        strapi.log.error('❌ License key storage verification failed');
+        strapi.log.error('[ERROR] License key storage verification failed');
         return false;
       }
     } catch (error) {
-      strapi.log.error('❌ Error storing license key:', error);
+      strapi.log.error('[ERROR] Error storing license key:', error);
       return false;
     }
   },
