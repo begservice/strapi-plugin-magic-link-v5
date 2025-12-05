@@ -1,3 +1,10 @@
+## [5.1.3](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.2...v5.1.3) (2025-12-05)
+
+
+### Bug Fixes
+
+* resolve strapi reference loss in setInterval cleanup functions ([1caae3f](https://github.com/begservice/strapi-plugin-magic-link-v5/commit/1caae3f81c274d64ee4e15457d8989e4873e9875))
+
 ## [5.1.2](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.1...v5.1.2) (2025-12-04)
 
 
