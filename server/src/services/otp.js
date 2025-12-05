@@ -17,18 +17,18 @@ const cryptoUtils = require('../utils/crypto');
  * - Backup codes are hashed (SHA256)
  */
 module.exports = ({ strapi }) => {
-  // Store the strapi instance reference
-  let strapiInstance = strapi;
+  // Store the strapi instance reference from module initialization
+  const strapiInstance = strapi;
 
-  // Helper to get strapi instance - prefers global.strapi for consistency
+  // Helper to get strapi instance - prefers stored instance (more reliable in bundled plugins)
   const getStrapi = () => {
-    // Prefer global.strapi as it's always available after bootstrap
-    if (global.strapi) {
-      return global.strapi;
-    }
-    // Fallback to stored instance
+    // Primary: Use stored instance from module initialization (reliable in bundled plugins)
     if (strapiInstance) {
       return strapiInstance;
+    }
+    // Fallback: Try global.strapi
+    if (global.strapi) {
+      return global.strapi;
     }
     throw new Error('Strapi instance not available');
   };
@@ -377,29 +377,38 @@ If you didn't request this code, you can safely ignore this email.
 
   /**
    * Clean up expired OTP codes
+   * Uses strapiInstance from module closure for reliability in bundled plugins
    */
   async cleanupExpiredCodes() {
     try {
-      const activeStrapi = getStrapi();
+      // Use strapiInstance directly (more reliable than getStrapi() in intervals)
+      if (!strapiInstance) {
+        // Silently skip if strapi not available yet
+        return;
+      }
+      
       const now = new Date();
       
-      const expiredCodes = await activeStrapi.documents('plugin::magic-link.otp-code').findMany({
+      const expiredCodes = await strapiInstance.documents('plugin::magic-link.otp-code').findMany({
         filters: {
           expiresAt: { $lt: now }
         }
       });
 
       for (const code of expiredCodes) {
-        await activeStrapi.documents('plugin::magic-link.otp-code').delete({
+        await strapiInstance.documents('plugin::magic-link.otp-code').delete({
           documentId: code.documentId
         });
       }
 
       if (expiredCodes.length > 0) {
-        activeStrapi.log.info(`Cleaned up ${expiredCodes.length} expired OTP codes`);
+        strapiInstance.log.info(`[CLEANUP] Cleaned up ${expiredCodes.length} expired OTP codes`);
       }
     } catch (error) {
-      log.error('Error cleaning up expired OTP codes:', error);
+      // Silent fail with debug log - don't spam error logs
+      if (strapiInstance && strapiInstance.log) {
+        strapiInstance.log.debug('[CLEANUP] OTP cleanup skipped:', error.message);
+      }
     }
   },
 

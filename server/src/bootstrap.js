@@ -148,47 +148,49 @@ Thanks.`,
   });
 
   // Initialize Rate Limiter Cleanup Job
-  const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
+  // Note: strapi is captured as closure from the bootstrap function parameter
   
   // Initial cleanup - wait longer for DB to be ready
-  setTimeout(() => {
+  setTimeout(async () => {
     try {
-      rateLimiter.cleanupExpired();
+      const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
+      await rateLimiter.cleanupExpired();
     } catch (error) {
       // Silently ignore on first cleanup if DB not ready yet
-      strapi.log.debug('Rate limit cleanup skipped - DB not ready');
+      strapi.log.debug('[CLEANUP] Rate limit cleanup skipped - DB not ready');
     }
   }, 10000);
   
-  // Cleanup every 30 minutes
-  setInterval(() => {
+  // Cleanup every 30 minutes - strapi is captured as closure
+  setInterval(async () => {
     try {
-      rateLimiter.cleanupExpired();
+      const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
+      await rateLimiter.cleanupExpired();
     } catch (error) {
-      strapi.log.debug('Rate limit cleanup failed:', error.message);
+      // Silent fail - service handles its own logging
     }
   }, 30 * 60 * 1000);
 
   // Initialize OTP Cleanup Job
-  // Note: Get service reference dynamically to preserve strapi context
+  // Note: strapi is captured as closure from the bootstrap function parameter
   
   // Initial cleanup for OTP codes
-  setTimeout(() => {
+  setTimeout(async () => {
     try {
       const otpService = strapi.plugin('magic-link').service('otp');
-      otpService.cleanupExpiredCodes();
+      await otpService.cleanupExpiredCodes();
     } catch (error) {
-      strapi.log.debug('OTP cleanup skipped - DB not ready');
+      strapi.log.debug('[CLEANUP] OTP cleanup skipped - DB not ready');
     }
   }, 10000);
   
-  // Cleanup expired OTP codes every 5 minutes
-  setInterval(() => {
+  // Cleanup expired OTP codes every 5 minutes - strapi is captured as closure
+  setInterval(async () => {
     try {
       const otpService = strapi.plugin('magic-link').service('otp');
-      otpService.cleanupExpiredCodes();
+      await otpService.cleanupExpiredCodes();
     } catch (error) {
-      strapi.log.error('OTP cleanup failed:', error.message);
+      // Silent fail - service handles its own logging
     }
   }, 5 * 60 * 1000);
 
