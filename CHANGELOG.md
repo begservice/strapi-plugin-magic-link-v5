@@ -1,3 +1,11 @@
+# [5.2.0](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.4...v5.2.0) (2025-12-08)
+
+
+### Features
+
+* enhance GitHub issue templates with plugin-specific fields and feature request template ([78f9829](https://github.com/begservice/strapi-plugin-magic-link-v5/commit/78f982927fb970d6062a584b4b81294795330d0e))
+* enhance pull request template with comprehensive sections and plugin-specific checklist ([e64eec1](https://github.com/begservice/strapi-plugin-magic-link-v5/commit/e64eec1c2986776a9f7f00f14fec37b29acd9fb5))
+
 ## [5.1.4](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.3...v5.1.4) (2025-12-08)
 
 
