@@ -1,0 +1,4 @@
+contact_links:
+  - name: Discussions
+    url: https://github.com/begservice/strapi-plugin-magic-link-v5/discussions
+    about: Use discussions for improvements and/or questions

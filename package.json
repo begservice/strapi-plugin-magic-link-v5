@@ -33,7 +33,6 @@
     "lodash": "^4.17.21",
     "nanoid": "^3.3.4",
     "qrcode": "^1.5.4",
-    "semantic-release": "^24.2.3",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {
@@ -51,6 +50,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.0",
+    "semantic-release": "^24.2.3",
     "styled-components": "^6.1.15",
     "vite": "^5.0.0"
   },
