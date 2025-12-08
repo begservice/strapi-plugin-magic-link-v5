@@ -1,4 +1,14 @@
+blank_issues_enabled: false
 contact_links:
-  - name: Discussions
+  - name: 💬 Discussions
     url: https://github.com/begservice/strapi-plugin-magic-link-v5/discussions
-    about: Use discussions for improvements and/or questions
+    about: Ask questions, share ideas, and discuss with the community
+  - name: 📖 Documentation
+    url: https://github.com/begservice/strapi-plugin-magic-link-v5#readme
+    about: Read the full documentation and setup guide
+  - name: 🐛 Existing Issues
+    url: https://github.com/begservice/strapi-plugin-magic-link-v5/issues
+    about: Check if your issue has already been reported
+  - name: ⭐ Star on GitHub
+    url: https://github.com/begservice/strapi-plugin-magic-link-v5
+    about: Show your support by starring the repository

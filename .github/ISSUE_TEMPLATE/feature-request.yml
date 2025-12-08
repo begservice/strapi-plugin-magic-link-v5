@@ -1,0 +1,95 @@
+name: 💡 Feature Request
+description: Suggest a new feature or enhancement for Magic Link Authentication
+title: '[Feature]: '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for suggesting a feature! 
+        
+        Please describe your idea in detail below.
+        
+  - type: dropdown
+    id: feature-area
+    attributes:
+      label: 📦 Feature Area
+      description: Which part of the plugin does this feature relate to?
+      options:
+        - Magic Link (Email Authentication)
+        - OTP (One-Time Password)
+        - TOTP (2FA / Time-based OTP)
+        - JWT Session Management
+        - IP Ban System
+        - Rate Limiting
+        - Email Templates
+        - Admin UI
+        - API / Endpoints
+        - Configuration
+        - Documentation
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🤔 Problem / Use Case
+      description: What problem does this feature solve? Or what use case does it enable?
+      placeholder: Describe the problem or use case...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: solution
+    attributes:
+      label: 💡 Proposed Solution
+      description: How would you like to see this feature implemented?
+      placeholder: Describe your proposed solution...
+    validations:
+      required: true
+      
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+      placeholder: Describe any alternatives you've considered...
+    validations:
+      required: false
+      
+  - type: textarea
+    id: example
+    attributes:
+      label: 📝 Example / Mockup
+      description: Provide code examples, mockups, or screenshots if applicable
+      placeholder: |
+        // Example configuration or API usage
+        'magic-link': {
+          config: {
+            newFeature: {
+              // ...
+            }
+          }
+        }
+    validations:
+      required: false
+      
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 📚 Additional Context
+      description: Add any other context, screenshots, or links about the feature request
+      placeholder: Any additional information...
+    validations:
+      required: false
+      
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: ✔️ Checklist
+      options:
+        - label: I have searched for similar feature requests before creating this one
+          required: true
+        - label: This feature would benefit the broader community, not just my specific use case
+          required: false
