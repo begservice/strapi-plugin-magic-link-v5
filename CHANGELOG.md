@@ -1,3 +1,10 @@
+## [5.1.4](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.3...v5.1.4) (2025-12-08)
+
+
+### Bug Fixes
+
+* move semantic-release to devDependencies and add GitHub templates ([a942b79](https://github.com/begservice/strapi-plugin-magic-link-v5/commit/a942b791a401c48f9c7450183c9ba57b4938a777))
+
 ## [5.1.3](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.2...v5.1.3) (2025-12-05)
 
 
