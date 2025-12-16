@@ -1,3 +1,10 @@
+# [5.3.0](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.2.0...v5.3.0) (2025-12-16)
+
+
+### Features
+
+* add WhatsApp integration for magic links v5.2.7 ([bc2ba06](https://github.com/begservice/strapi-plugin-magic-link-v5/commit/bc2ba068d5375002a068f49f3566fee3b3e5fbca))
+
 # [5.2.0](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.1.4...v5.2.0) (2025-12-08)
 
 
