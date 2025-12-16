@@ -324,5 +324,55 @@ module.exports = {
         policies: [],
       },
     },
+    
+    // WhatsApp Integration
+    {
+      method: 'GET',
+      path: '/whatsapp/status',
+      handler: 'whatsapp.getStatus',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/whatsapp/connect',
+      handler: 'whatsapp.connect',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/whatsapp/disconnect',
+      handler: 'whatsapp.disconnect',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'GET',
+      path: '/whatsapp/qr',
+      handler: 'whatsapp.getQRCode',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/whatsapp/check-number',
+      handler: 'whatsapp.checkNumber',
+      config: {
+        policies: [],
+      },
+    },
+    {
+      method: 'POST',
+      path: '/whatsapp/test-message',
+      handler: 'whatsapp.testMessage',
+      config: {
+        policies: [],
+      },
+    },
   ],
 }; 

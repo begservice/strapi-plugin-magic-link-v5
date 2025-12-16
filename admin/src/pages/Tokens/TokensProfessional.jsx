@@ -986,12 +986,31 @@ const ActionBar = styled(Flex)`
 `;
 
 // ================ HELPER FUNKTIONEN ================
-const formatDate = (dateString) => {
-  if (!dateString) return '—';
-  
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return '—';
-  
+/**
+ * Safely parse a date-like value into a valid Date or return null
+ * Accepts Date, string, or number. Guards against invalid/undefined values.
+ */
+const safeDateFrom = (value) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+/**
+ * Converts a date-like value to an ISO string or null if invalid.
+ */
+const toIsoStringOrNull = (value) => {
+  const date = safeDateFrom(value);
+  return date ? date.toISOString() : null;
+};
+
+/**
+ * Formats a date-like value to a localized string or fallback dash.
+ */
+const formatDate = (value) => {
+  const date = safeDateFrom(value);
+  if (!date) return '—';
+
   return new Intl.DateTimeFormat('de-DE', {
     day: '2-digit',
     month: '2-digit',
@@ -999,6 +1018,25 @@ const formatDate = (dateString) => {
     hour: '2-digit',
     minute: '2-digit'
   }).format(date);
+};
+
+/**
+ * Returns true when the date-like value represents a past moment.
+ */
+const isDateExpired = (value) => {
+  const date = safeDateFrom(value);
+  return date ? date.getTime() < Date.now() : false;
+};
+
+/**
+ * Returns a primitive suitable for sorting (dates -> timestamp).
+ */
+const toSortableValue = (value) => {
+  const asDate = safeDateFrom(value);
+  if (asDate) return asDate.getTime();
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return value.toLowerCase();
+  return '';
 };
 
 // ================ HAUPTKOMPONENTE ================
@@ -1055,20 +1093,14 @@ const TokensProfessional = () => {
   // Stats berechnen
   const stats = useMemo(() => ({
     total: tokens.length,
-    active: tokens.filter(t => {
-      const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
-      return t.is_active && !isExpired;
-    }).length,
-    expired: tokens.filter(t => {
-      const isExpired = t.expires_at && new Date(t.expires_at) < new Date();
-      return isExpired;
-    }).length,
+    active: tokens.filter(t => t.is_active && !isDateExpired(t.expires_at)).length,
+    expired: tokens.filter(t => isDateExpired(t.expires_at)).length,
     used: tokens.filter(t => !t.is_active).length,
   }), [tokens]);
   
   // Gefilterte und sortierte Tokens
   const filteredAndSortedTokens = useMemo(() => {
-    let filtered = tokens;
+    let filtered = [...tokens];
     
     // Search Filter
     if (searchQuery) {
@@ -1081,7 +1113,7 @@ const TokensProfessional = () => {
     // Status Filter
     if (filterStatus !== 'all') {
       filtered = filtered.filter(token => {
-        const isExpired = token.expires_at && new Date(token.expires_at) < new Date();
+        const isExpired = isDateExpired(token.expires_at);
         switch (filterStatus) {
           case 'active':
             return token.is_active && !isExpired;
@@ -1097,12 +1129,14 @@ const TokensProfessional = () => {
     
     // Sortierung
     filtered.sort((a, b) => {
-      const aValue = a[sortBy];
-      const bValue = b[sortBy];
+      const aValue = toSortableValue(a[sortBy]);
+      const bValue = toSortableValue(b[sortBy]);
       
       if (sortOrder === 'asc') {
+        if (aValue === bValue) return 0;
         return aValue > bValue ? 1 : -1;
       } else {
+        if (aValue === bValue) return 0;
         return aValue < bValue ? 1 : -1;
       }
     });
@@ -1111,13 +1145,21 @@ const TokensProfessional = () => {
   }, [tokens, searchQuery, filterStatus, sortBy, sortOrder]);
   
   // Pagination
+  const totalPages = Math.max(0, Math.ceil(filteredAndSortedTokens.length / pageSize));
+  const safePageCount = Math.max(1, totalPages);
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), safePageCount);
+
+  useEffect(() => {
+    if (currentPage !== safeCurrentPage) {
+      setCurrentPage(safeCurrentPage);
+    }
+  }, [currentPage, safeCurrentPage]);
+
   const paginatedTokens = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
+    const start = (safeCurrentPage - 1) * pageSize;
     const end = start + pageSize;
     return filteredAndSortedTokens.slice(start, end);
-  }, [filteredAndSortedTokens, currentPage, pageSize]);
-  
-  const totalPages = Math.ceil(filteredAndSortedTokens.length / pageSize);
+  }, [filteredAndSortedTokens, safeCurrentPage, pageSize]);
   
   // Stat Cards Konfiguration
   const statCards = [
@@ -1156,11 +1198,20 @@ const TokensProfessional = () => {
   ];
   
   // Fetch Functions
+  const normalizeToken = (token) => ({
+    ...token,
+    createdAt: toIsoStringOrNull(token.createdAt || token.created_at),
+    expires_at: toIsoStringOrNull(token.expires_at),
+    used_at: toIsoStringOrNull(token.used_at),
+    last_used_at: toIsoStringOrNull(token.last_used_at),
+  });
+
   const fetchTokens = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await get('/magic-link/tokens');
-      setTokens(response?.data?.data || response?.data || []);
+      const rawTokens = response?.data?.data || response?.data || [];
+      setTokens(rawTokens.map(normalizeToken));
     } catch (error) {
       console.error('Error fetching tokens:', error);
       toggleNotification({
@@ -1336,7 +1387,7 @@ const TokensProfessional = () => {
       return <AnimatedBadge variant="secondary">{formatMessage({ id: getTrad('tokens.status.used') })}</AnimatedBadge>;
     }
     // Prüfe ob abgelaufen
-    const isExpired = token.expires_at && new Date(token.expires_at) < new Date();
+    const isExpired = isDateExpired(token.expires_at);
     if (isExpired) {
       return <AnimatedBadge variant="warning">{formatMessage({ id: getTrad('tokens.status.expired') })}</AnimatedBadge>;
     }
@@ -1725,7 +1776,7 @@ const TokensProfessional = () => {
                                   </Typography>
                                 );
                               }
-                              const isExpired = token.expires_at && new Date(token.expires_at) < new Date();
+                          const isExpired = isDateExpired(token.expires_at);
                               return (
                                 <Typography 
                                   variant="pi" 
@@ -1784,20 +1835,20 @@ const TokensProfessional = () => {
                 {totalPages > 1 && (
                   <Box paddingTop={4} paddingBottom={4}>
                     <Flex justifyContent="center">
-                      <Pagination activePage={currentPage} pageCount={totalPages}>
-                        <PreviousLink onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
+                      <Pagination activePage={safeCurrentPage} pageCount={safePageCount}>
+                        <PreviousLink onClick={() => setCurrentPage(Math.max(1, safeCurrentPage - 1))}>
                           {formatMessage({ id: getTrad('tokens.pagination.previous') })}
                         </PreviousLink>
-                        {[...Array(totalPages)].map((_, i) => (
+                        {[...Array(safePageCount)].map((_, i) => (
                           <PageLink
                             key={i + 1}
                             number={i + 1}
-                            onClick={() => setCurrentPage(i + 1)}
+                            onClick={() => setCurrentPage(Math.min(safePageCount, i + 1))}
                           >
                             {i + 1}
                           </PageLink>
                         ))}
-                        <NextLink onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}>
+                        <NextLink onClick={() => setCurrentPage(Math.min(safePageCount, safeCurrentPage + 1))}>
                           {formatMessage({ id: getTrad('tokens.pagination.next') })}
                         </NextLink>
                       </Pagination>
@@ -1990,7 +2041,7 @@ const TokensProfessional = () => {
                           style={{ 
                             fontSize: '13px', 
                             fontWeight: '600',
-                            color: selectedTokenDetails.expires_at && new Date(selectedTokenDetails.expires_at) < new Date() ? '#d02b20' : '#32324d'
+                              color: isDateExpired(selectedTokenDetails.expires_at) ? '#d02b20' : '#32324d'
                           }}
                         >
                           {formatDate(selectedTokenDetails.expires_at) || formatMessage({ id: getTrad('tokens.details.unlimited') })}

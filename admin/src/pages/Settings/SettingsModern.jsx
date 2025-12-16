@@ -253,6 +253,22 @@ const SettingsModern = () => {
     totp_algorithm: 'SHA1',
     totp_digits: 6,
     totp_period: 30,
+    // WhatsApp Settings
+    whatsapp_enabled: false,
+    whatsapp_debug: false,
+    whatsapp_app_name: 'Magic Link',
+    whatsapp_message_template: `*{{appName}} Login*
+
+Klicke auf den Link um dich einzuloggen:
+
+{{link}}
+
+Dieser Link ist {{expiry}} gültig.
+
+_Falls du diesen Link nicht angefordert hast, ignoriere diese Nachricht._`,
+    // Frontend URL Settings
+    frontend_url: '',
+    frontend_login_path: '/auth/magic-link',
   });
   
   const [rateLimitStats, setRateLimitStats] = useState(null);
@@ -947,6 +963,167 @@ const SettingsModern = () => {
                       <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '8px' }}>
                         {formatMessage({ id: getTrad('settings.callbackUrl.note') })}
                       </Typography>
+                    </Box>
+                  </Grid.Item>
+                  
+                  {/* Frontend URL Settings */}
+                  <Grid.Item col={12}>
+                    <Divider style={{ margin: '16px 0' }} />
+                    <Typography variant="delta" fontWeight="bold" style={{ marginBottom: '16px', display: 'block' }}>
+                      Frontend URL (for SPA/Mobile Apps)
+                    </Typography>
+                  </Grid.Item>
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        Frontend Base URL
+                      </Typography>
+                      <TextInput
+                        value={settings.frontend_url || ''}
+                        onChange={(e) => updateSetting('frontend_url', e.target.value)}
+                        placeholder="https://myapp.com"
+                      />
+                      <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '8px' }}>
+                        Base URL deiner Frontend-App (React, Vue, etc.). Wenn leer, wird confirmationUrl verwendet.
+                      </Typography>
+                    </Box>
+                  </Grid.Item>
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        Login Path
+                      </Typography>
+                      <TextInput
+                        value={settings.frontend_login_path || '/auth/magic-link'}
+                        onChange={(e) => updateSetting('frontend_login_path', e.target.value)}
+                        placeholder="/auth/magic-link"
+                      />
+                      <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '8px' }}>
+                        Pfad der an die Frontend URL angehaengt wird.
+                      </Typography>
+                    </Box>
+                  </Grid.Item>
+                  <Grid.Item col={12}>
+                    <Box padding={3} background="primary50" style={{ borderRadius: '8px', marginTop: '8px' }}>
+                      <Typography variant="pi" fontWeight="bold" style={{ display: 'block', marginBottom: '4px' }}>
+                        Resultierende Magic Link URL:
+                      </Typography>
+                      <Typography variant="pi" textColor="primary700" style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+                        {settings.frontend_url 
+                          ? `${settings.frontend_url.replace(/\/$/, '')}${settings.frontend_login_path || '/auth/magic-link'}?loginToken=ABC123`
+                          : `${settings.confirmationUrl || 'http://localhost:1337/api/magic-link/login'}?loginToken=ABC123`
+                        }
+                      </Typography>
+                    </Box>
+                  </Grid.Item>
+                </Grid.Root>
+              </Box>
+            </Accordion.Content>
+          </Accordion.Item>
+
+          {/* WhatsApp Settings */}
+          <Accordion.Item value="whatsapp">
+            <Accordion.Header>
+              <Accordion.Trigger
+                icon={Lightning}
+                description="WhatsApp-Nachricht anpassen und Delivery konfigurieren"
+              >
+                WhatsApp Einstellungen
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content>
+              <Box padding={6}>
+                <Grid.Root gap={4}>
+                  <Grid.Item col={12}>
+                    <Box background="success50" padding={4} style={{ borderRadius: '8px', border: '2px solid #22C55E', marginBottom: '16px' }}>
+                      <Flex gap={3} alignItems="flex-start">
+                        <Lightning style={{ color: '#22C55E', width: '24px', height: '24px', flexShrink: 0, marginTop: '2px' }} />
+                        <Box>
+                          <Typography variant="delta" fontWeight="bold" style={{ display: 'block', marginBottom: '4px' }}>
+                            WhatsApp Magic Link Delivery
+                          </Typography>
+                          <Typography variant="pi" textColor="neutral600">
+                            Sende Magic Links kostenlos via WhatsApp anstatt per Email. Die Nachricht kann hier angepasst werden.
+                          </Typography>
+                        </Box>
+                      </Flex>
+                    </Box>
+                  </Grid.Item>
+                  
+                  <Grid.Item col={6} s={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        App Name (in WhatsApp Nachricht)
+                      </Typography>
+                      <TextInput
+                        value={settings.whatsapp_app_name || 'Magic Link'}
+                        onChange={(e) => updateSetting('whatsapp_app_name', e.target.value)}
+                        placeholder="Magic Link"
+                      />
+                      <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '8px' }}>
+                        Wird in der WhatsApp-Nachricht als App-Name angezeigt.
+                      </Typography>
+                    </Box>
+                  </Grid.Item>
+                  
+                  <Grid.Item col={6} s={12}>
+                    <Flex direction="column" gap={3}>
+                      <ToggleCard $active={settings.whatsapp_debug} $statusLabel={settings.whatsapp_debug ? 'DEBUG' : 'OFF'} onClick={() => updateSetting('whatsapp_debug', !settings.whatsapp_debug)}>
+                        <Flex gap={3} alignItems="center">
+                          <GreenToggle $isActive={settings.whatsapp_debug}>
+                            <Toggle checked={settings.whatsapp_debug} onChange={() => updateSetting('whatsapp_debug', !settings.whatsapp_debug)} />
+                          </GreenToggle>
+                          <Box>
+                            <Typography variant="omega" fontWeight="bold">Debug Mode</Typography>
+                            <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px' }}>
+                              Aktiviert ausfuehrliche WhatsApp-Logs
+                            </Typography>
+                          </Box>
+                        </Flex>
+                      </ToggleCard>
+                    </Flex>
+                  </Grid.Item>
+                  
+                  <Grid.Item col={12}>
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '8px', display: 'block' }}>
+                        WhatsApp Nachricht Template
+                      </Typography>
+                      <Textarea
+                        value={settings.whatsapp_message_template || ''}
+                        onChange={(e) => updateSetting('whatsapp_message_template', e.target.value)}
+                        style={{ minHeight: '200px', fontFamily: 'monospace', fontSize: '13px' }}
+                      />
+                      <Box padding={3} background="neutral100" style={{ borderRadius: '8px', marginTop: '12px' }}>
+                        <Typography variant="pi" fontWeight="bold" style={{ display: 'block', marginBottom: '8px' }}>
+                          Verfuegbare Platzhalter:
+                        </Typography>
+                        <Flex gap={2} wrap="wrap">
+                          <Badge backgroundColor="primary100" textColor="primary700">{'{{appName}}'}</Badge>
+                          <Badge backgroundColor="primary100" textColor="primary700">{'{{link}}'}</Badge>
+                          <Badge backgroundColor="primary100" textColor="primary700">{'{{expiry}}'}</Badge>
+                        </Flex>
+                        <Typography variant="pi" textColor="neutral600" style={{ fontSize: '11px', marginTop: '8px', display: 'block' }}>
+                          *text* = Fett, _text_ = Kursiv (WhatsApp Formatierung)
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Grid.Item>
+                  
+                  <Grid.Item col={12}>
+                    <Box padding={4} background="neutral50" style={{ borderRadius: '8px', border: '1px solid #E5E7EB' }}>
+                      <Typography variant="pi" fontWeight="bold" style={{ display: 'block', marginBottom: '8px' }}>
+                        Vorschau:
+                      </Typography>
+                      <Box padding={3} background="neutral0" style={{ borderRadius: '8px', whiteSpace: 'pre-wrap', fontFamily: 'system-ui', fontSize: '14px', lineHeight: '1.5', border: '1px solid #D1D5DB' }}>
+                        {(settings.whatsapp_message_template || '')
+                          .replace(/\{\{appName\}\}/g, settings.whatsapp_app_name || 'Magic Link')
+                          .replace(/\{\{link\}\}/g, settings.frontend_url 
+                            ? `${settings.frontend_url.replace(/\/$/, '')}${settings.frontend_login_path || '/auth/magic-link'}?loginToken=ABC123`
+                            : `${settings.confirmationUrl || 'http://localhost:1337'}?loginToken=ABC123`)
+                          .replace(/\{\{expiry\}\}/g, '1 Stunde')
+                        }
+                      </Box>
                     </Box>
                   </Grid.Item>
                 </Grid.Root>
@@ -2779,6 +2956,154 @@ ${language === 'de' ? 'Der Link läuft in 1 Stunde ab.' : 'The link expires in 1
                     </Flex>
                   </>
                 )}
+              </Box>
+            </Accordion.Content>
+          </Accordion.Item>
+
+          {/* Compatibility Settings */}
+          <Accordion.Item value="compatibility">
+            <Accordion.Header>
+              <Accordion.Trigger
+                icon={Link}
+                description={formatMessage({ id: getTrad('settings.section.compatibility.description') })}
+              >
+                {formatMessage({ id: getTrad('settings.section.compatibility') })}
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content>
+              <Box padding={6}>
+                <Typography variant="sigma" fontWeight="bold" style={{ marginBottom: '8px', display: 'block', color: theme.colors.neutral[700] }}>
+                  {formatMessage({ id: getTrad('settings.compatibility.title') })}
+                </Typography>
+                <Typography variant="pi" textColor="neutral600" style={{ marginBottom: '20px', display: 'block', fontSize: '12px' }}>
+                  {formatMessage({ id: getTrad('settings.compatibility.subtitle') })}
+                </Typography>
+                
+                {/* Info Box */}
+                <Box 
+                  background="primary100" 
+                  padding={4} 
+                  style={{ 
+                    borderRadius: theme.borderRadius.md, 
+                    marginBottom: '24px', 
+                    border: '2px solid #BAE6FD'
+                  }}
+                >
+                  <Flex alignItems="flex-start" gap={3}>
+                    <Link width="20px" height="20px" style={{ color: theme.colors.primary[600], flexShrink: 0, marginTop: '2px' }} />
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '6px', display: 'block' }}>
+                        {formatMessage({ id: getTrad('settings.compatibility.info.title') })}
+                      </Typography>
+                      <Typography variant="pi" textColor="neutral600" style={{ fontSize: '12px', lineHeight: '1.5' }}>
+                        {formatMessage({ id: getTrad('settings.compatibility.info.description') })}
+                      </Typography>
+                    </Box>
+                  </Flex>
+                </Box>
+
+                <Grid.Root gap={6}>
+                  {/* Passwordless Compatibility */}
+                  <Grid.Item col={6} s={12}>
+                    <ToggleCard $active={settings.passwordlessCompatibility} $statusLabel={settings.passwordlessCompatibility ? statusActive : statusInactive}>
+                      <Flex direction="column" gap={3}>
+                        <Flex justifyContent="center" alignItems="center" style={{ marginBottom: '8px' }}>
+                          <Toggle
+                            checked={settings.passwordlessCompatibility}
+                            onChange={(e) => updateSetting('passwordlessCompatibility', e.target.checked)}
+                            size="L"
+                          />
+                        </Flex>
+                        <Box>
+                          <Typography variant="pi" fontWeight="bold" style={{ fontSize: '14px', marginBottom: '6px', display: 'block', textAlign: 'center' }}>
+                            {formatMessage({ id: getTrad('settings.compatibility.passwordless.title') })}
+                          </Typography>
+                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px', lineHeight: '1.4', textAlign: 'center' }}>
+                            {formatMessage({ id: getTrad('settings.compatibility.passwordless.description') })}
+                          </Typography>
+                        </Box>
+                        {settings.passwordlessCompatibility && (
+                          <Box 
+                            background="success100" 
+                            padding={3} 
+                            style={{ 
+                              borderRadius: theme.borderRadius.md, 
+                              marginTop: '8px',
+                              border: '1px solid #BBF7D0'
+                            }}
+                          >
+                            <Typography variant="pi" style={{ fontSize: '11px', fontFamily: 'monospace' }}>
+                              POST /api/passwordless/send-link<br/>
+                              GET /api/passwordless/login
+                            </Typography>
+                          </Box>
+                        )}
+                      </Flex>
+                    </ToggleCard>
+                  </Grid.Item>
+
+                  {/* Email Designer Compatibility */}
+                  <Grid.Item col={6} s={12}>
+                    <ToggleCard $active={settings.emailDesignerCompatibility} $statusLabel={settings.emailDesignerCompatibility ? statusActive : statusInactive}>
+                      <Flex direction="column" gap={3}>
+                        <Flex justifyContent="center" alignItems="center" style={{ marginBottom: '8px' }}>
+                          <Toggle
+                            checked={settings.emailDesignerCompatibility}
+                            onChange={(e) => updateSetting('emailDesignerCompatibility', e.target.checked)}
+                            size="L"
+                          />
+                        </Flex>
+                        <Box>
+                          <Typography variant="pi" fontWeight="bold" style={{ fontSize: '14px', marginBottom: '6px', display: 'block', textAlign: 'center' }}>
+                            {formatMessage({ id: getTrad('settings.compatibility.emailDesigner.title') })}
+                          </Typography>
+                          <Typography variant="omega" textColor="neutral600" style={{ fontSize: '12px', lineHeight: '1.4', textAlign: 'center' }}>
+                            {formatMessage({ id: getTrad('settings.compatibility.emailDesigner.description') })}
+                          </Typography>
+                        </Box>
+                        {settings.emailDesignerCompatibility && (
+                          <Box 
+                            background="success100" 
+                            padding={3} 
+                            style={{ 
+                              borderRadius: theme.borderRadius.md, 
+                              marginTop: '8px',
+                              border: '1px solid #BBF7D0'
+                            }}
+                          >
+                            <Typography variant="pi" style={{ fontSize: '11px' }}>
+                              ✓ Email Designer 5 Integration<br/>
+                              ✓ sendTemplatedEmail() Support
+                            </Typography>
+                          </Box>
+                        )}
+                      </Flex>
+                    </ToggleCard>
+                  </Grid.Item>
+                </Grid.Root>
+
+                {/* Migration Note */}
+                <Box 
+                  background="warning100" 
+                  padding={4} 
+                  style={{ 
+                    borderRadius: theme.borderRadius.md, 
+                    marginTop: '24px',
+                    border: '2px solid #FDE68A'
+                  }}
+                >
+                  <Flex alignItems="flex-start" gap={3}>
+                    <Code width="20px" height="20px" style={{ color: theme.colors.warning[600], flexShrink: 0, marginTop: '2px' }} />
+                    <Box>
+                      <Typography variant="pi" fontWeight="bold" style={{ marginBottom: '6px', display: 'block' }}>
+                        {formatMessage({ id: getTrad('settings.compatibility.migration.title') })}
+                      </Typography>
+                      <Typography variant="pi" textColor="neutral600" style={{ fontSize: '12px', lineHeight: '1.5' }}>
+                        {formatMessage({ id: getTrad('settings.compatibility.migration.description') })}
+                      </Typography>
+                    </Box>
+                  </Flex>
+                </Box>
               </Box>
             </Accordion.Content>
           </Accordion.Item>

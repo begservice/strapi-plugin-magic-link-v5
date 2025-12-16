@@ -1,5 +1,5 @@
 {
-  "version": "5.2.0",
+  "version": "5.2.7",
   "keywords": [],
   "type": "commonjs",
   "exports": {
@@ -30,8 +30,10 @@
   },
   "dependencies": {
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "lodash": "^4.17.21",
     "nanoid": "^3.3.4",
+    "pino": "^9.5.0",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0"
   },

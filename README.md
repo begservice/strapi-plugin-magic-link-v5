@@ -8,13 +8,14 @@ Secure, modern, and user-friendly authentication using email-based magic links, 
 [![npm version](https://badge.fury.io/js/strapi-plugin-magic-link-v5.svg)](https://www.npmjs.com/package/strapi-plugin-magic-link-v5)
 [![Strapi v5](https://img.shields.io/badge/Strapi-v5-7C3AED.svg)](https://strapi.io)
 
-## 🚀 Why Magic Link?
+## Why Magic Link?
 
-- ⚡ **Zero Setup Time** - Install, activate license (free), and start using
-- 🎯 **Production Ready** - Battle-tested with rate limiting, IP bans, and session management
-- 🛡️ **Multi-Factor Authentication** - Email OTP + TOTP Authenticator support
-- 🎨 **Beautiful UI** - Modern, responsive admin interface with German translations
-- 🔒 **Enterprise Security** - License-based feature unlocking with Free, Premium & Advanced tiers
+- **Zero Setup Time** - Install, activate license (free), and start using
+- **Production Ready** - Battle-tested with rate limiting, IP bans, and session management
+- **Multi-Factor Authentication** - Email OTP + TOTP Authenticator support
+- **WhatsApp Integration** - Send magic links via WhatsApp (FREE!)
+- **Beautiful UI** - Modern, responsive admin interface with German translations
+- **Enterprise Security** - License-based feature unlocking with Free, Premium & Advanced tiers
 
 ## 📚 Quick Links
 
@@ -23,6 +24,7 @@ Secure, modern, and user-friendly authentication using email-based magic links, 
 - [🎯 Quick Start](#-quick-start) - License activation & configuration
 - [💻 Frontend Examples](#-frontend-implementation) - Magic Link, Email OTP, TOTP flows
 - [📡 API Endpoints](#-api-endpoints) - Complete API reference
+- [🔄 Plugin Compatibility](#-plugin-compatibility) - Migration from other plugins
 - [⚙️ Configuration](#-configuration) - All settings explained
 - [🐛 Troubleshooting](#-troubleshooting) - Common issues & solutions
 - [📝 Changelog](#-changelog) - Version history & updates
@@ -65,16 +67,17 @@ This plugin is licensed under the **MIT License** - free for everyone to use!
 
 ## ✨ Features
 
-### 🔐 Authentication Modes
+### Authentication Modes
 
 Choose the security level that fits your needs:
 
 | Mode | Description | License |
 |------|-------------|---------|
-| **Magic Link Only** | One-click email login - fast & user-friendly | ✅ Free |
-| **Magic Link + Email OTP** | 6-digit code after magic link click | 💎 Premium |
-| **Magic Link + TOTP (MFA)** | Authenticator app (Google Auth, Authy) | ⚡ Advanced |
-| **TOTP-Only Login** | Direct login with email + TOTP code | ⚡ Advanced |
+| **Magic Link Only** | One-click email login - fast & user-friendly | Free |
+| **Magic Link via WhatsApp** | Send magic links via WhatsApp messenger | Free |
+| **Magic Link + Email OTP** | 6-digit code after magic link click | Premium |
+| **Magic Link + TOTP (MFA)** | Authenticator app (Google Auth, Authy) | Advanced |
+| **TOTP-Only Login** | Direct login with email + TOTP code | Advanced |
 
 ### 🛡️ Security Features
 
@@ -108,11 +111,13 @@ Choose the security level that fits your needs:
 - **Search & Filter** - Find anything in seconds
 - **Bulk Operations** - Manage multiple items at once
 
-### ⚙️ Customization
+### Customization
 
 - **Email Templates** - HTML & plain text with variables
+- **WhatsApp Templates** - Customizable WhatsApp message content
 - **Email Designer 5** - Visual email builder integration
 - **Flexible Configuration** - All settings in admin panel
+- **Frontend URL** - Configure custom frontend login URLs
 - **Custom Callbacks** - Post-login redirect URLs
 - **Auto User Creation** - Optional on first login
 - **Token Reusability** - One-time or multi-use tokens
@@ -153,7 +158,83 @@ Configure core functionality and authentication options.
 
 ---
 
-## 📋 Prerequisites
+## WhatsApp Integration (NEW!)
+
+Magic Link now supports sending authentication links via **WhatsApp** - completely FREE!
+
+### Why WhatsApp?
+
+- **Higher Open Rates** - 98% open rate vs 20% for email
+- **Instant Delivery** - No spam folders, no delays
+- **User Preference** - Many users prefer messaging over email
+- **FREE** - No additional costs, uses your own WhatsApp number
+
+### Quick Setup
+
+1. Navigate to **Admin Panel -> Magic Link -> WhatsApp**
+2. Scan the QR code with your WhatsApp mobile app
+3. Done! Your WhatsApp is connected
+
+### How It Works
+
+When a user requests a magic link and has a phone number on file, you can send the magic link via WhatsApp instead of email:
+
+```javascript
+// Send magic link via WhatsApp
+await fetch('/api/magic-link/send-link', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    channel: 'whatsapp',  // Send via WhatsApp
+    phoneNumber: '+491234567890'  // Required for WhatsApp
+  })
+});
+```
+
+### Customizable Messages
+
+Configure your WhatsApp message templates in **Settings -> Email & Messaging**:
+
+**Available Variables:**
+- `<%= URL %>` - Your frontend login URL
+- `<%= CODE %>` - The magic link token
+- `<%= APP_NAME %>` - Your app name
+- `<%= EXPIRY_TEXT %>` - Token expiration text
+
+**Example Template:**
+```
+*<%= APP_NAME %> Login*
+
+Click the link below to log in:
+
+<%= URL %>?loginToken=<%= CODE %>
+
+This link expires in <%= EXPIRY_TEXT %>.
+
+_If you didn't request this, please ignore this message._
+```
+
+### Frontend Login URL
+
+Configure where users land when clicking the magic link:
+
+1. Go to **Settings -> Email & Messaging**
+2. Set **Frontend Login URL** (e.g., `https://yourapp.com/auth/login`)
+3. Magic links will now redirect to your frontend
+
+### Integration with Magic-Mail
+
+If you have both **Magic-Link** and **Magic-Mail** plugins installed:
+
+- Magic-Link delegates WhatsApp functionality to Magic-Mail
+- Only ONE WhatsApp connection needed (managed by Magic-Mail)
+- Navigate to Magic-Mail for WhatsApp setup
+- Unified WhatsApp management across both plugins
+
+---
+
+## Prerequisites
 
 This plugin requires a **configured email provider** to send magic link emails.
 
@@ -531,6 +612,81 @@ if (license.isPremium) {
 
 ---
 
+## 🔄 Plugin Compatibility
+
+Magic Link provides **compatibility modes** for seamless migration from other authentication plugins. No frontend code changes required!
+
+### 🔗 strapi-plugin-passwordless Migration
+
+If you're migrating from [strapi-plugin-passwordless](https://github.com/kucherenko/strapi-plugin-passwordless), enable the compatibility mode:
+
+**Enable in Admin Panel:** Settings → Magic Link → Compatibility → "Passwordless Plugin Compatibility"
+
+When enabled, these additional routes become available:
+
+| Original Route | Magic Link Handler | Description |
+|----------------|-------------------|-------------|
+| `POST /api/passwordless/send-link` | `auth.sendLink` | Send magic link email |
+| `GET /api/passwordless/login?loginToken=xxx` | `auth.login` | Authenticate with token |
+
+**Request/Response Format:** Identical to the original plugin!
+
+```javascript
+// Your existing code works without changes:
+const response = await fetch('/api/passwordless/send-link', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    username: 'John Doe',      // Optional: username for new users
+    context: { redirectTo: '/dashboard' }
+  })
+});
+
+// Login response is identical:
+// { jwt: "...", user: {...}, context: {...} }
+```
+
+**Migration Steps:**
+1. Install `strapi-plugin-magic-link-v5`
+2. Remove `strapi-plugin-passwordless` from `package.json`
+3. Enable **Passwordless Compatibility** in Settings
+4. Restart Strapi - done! ✅
+
+**Gradual Migration:** You can later switch your frontend to use `/api/magic-link/*` endpoints and disable compatibility mode.
+
+### 📧 Email Designer 5 Integration
+
+Magic Link is **fully compatible** with [strapi-plugin-email-designer-5](https://www.npmjs.com/package/strapi-plugin-email-designer-5)!
+
+**Enable in Admin Panel:** Settings → Magic Link → Compatibility → "Email Designer 5 Integration"
+
+```bash
+# Install Email Designer 5
+npm install strapi-plugin-email-designer-5
+```
+
+**Template Variables:**
+| Variable | Description |
+|----------|-------------|
+| `{{magicLink}}` | Complete magic link URL with token |
+| `{{token}}` | Raw token value |
+| `{{user.email}}` | User's email address |
+| `{{user.username}}` | User's username |
+| `{{expiresAt}}` | Token expiration time |
+
+**Configuration:**
+1. Create a template in Email Designer
+2. Go to Settings → Magic Link → Email Settings
+3. Enable "Use Email Designer Template"
+4. Select your template from the dropdown
+
+### 🛡️ Security Note
+
+**Compatibility routes are disabled by default** for security. When disabled, accessing `/api/passwordless/*` returns a `404 Not Found` response - the routes appear to not exist.
+
+---
+
 ## ⚙️ Configuration
 
 ### 🔐 Authentication Mode Settings
@@ -733,9 +889,37 @@ Contributions are welcome! Please:
 
 ---
 
-## 📝 Changelog
+## Changelog
 
-### v4.16.3 (2025-11-22) - Latest 🎉
+### v5.2.7 (2025-12-16) - Latest
+
+**WhatsApp Integration**
+- **WhatsApp Magic Links** - Send authentication links via WhatsApp messenger (FREE!)
+- **Customizable Templates** - Configure WhatsApp message text with variables
+- **Frontend URL Setting** - Set custom frontend login URLs for magic links
+- **Magic-Mail Integration** - Automatic delegation when both plugins installed
+- **QR Code Setup** - Easy WhatsApp connection via QR code scan
+- **Debug Mode** - Optional verbose logging for WhatsApp connections
+
+**New Settings:**
+- `frontend_login_url` - Custom frontend URL for magic links
+- `whatsapp_message_text` - WhatsApp message template
+- `whatsapp_app_name` - App name displayed in WhatsApp messages
+- `whatsapp_debug` - Enable/disable verbose WhatsApp logging
+
+### v5.1.10 (2025-12-15)
+
+**Plugin Compatibility Mode**
+- **Passwordless Plugin Compatibility** - Migration support for `strapi-plugin-passwordless`
+  - Added `/api/passwordless/send-link` and `/api/passwordless/login` routes
+  - Identical request/response format - no frontend changes needed!
+  - Disabled by default for security (returns 404 when off)
+- **Email Designer 5 Integration** - Enhanced template support
+- New "Compatibility" settings section in admin UI
+- Full i18n support for compatibility settings (DE, EN, ES, FR, PT)
+- `compatibility-check` policy for secure route access
+
+### v4.16.3 (2025-11-22)
 
 **License Validation Fix**
 - ✅ Fixed license tier detection from backend features

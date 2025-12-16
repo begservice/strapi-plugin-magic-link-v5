@@ -376,6 +376,12 @@ const OTPCodes = () => {
   const [pageSize, setPageSize] = useState(10);
   const [selectedCodes, setSelectedCodes] = useState([]);
 
+  const normalizeCode = (code) => ({
+    ...code,
+    createdAt: toIsoStringOrNull(code.createdAt || code.created_at),
+    expiresAt: toIsoStringOrNull(code.expiresAt || code.expires_at),
+  });
+
   const fetchCodes = async () => {
     try {
       setLoading(true);
@@ -386,7 +392,7 @@ const OTPCodes = () => {
         }
       });
       
-      setCodes(data.codes || []);
+      setCodes((data.codes || []).map(normalizeCode));
     } catch (error) {
       console.error('Error fetching OTP codes:', error);
       toggleNotification({
@@ -440,11 +446,20 @@ const OTPCodes = () => {
     fetchCodes();
   }, []);
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '—';
-    
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return '—';
+  const safeDateFrom = (value) => {
+    if (!value) return null;
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  };
+
+  const toIsoStringOrNull = (value) => {
+    const date = safeDateFrom(value);
+    return date ? date.toISOString() : null;
+  };
+
+  const formatDate = (value) => {
+    const date = safeDateFrom(value);
+    if (!date) return '—';
     
     return new Intl.DateTimeFormat('de-DE', {
       day: '2-digit',
@@ -456,7 +471,8 @@ const OTPCodes = () => {
   };
 
   const isExpired = (expiresAt) => {
-    return new Date(expiresAt) < new Date();
+    const date = safeDateFrom(expiresAt);
+    return date ? date.getTime() < Date.now() : false;
   };
 
   // Stats berechnen

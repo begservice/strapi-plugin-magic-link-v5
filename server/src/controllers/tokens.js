@@ -401,8 +401,19 @@ module.exports = {
           const emailSubject = settings?.object || 'Your Magic Link';
           
           if (canSendEmail) {
-            // Erstelle die Magic-Link-URL (fällt auf Strapi-Server-URL zurück, wenn keine konfiguriert ist)
-            const baseUrl = settings.confirmationUrl || process.env.URL || strapi.config.get('server.url') || 'http://localhost:1337/api/magic-link/login';
+            // Erstelle die Magic-Link-URL
+            // Prioritaet: 1. frontend_url + frontend_login_path, 2. confirmationUrl, 3. server URL
+            let baseUrl;
+            if (settings.frontend_url) {
+              // Frontend URL ist konfiguriert - nutze diese
+              const frontendBase = settings.frontend_url.replace(/\/$/, ''); // Remove trailing slash
+              const loginPath = settings.frontend_login_path || '/auth/magic-link';
+              baseUrl = `${frontendBase}${loginPath}`;
+              strapi.log.debug(`[MagicLink] Using frontend URL: ${baseUrl}`);
+            } else {
+              // Fallback auf confirmationUrl oder Server URL
+              baseUrl = settings.confirmationUrl || process.env.URL || strapi.config.get('server.url') || 'http://localhost:1337/api/magic-link/login';
+            }
             const magicLink = `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}loginToken=${tokenValue}`;
             
             // Prüfen, ob wir Email Designer verwenden sollen

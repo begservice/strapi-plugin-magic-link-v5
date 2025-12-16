@@ -456,6 +456,52 @@ module.exports = ({ strapi }) => ({
   },
 
   /**
+   * Send Magic Link via WhatsApp
+   * @param {object} token - Token object with email and _plaintextToken
+   * @param {string} phoneNumber - Phone number to send to
+   */
+  async sendLoginLinkViaWhatsApp(token, phoneNumber) {
+    const settings = await this.settings();
+    const whatsappService = strapi.plugin('magic-link').service('whatsapp');
+
+    // Build magic link URL
+    const url = settings?.confirmationUrl || `${process.env.URL || 'http://localhost:1337'}/api/magic-link/login`;
+    const code = token._plaintextToken || token.token;
+    const magicLink = `${url}?loginToken=${code}`;
+
+    // Calculate expiry text
+    let expiryText = '1 hour';
+    if (token.expires_at) {
+      const expiresAt = new Date(token.expires_at);
+      const now = new Date();
+      const minutesUntilExpiry = Math.max(1, Math.floor((expiresAt - now) / (1000 * 60)));
+      expiryText = formatExpiryText(minutesUntilExpiry);
+    } else if (settings?.expire_period) {
+      const minutes = Math.floor(settings.expire_period / 60);
+      expiryText = formatExpiryText(minutes);
+    }
+
+    // Get custom message or use default
+    const appName = settings?.whatsapp_app_name || settings?.from_name || 'Magic Link';
+    const customMessage = settings?.whatsapp_message_template;
+
+    // Send via WhatsApp service
+    const result = await whatsappService.sendMagicLink(phoneNumber, magicLink, {
+      appName,
+      expiryText,
+      customMessage,
+    });
+
+    if (result.success) {
+      strapi.log.info(`Magic Link sent via WhatsApp to ${phoneNumber}`);
+    } else {
+      strapi.log.error(`Failed to send Magic Link via WhatsApp: ${result.error}`);
+    }
+
+    return result;
+  },
+
+  /**
    * Sperrt einen bestimmten JWT-Token vor seinem Ablauf
    * @param {string} token - Der zu sperrende JWT-Token
    * @param {string} userId - Die Benutzer-ID des Token-Inhabers

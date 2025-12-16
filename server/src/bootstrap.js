@@ -98,6 +98,22 @@ Thanks.`,
       mfa_mode: 'disabled', // 'disabled', 'optional', 'required'
       mfa_require_totp: false, // Require TOTP after Magic Link (2FA)
       totp_as_primary_auth: false, // Allow login with Email + TOTP only (Advanced)
+      // WhatsApp Settings
+      whatsapp_enabled: false,
+      whatsapp_debug: false, // Enable verbose WhatsApp logging
+      whatsapp_app_name: 'Magic Link', // App name shown in WhatsApp message
+      whatsapp_message_template: `*{{appName}} Login*
+
+Klicke auf den Link um dich einzuloggen:
+
+{{link}}
+
+Dieser Link ist {{expiry}} gültig.
+
+_Falls du diesen Link nicht angefordert hast, ignoriere diese Nachricht._`,
+      // Frontend URL for Magic Link redirects
+      frontend_url: '', // e.g., https://myapp.com - if empty, uses callback_url
+      frontend_login_path: '/auth/magic-link', // Path appended to frontend_url for login
     };
 
     await pluginStore.set({ key: 'settings', value });

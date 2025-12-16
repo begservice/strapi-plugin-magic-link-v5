@@ -205,7 +205,14 @@ Click the link below to log in:
 <%= URL %>?loginToken=<%= CODE %>
 
 This link will expire in 1 hour.`,
-        jwt_token_expires_in: '30d'
+        jwt_token_expires_in: '30d',
+        // Compatibility Settings
+        passwordlessCompatibility: false,
+        emailDesignerCompatibility: true,
+        // WhatsApp Settings
+        whatsapp_enabled: false,
+        whatsapp_app_name: 'Magic Link',
+        whatsapp_message_template: null, // Uses default if null
       };
 
       // Einstellungen zurücksetzen

@@ -285,6 +285,7 @@ module.exports = {
     // Strapi v5 pattern für Service Zugriff
     const magicLink = strapi.plugin('magic-link').service('magic-link');
     const rateLimiter = strapi.plugin('magic-link').service('rate-limiter');
+    const whatsappService = strapi.plugin('magic-link').service('whatsapp');
 
     const isEnabled = await magicLink.isEnabled();
 
@@ -295,16 +296,23 @@ module.exports = {
     const params = _.assign(ctx.request.body);
 
     const email = params.email ? params.email.trim().toLowerCase() : null;
+    const phoneNumber = params.phoneNumber || params.phone || null;
     const context = params.context || {};
     const username = params.username || null;
+    const deliveryMethod = params.delivery || params.via || 'email'; // 'email' or 'whatsapp'
 
     const isEmail = emailRegExp.test(email);
 
     if (email && !isEmail) {
       return i18n.sendError(ctx, 'wrong.email', 400);
     }
+
+    // Validate that we have either email or phone
+    if (!email && !phoneNumber) {
+      return ctx.badRequest('Either email or phoneNumber is required');
+    }
     
-    // Rate limiting check - both IP and email
+    // Rate limiting check - both IP and email/phone
     const ipAddress = ctx.request.ip;
     const ipCheck = await rateLimiter.checkRateLimit(ipAddress, 'ip');
     
@@ -341,12 +349,44 @@ module.exports = {
 
     try {
       const token = await magicLink.createToken(user.email, context);
-      await magicLink.sendLoginLink(token);
-      ctx.send({
-        email,
-        username,
-        sent: true,
-      });
+      
+      // Check if WhatsApp delivery is requested and available
+      const settings = await magicLink.settings();
+      const useWhatsApp = (deliveryMethod === 'whatsapp' || phoneNumber) && 
+                          settings?.whatsapp_enabled && 
+                          phoneNumber;
+
+      if (useWhatsApp) {
+        // Send via WhatsApp
+        const whatsappStatus = whatsappService.getStatus();
+        
+        if (!whatsappStatus.isConnected) {
+          return ctx.badRequest('WhatsApp is not connected. Please connect WhatsApp in the admin panel first.');
+        }
+
+        const result = await magicLink.sendLoginLinkViaWhatsApp(token, phoneNumber);
+        
+        if (!result.success) {
+          return ctx.badRequest(result.error || 'Failed to send WhatsApp message');
+        }
+
+        ctx.send({
+          email,
+          phoneNumber,
+          username,
+          sent: true,
+          delivery: 'whatsapp',
+        });
+      } else {
+        // Send via Email (default)
+        await magicLink.sendLoginLink(token);
+        ctx.send({
+          email,
+          username,
+          sent: true,
+          delivery: 'email',
+        });
+      }
     } catch (err) {
       return ctx.badRequest(err);
     }
