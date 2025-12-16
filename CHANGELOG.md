@@ -1,3 +1,10 @@
+## [5.3.1](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.3.0...v5.3.1) (2025-12-16)
+
+
+### Bug Fixes
+
+* improve WhatsApp integration stability and documentation ([5730c07](https://github.com/begservice/strapi-plugin-magic-link-v5/commit/5730c07710cd59d007341608e10758cf7a23f2aa))
+
 # [5.3.0](https://github.com/begservice/strapi-plugin-magic-link-v5/compare/v5.2.0...v5.3.0) (2025-12-16)
 
 
