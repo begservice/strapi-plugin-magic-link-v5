@@ -1,32 +1,34 @@
-name: 💡 Feature Request
-description: Suggest a new feature or enhancement for Magic Link Authentication
+name: Feature Request
+description: Suggest a new feature or enhancement for Magic-Link
 title: '[Feature]: '
 labels: ['enhancement', 'needs-triage']
 body:
   - type: markdown
     attributes:
       value: |
-        ## Thanks for suggesting a feature! 
+        ## Thanks for suggesting a feature!
         
         Please describe your idea in detail below.
         
   - type: dropdown
     id: feature-area
     attributes:
-      label: 📦 Feature Area
-      description: Which part of the plugin does this feature relate to?
+      label: Feature Area
       options:
-        - Magic Link (Email Authentication)
-        - OTP (One-Time Password)
-        - TOTP (2FA / Time-based OTP)
-        - JWT Session Management
-        - IP Ban System
-        - Rate Limiting
-        - Email Templates
+        - Magic Link Authentication
+        - Email OTP
+        - TOTP / MFA
+        - WhatsApp Integration
+        - Token Management
+        - Security Features
+        - Rate Limiting / IP Banning
+        - JWT Sessions
+        - Email Configuration
+        - Template Customization
         - Admin UI
-        - API / Endpoints
-        - Configuration
+        - API / Backend
         - Documentation
+        - License System
         - Other
     validations:
       required: true
@@ -34,62 +36,39 @@ body:
   - type: textarea
     id: problem
     attributes:
-      label: 🤔 Problem / Use Case
-      description: What problem does this feature solve? Or what use case does it enable?
-      placeholder: Describe the problem or use case...
+      label: Problem / Use Case
+      description: What problem does this feature solve?
     validations:
       required: true
       
   - type: textarea
     id: solution
     attributes:
-      label: 💡 Proposed Solution
-      description: How would you like to see this feature implemented?
-      placeholder: Describe your proposed solution...
+      label: Proposed Solution
+      description: How would you like to see this implemented?
     validations:
       required: true
       
   - type: textarea
     id: alternatives
     attributes:
-      label: 🔄 Alternatives Considered
-      description: Have you considered any alternative solutions or workarounds?
-      placeholder: Describe any alternatives you've considered...
+      label: Alternatives Considered
+      description: Have you considered any alternatives?
     validations:
       required: false
       
   - type: textarea
     id: example
     attributes:
-      label: 📝 Example / Mockup
-      description: Provide code examples, mockups, or screenshots if applicable
-      placeholder: |
-        // Example configuration or API usage
-        'magic-link': {
-          config: {
-            newFeature: {
-              // ...
-            }
-          }
-        }
-    validations:
-      required: false
-      
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: 📚 Additional Context
-      description: Add any other context, screenshots, or links about the feature request
-      placeholder: Any additional information...
+      label: Example
+      description: Provide examples, mockups, or code snippets
     validations:
       required: false
       
   - type: checkboxes
     id: terms
     attributes:
-      label: ✔️ Checklist
+      label: Checklist
       options:
-        - label: I have searched for similar feature requests before creating this one
+        - label: I have searched for similar feature requests
           required: true
-        - label: This feature would benefit the broader community, not just my specific use case
-          required: false

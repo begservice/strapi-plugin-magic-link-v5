@@ -1,19 +1,19 @@
-name: 🐛 Bug Report
-description: Report a bug or issue with Magic Link Authentication
+name: Bug Report
+description: Report a bug or issue with Magic-Link
 title: '[Bug]: '
 labels: ['bug', 'needs-triage']
 body:
   - type: markdown
     attributes:
       value: |
-        ## Thanks for taking the time to report a bug! 
+        ## Thanks for taking the time to report a bug!
         
         Please fill out the information below to help us reproduce and fix the issue.
         
   - type: textarea
     id: bug-description
     attributes:
-      label: 🐛 Bug Description
+      label: Bug Description
       description: A clear and concise description of what the bug is
       placeholder: Describe the bug you're experiencing...
     validations:
@@ -22,114 +22,105 @@ body:
   - type: textarea
     id: expected-behavior
     attributes:
-      label: ✅ Expected Behavior
+      label: Expected Behavior
       description: What did you expect to happen?
-      placeholder: Describe what should happen...
     validations:
       required: true
       
   - type: textarea
     id: actual-behavior
     attributes:
-      label: ❌ Actual Behavior
+      label: Actual Behavior
       description: What actually happened?
-      placeholder: Describe what actually happened...
     validations:
       required: true
       
   - type: textarea
     id: reproduction-steps
     attributes:
-      label: 🔄 Steps To Reproduce
+      label: Steps To Reproduce
       description: Steps to reproduce the behavior
       placeholder: |
-        1. Configure plugin with...
-        2. Create magic link for user with email...
-        3. Click on the magic link
+        1. Configure magic link settings...
+        2. Request magic link...
+        3. Click on link...
         4. See error...
     validations:
       required: true
       
   - type: dropdown
-    id: authentication-method
+    id: feature-area
     attributes:
-      label: 🔐 Authentication Method
-      description: Which authentication feature is affected?
+      label: Feature Area
+      description: Which feature is affected?
       options:
-        - Magic Link (Email)
-        - OTP (One-Time Password)
-        - TOTP (Time-based OTP / 2FA)
-        - JWT Session Management
-        - IP Ban System
+        - Magic Link Authentication
+        - Email OTP (Premium)
+        - TOTP / MFA (Advanced)
+        - WhatsApp Integration
+        - Token Management
+        - IP Banning
         - Rate Limiting
+        - JWT Sessions
+        - Email Configuration
+        - Admin UI
+        - License System
         - Other
     validations:
       required: true
       
+  - type: dropdown
+    id: auth-mode
+    attributes:
+      label: Authentication Mode
+      description: Which authentication mode are you using?
+      options:
+        - Magic Link Only
+        - Magic Link + Email OTP
+        - Magic Link + TOTP
+        - TOTP-Only Login
+        - WhatsApp Magic Link
+    validations:
+      required: false
+      
   - type: input
     id: plugin-version
     attributes:
-      label: 📦 Plugin Version
-      description: Which version of strapi-plugin-magic-link-v5 are you using?
-      placeholder: e.g. 5.1.3
+      label: Plugin Version
+      placeholder: e.g. 5.2.7
     validations:
       required: true
       
   - type: input
     id: strapi-version
     attributes:
-      label: 🚀 Strapi Version
-      description: Which version of Strapi are you using?
-      placeholder: e.g. 5.11.2
+      label: Strapi Version
+      placeholder: e.g. 5.30.1
     validations:
       required: true
       
   - type: input
     id: node-version
     attributes:
-      label: 🟢 Node Version
-      description: Which version of Node.js are you using?
+      label: Node Version
       placeholder: e.g. 20.19.4
     validations:
       required: true
       
-  - type: dropdown
-    id: database
-    attributes:
-      label: 🗄️ Database
-      description: Which database are you using?
-      options:
-        - PostgreSQL
-        - MySQL
-        - MariaDB
-        - SQLite
-        - Other
-    validations:
-      required: false
-      
   - type: textarea
     id: error-logs
     attributes:
-      label: 📋 Error Logs
+      label: Error Logs
       description: Please paste any relevant error logs
-      placeholder: Paste error logs here...
       render: shell
     validations:
       required: false
       
   - type: textarea
-    id: plugin-config
+    id: config
     attributes:
-      label: ⚙️ Plugin Configuration
+      label: Configuration
       description: Your plugin configuration (remove sensitive data!)
-      placeholder: |
-        // config/plugins.js
-        'magic-link': {
-          enabled: true,
-          config: {
-            // your config here
-          }
-        }
       render: javascript
     validations:
       required: false
@@ -137,21 +128,17 @@ body:
   - type: textarea
     id: additional-context
     attributes:
-      label: 📝 Additional Context
-      description: Add any other context about the problem here
-      placeholder: Any additional information that might help...
+      label: Additional Context
+      description: Add any other context, screenshots, or examples
     validations:
       required: false
       
   - type: checkboxes
     id: terms
     attributes:
-      label: ✔️ Checklist
-      description: Please confirm the following
+      label: Checklist
       options:
-        - label: I have searched for similar issues before creating this one
+        - label: I have searched for similar issues
           required: true
-        - label: I have provided all the required information above
-          required: true
-        - label: I have removed any sensitive information from logs and configs
+        - label: I have removed sensitive information (passwords, API keys, etc.)
           required: true
